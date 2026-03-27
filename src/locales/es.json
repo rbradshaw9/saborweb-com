@@ -1,0 +1,94 @@
+{
+  "nav": {
+    "services":    "Servicios",
+    "portfolio":   "Portafolio",
+    "howItWorks":  "Cómo Funciona",
+    "localSeo":    "SEO Local",
+    "about":       "Nosotros",
+    "contact":     "Contacto",
+    "cta":         "Ver Preview Gratis"
+  },
+  "home": {
+    "heroLabel":    "La agencia web de restaurantes en Puerto Rico",
+    "heroHeading":  "Páginas web que llenan mesas.",
+    "heroSub":      "Creamos sitios web impresionantes y bilingües para restaurantes en Puerto Rico — y te entregamos las llaves. Sin suposiciones, sin depósitos, sin esperas.",
+    "heroCta":      "Ver Mi Preview Gratis",
+    "heroSecondary":"Ver Nuestro Trabajo",
+    "howLabel":     "Cómo Funciona",
+    "howHeading":   "Lo construimos. Lo ves. Lo tuyo.",
+    "step1Title":   "Construimos tu sitio",
+    "step1Body":    "Investigamos tu restaurante, usamos tu menú, fotos y marca — y construimos un sitio completo. Sin depósito.",
+    "step2Title":   "Ves el preview",
+    "step2Body":    "Recibe un enlace en vivo de tu sitio completamente construido. No necesitas imaginarlo — ya está listo para lanzar.",
+    "step3Title":   "Lo reclaimas",
+    "step3Body":    "¿Te gusta? Haz clic para pagar y tu sitio sale en vivo. Nosotros manejamos el hosting, seguridad y soporte continuo.",
+    "packagesLabel":   "Paquetes de Servicio",
+    "packagesHeading": "Precios simples y transparentes.",
+    "packagesSub":     "Sin cargos sorpresa. Cancela cuando quieras.",
+    "whyLabel":       "Por Qué Sabor Web",
+    "whyHeading":     "Construido para restaurantes de Puerto Rico. Por gente que conoce PR.",
+    "why1Title":      "Hiper-Local",
+    "why1Body":       "Conocemos Puerto Rico — la cultura, el mercado, y lo que resuena con clientes locales y turistas.",
+    "why2Title":      "Solo Restaurantes",
+    "why2Body":       "No hacemos de todo. Hacemos una cosa excepcionalmente bien: páginas web para restaurantes en PR.",
+    "why3Title":      "Bilingüe por Defecto",
+    "why3Body":       "Cada sitio habla a tus clientes en español e inglés de forma nativa — no traducida, escrita.",
+    "why4Title":      "Modelo Build-First",
+    "why4Body":       "Ves el producto terminado antes de gastar un centavo. Eso es único en este mercado.",
+    "ctaHeading":   "¿Listo para ver tu restaurante en línea?",
+    "ctaBody":      "Construimos tu preview gratis — sin compromisos. Si te gusta, es tuyo.",
+    "ctaButton":    "Ver Mi Preview Gratis"
+  },
+  "services": {
+    "heroLabel":   "Precios",
+    "heroHeading": "Paquetes simples. Resultados serios.",
+    "heroSub":     "Elige el plan que se adapta a tu restaurante. Cada paquete incluye un sitio Next.js profesional en hosting rápido de Vercel.",
+    "presencia":   "Presencia",
+    "visibilidad": "Visibilidad",
+    "crecimiento": "Crecimiento",
+    "perMonth":    "/mes",
+    "setupFee":    "Cargo de configuración",
+    "mostPopular": "Más Popular",
+    "getStarted":  "Comenzar",
+    "modulesLabel":   "Módulos Adicionales",
+    "modulesHeading": "Expande cuando estés listo."
+  },
+  "portfolio": {
+    "heroLabel":   "Nuestro Trabajo",
+    "heroHeading": "Restaurantes para los que hemos construido.",
+    "heroSub":     "Cada sitio es construido a medida — la misma atención al detalle, único para cada restaurante.",
+    "viewSite":    "Ver Sitio"
+  },
+  "howItWorks": {
+    "heroLabel":   "El Proceso",
+    "heroHeading": "De idea a sitio en vivo — tú tienes el control.",
+    "heroSub":     "Dimos vuelta al modelo de agencia web tradicional. Nunca tienes que imaginar cómo se verá tu sitio.",
+    "faqLabel":    "Preguntas Frecuentes"
+  },
+  "localSeo": {
+    "heroLabel":   "SEO Local",
+    "heroHeading": "Aparece en Google. Llena más mesas.",
+    "heroSub":     "La mayoría de restaurantes en Puerto Rico son invisibles en Google. Nosotros lo arreglamos."
+  },
+  "about": {
+    "heroLabel":   "Nosotros",
+    "heroHeading": "Construido en Puerto Rico, para Puerto Rico.",
+    "heroSub":     "Sabor Web es una agencia web exclusiva para restaurantes. Creamos páginas web para restaurantes en PR — y también vivimos aquí."
+  },
+  "contact": {
+    "heroLabel":   "Contáctanos",
+    "heroHeading": "Solicita tu preview gratis.",
+    "heroSub":     "Cuéntanos tu restaurante y construiremos un preview gratis. Sin compromiso, sin tarjeta de crédito.",
+    "namePlaceholder":       "Tu nombre",
+    "restaurantPlaceholder": "Nombre del restaurante",
+    "phonePlaceholder":      "Teléfono / WhatsApp",
+    "messagePlaceholder":    "Cuéntanos sobre tu restaurante (opcional)",
+    "submit":                "Solicitar Preview Gratis",
+    "success":               "¡Recibido! Construiremos tu preview y estaremos en contacto dentro de 24 horas.",
+    "error":                 "Algo salió mal. Intenta de nuevo o escríbenos directamente por WhatsApp."
+  },
+  "footer": {
+    "tagline":   "La agencia web de restaurantes en Puerto Rico.",
+    "rights":    "Todos los derechos reservados."
+  }
+}

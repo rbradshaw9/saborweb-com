@@ -1,0 +1,94 @@
+{
+  "nav": {
+    "services":    "Services",
+    "portfolio":   "Portfolio",
+    "howItWorks":  "How It Works",
+    "localSeo":    "Local SEO",
+    "about":       "About",
+    "contact":     "Contact",
+    "cta":         "Get Free Preview"
+  },
+  "home": {
+    "heroLabel":    "Puerto Rico's Restaurant Web Agency",
+    "heroHeading":  "Websites that fill tables.",
+    "heroSub":      "We build stunning, fast, bilingual websites for Puerto Rico restaurants — then hand you the keys. No guesswork, no deposits, no delays.",
+    "heroCta":      "See Your Free Preview",
+    "heroSecondary":"View Our Work",
+    "howLabel":     "How It Works",
+    "howHeading":   "We build it. You see it. You own it.",
+    "step1Title":   "We build your site",
+    "step1Body":    "We research your restaurant, pull your menu, photos, and brand — and build a complete website. No deposit required.",
+    "step2Title":   "You see the preview",
+    "step2Body":    "Get a live link to your fully built site. No imagination needed — it's already done and ready to launch.",
+    "step3Title":   "You claim it",
+    "step3Body":    "Love it? Click to pay and your site goes live. We handle hosting, security, and ongoing support.",
+    "packagesLabel":   "Service Packages",
+    "packagesHeading": "Simple, transparent pricing.",
+    "packagesSub":     "No surprise fees. Cancel any time.",
+    "whyLabel":       "Why Sabor Web",
+    "whyHeading":     "Built for Puerto Rico restaurants. By people who know PR.",
+    "why1Title":      "Hyper-Local",
+    "why1Body":       "We know Puerto Rico — the culture, the market, and what resonates with local guests and tourists alike.",
+    "why2Title":      "Restaurant-Only",
+    "why2Body":       "We don't do everything. We do one thing exceptionally well: restaurant websites in Puerto Rico.",
+    "why3Title":      "Bilingual by Default",
+    "why3Body":       "Every site speaks to your Spanish and English-speaking guests natively — not translated, written.",
+    "why4Title":      "Build-First Model",
+    "why4Body":       "You see a finished product before you spend a cent. That's a first in this market.",
+    "ctaHeading":   "Ready to see your restaurant online?",
+    "ctaBody":      "We'll build your free preview — no strings attached. If you love it, it's yours.",
+    "ctaButton":    "Get My Free Preview"
+  },
+  "services": {
+    "heroLabel":   "Pricing",
+    "heroHeading": "Simple packages. Serious results.",
+    "heroSub":     "Pick the plan that fits your restaurant. Every package includes a professionally built Next.js website on fast Vercel hosting.",
+    "presencia":   "Presencia",
+    "visibilidad": "Visibilidad",
+    "crecimiento": "Crecimiento",
+    "perMonth":    "/mo",
+    "setupFee":    "Setup fee",
+    "mostPopular": "Most Popular",
+    "getStarted":  "Get Started",
+    "modulesLabel":   "Add-On Modules",
+    "modulesHeading": "Expand when you're ready."
+  },
+  "portfolio": {
+    "heroLabel":   "Our Work",
+    "heroHeading": "Restaurants we've built for.",
+    "heroSub":     "Every site is built custom — same attention to detail, unique to each restaurant.",
+    "viewSite":    "View Site"
+  },
+  "howItWorks": {
+    "heroLabel":   "The Process",
+    "heroHeading": "From idea to live site — you're in control.",
+    "heroSub":     "We flipped the traditional web agency model on its head. You never have to imagine what your site will look like.",
+    "faqLabel":    "Common Questions"
+  },
+  "localSeo": {
+    "heroLabel":   "Local SEO",
+    "heroHeading": "Get found on Google. Fill more tables.",
+    "heroSub":     "Most Puerto Rico restaurants are invisible on Google. We fix that."
+  },
+  "about": {
+    "heroLabel":   "About Us",
+    "heroHeading": "Built in Puerto Rico, for Puerto Rico.",
+    "heroSub":     "Sabor Web is a restaurant-only web agency. We build websites for PR restaurants — and we live here too."
+  },
+  "contact": {
+    "heroLabel":   "Get In Touch",
+    "heroHeading": "Request your free preview.",
+    "heroSub":     "Tell us your restaurant and we'll build a free preview site. No commitment, no credit card.",
+    "namePlaceholder":       "Your name",
+    "restaurantPlaceholder": "Restaurant name",
+    "phonePlaceholder":      "Phone / WhatsApp",
+    "messagePlaceholder":    "Tell us about your restaurant (optional)",
+    "submit":                "Request Free Preview",
+    "success":               "Got it! We'll build your preview and be in touch within 24 hours.",
+    "error":                 "Something went wrong. Please try again or WhatsApp us directly."
+  },
+  "footer": {
+    "tagline":   "Puerto Rico's restaurant web agency.",
+    "rights":    "All rights reserved."
+  }
+}
