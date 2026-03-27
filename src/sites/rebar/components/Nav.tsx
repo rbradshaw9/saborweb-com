@@ -8,7 +8,7 @@ import styles from './Nav.module.css';
 export default function Nav() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const { lang, t, toggle, setLang } = useLanguage();
+  const { lang, toggle, setLang } = useLanguage();
   const pathname = usePathname();
 
   useEffect(() => {
@@ -20,12 +20,15 @@ export default function Nav() {
   useEffect(() => { setMenuOpen(false); }, [pathname]);
 
   const navLinks = [
-    { href: '/menu', label: t.nav.menu },
-    { href: '/events', label: t.nav.events },
-    { href: '/gallery', label: t.nav.gallery },
-    { href: '/about', label: t.nav.about },
-    { href: '/contact', label: t.nav.contact },
+    { href: '/menu',    label: lang === 'es' ? 'Menú'     : 'Menu' },
+    { href: '/events',  label: lang === 'es' ? 'Eventos'  : 'Events' },
+    { href: '/gallery', label: lang === 'es' ? 'Galería'  : 'Gallery' },
+    { href: '/about',   label: lang === 'es' ? 'Nosotros' : 'About' },
+    { href: '/contact', label: lang === 'es' ? 'Contacto' : 'Contact' },
   ];
+
+  const reserveLabel = lang === 'es' ? 'Reservar' : 'Reserve';
+  const tagline      = lang === 'es' ? 'Cocina de autor' : 'Signature cuisine';
 
   return (
     <nav className={`${styles.nav} ${scrolled ? styles.scrolled : ''}`} role="navigation" aria-label="Main navigation">
@@ -34,7 +37,7 @@ export default function Nav() {
         <Link href="/" className={styles.logo} aria-label="Rebar - Home">
           <span className={styles.logoMark}>×</span>
           <span className={styles.logoText}>REBAR</span>
-          <span className={styles.logoSub}>{t.footer.tagline}</span>
+          <span className={styles.logoSub}>{tagline}</span>
         </Link>
 
         {/* Desktop Links */}
@@ -63,7 +66,7 @@ export default function Nav() {
             <span className={lang === 'es' ? styles.langActive : ''}>ES</span>
           </button>
           <Link href="/reservations" className={styles.reserveBtn}>
-            {t.nav.reserve}
+            {reserveLabel}
           </Link>
         </div>
 
