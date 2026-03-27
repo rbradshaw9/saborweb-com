@@ -128,6 +128,13 @@ const WEEKLY_SPECIALS = [
   { day: 'Friday',    icon: '🕯️', title: 'Slow Vibes Friday', description: 'Dim lights, slow music. Food for the soul — cocktails that enchant.' },
 ];
 
+const GALLERY = [
+  { src: '/sites/rebar/images/bar-interior.jpg',  alt: 'The Rebar bar — warm amber light, dark wood, bottles backlit in gold', wide: true  },
+  { src: '/sites/rebar/images/cocktail.jpg',       alt: 'House smoked Old Fashioned — Querido Viejo',                          wide: false },
+  { src: '/sites/rebar/images/plated-dish.jpg',    alt: 'Chef-plated entrée on dark slate',                                    wide: false },
+  { src: '/sites/rebar/images/dining-room.jpg',    alt: 'The dining room by candlelight',                                      wide: true  },
+];
+
 // ─── COMPONENT ───────────────────────────────────────────────────────────────
 
 export default function RebarPage() {
@@ -136,6 +143,9 @@ export default function RebarPage() {
   const [bannerVisible, setBannerVisible] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLElement>(null);
+
+  // Highlight today's hours
+  const TODAY = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][new Date().getDay()];
 
   useEffect(() => {
     const onScroll = () => setNavScrolled(window.scrollY > 60);
@@ -371,6 +381,45 @@ export default function RebarPage() {
           background: var(--gold); color: #0D0C0A;
           padding: 12px 20px; font-size: 11px; font-weight: 600;
           letter-spacing: 0.15em; text-transform: uppercase;
+        }
+
+        /* ── Gallery ── */
+        .gallery-section { padding: 100px 0; }
+        .gallery-inner { max-width: 1200px; margin: 0 auto; padding: 0 48px; }
+        .gallery-header { text-align: center; margin-bottom: 56px; }
+        .gallery-header p { color: var(--muted); font-size: 15px; margin-top: 14px; }
+        .gallery-grid {
+          display: grid;
+          grid-template-columns: repeat(12, 1fr);
+          grid-template-rows: auto auto;
+          gap: 6px;
+        }
+        .gallery-item {
+          overflow: hidden;
+          position: relative;
+          background: var(--surface);
+        }
+        .gallery-item:nth-child(1) { grid-column: span 7; }
+        .gallery-item:nth-child(2) { grid-column: span 5; }
+        .gallery-item:nth-child(3) { grid-column: span 5; }
+        .gallery-item:nth-child(4) { grid-column: span 7; }
+        .gallery-item img {
+          width: 100%; height: 100%;
+          object-fit: cover;
+          display: block;
+          aspect-ratio: unset;
+          min-height: 300px;
+          filter: brightness(0.88) saturate(0.9);
+          transition: filter 0.5s ease, transform 0.6s cubic-bezier(0.22,1,0.36,1);
+        }
+        .gallery-item:hover img { filter: brightness(1) saturate(1.05); transform: scale(1.03); }
+        @media (max-width: 900px) {
+          .gallery-grid { grid-template-columns: 1fr 1fr; }
+          .gallery-item:nth-child(n) { grid-column: span 1; }
+          .gallery-inner { padding: 0 24px; }
+        }
+        @media (max-width: 540px) {
+          .gallery-grid { grid-template-columns: 1fr; }
         }
 
         /* ── Weekly Specials ── */
@@ -645,6 +694,25 @@ export default function RebarPage() {
           </div>
         </section>
 
+        {/* ── Gallery ── */}
+        <section className="gallery-section">
+          <div className="gallery-inner">
+            <div className="gallery-header">
+              <p className="rebar-section-label">The Experience</p>
+              <h2 className="rebar-section-heading">Inside <em>Rebar</em></h2>
+              <p>An evening here is unlike anything else on the island.</p>
+            </div>
+            <div className="gallery-grid">
+              {GALLERY.map((img) => (
+                <div key={img.src} className="gallery-item">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={img.src} alt={img.alt} loading="lazy" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* ── Weekly Specials ── */}
         <section className="specials-section" id="specials">
           <div className="specials-inner">
@@ -709,8 +777,8 @@ export default function RebarPage() {
                 <tbody>
                   {REBAR.hours.map((h) => (
                     <tr key={h.day} className={h.closed ? 'closed' : ''}>
-                      <td>{h.day}</td>
-                      <td>{h.closed ? 'Closed' : `${h.open} – ${h.close}`}</td>
+                      <td className={h.day === TODAY ? 'hours-today' : ''}>{h.day}</td>
+                      <td className={h.day === TODAY ? 'hours-today' : ''}>{h.closed ? 'Closed' : `${h.open} – ${h.close}`}</td>
                     </tr>
                   ))}
                 </tbody>
