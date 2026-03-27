@@ -43,19 +43,21 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid package. Use pkg=presencia, visibilidad, or crecimiento.' }, { status: 400 });
   }
 
+  // Debug: confirm the key is loaded (first/last 4 chars only)
+  const key = process.env.STRIPE_SECRET_KEY ?? '';
+  console.log('[Checkout] key prefix:', key.slice(0, 8), 'suffix:', key.slice(-4), 'len:', key.length);
+
   const { setupPrice, monthlyPrice, name } = PACKAGES[pkg];
-  const origin = req.nextUrl.origin;
+  const origin = 'https://saborweb.com';
 
   try {
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       line_items: [
-        { price: setupPrice,   quantity: 1 },  // one-time setup fee — billed on first invoice only
-        { price: monthlyPrice, quantity: 1 },  // recurring monthly subscription
+        { price: setupPrice,   quantity: 1 },
+        { price: monthlyPrice, quantity: 1 },
       ],
       subscription_data: {
-        // Monthly subscription doesn't bill until 30 days after setup fee is paid.
-        // The customer sees "Due today: $[setup]" and "Starting [date+30]" for the monthly.
         trial_period_days: 30,
         metadata: { package: pkg, package_name: name },
       },
@@ -68,9 +70,20 @@ export async function GET(req: NextRequest) {
     });
 
     return NextResponse.redirect(session.url!, 303);
-  } catch (err) {
-    console.error('[Checkout Error]', err);
-    const message = err instanceof Error ? err.message : 'Unknown error';
-    return NextResponse.json({ error: 'Failed to create checkout session', detail: message }, { status: 500 });
+  } catch (err: any) {
+    console.error('[Checkout Error]', JSON.stringify({
+      type: err?.type,
+      code: err?.code,
+      statusCode: err?.statusCode,
+      message: err?.message,
+      raw: err?.raw,
+    }));
+    return NextResponse.json({
+      error: 'Failed to create checkout session',
+      detail: err?.message,
+      type: err?.type,
+      code: err?.code,
+      statusCode: err?.statusCode,
+    }, { status: 500 });
   }
 }
