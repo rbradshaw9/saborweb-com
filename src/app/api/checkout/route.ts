@@ -43,10 +43,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid package. Use pkg=presencia, visibilidad, or crecimiento.' }, { status: 400 });
   }
 
-  // Debug: confirm the key is loaded (first/last 4 chars only)
-  const key = process.env.STRIPE_SECRET_KEY ?? '';
-  console.log('[Checkout] key prefix:', key.slice(0, 8), 'suffix:', key.slice(-4), 'len:', key.length);
-
   const { setupPrice, monthlyPrice, name } = PACKAGES[pkg];
   const origin = 'https://saborweb.com';
 
