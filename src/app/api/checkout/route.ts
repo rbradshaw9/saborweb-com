@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2026-03-25.dahlia' });
+// Stripe is initialized inside the handler to avoid module-level crash
+// when STRIPE_SECRET_KEY is not set at build time.
 
 /*
   Billing model:
@@ -35,6 +36,7 @@ const PACKAGES: Record<string, { setupPrice: string; monthlyPrice: string; name:
 
 
 export async function GET(req: NextRequest) {
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
   const pkg = req.nextUrl.searchParams.get('pkg')?.toLowerCase();
 
   if (!pkg || !PACKAGES[pkg]) {
