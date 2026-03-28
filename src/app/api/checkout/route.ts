@@ -6,31 +6,31 @@ import Stripe from 'stripe';
 
 /*
   Billing model:
-    - Day 0:   Customer pays the one-time setup fee (e.g. $597 for Presencia).
+    - Day 0:   Customer pays the one-time setup fee (e.g. $597 for Cornerstone).
     - Day 30+: Monthly subscription begins ($97/month). This is driven by
                trial_period_days: 30 in subscription_data below.
 
   Stripe checkout shows:
-    "Website Build — Presencia"   $597.00   (due today)
-    "Monthly Plan — Presencia"    $97.00/month   starting [date]
+    "Website Build — Cornerstone"   $597.00   (due today)
+    "Monthly Plan — Cornerstone"    $97.00/month   starting [date]
     ────────────────────────────────────────
     Due today                     $597.00
 */
 const PACKAGES: Record<string, { setupPrice: string; monthlyPrice: string; name: string }> = {
   presencia: {
-    setupPrice:   'price_1TFHY8IhTLSI9ce8OyHA3E41',  // Website Build — Presencia    $597 one-time
-    monthlyPrice: 'price_1TFHY9IhTLSI9ce8dNcKm4Wm',  // Monthly Plan — Presencia     $97/mo
-    name: 'Presencia',
+    setupPrice:   'price_1TFHY8IhTLSI9ce8OyHA3E41',  // Website Build — Cornerstone  $597 one-time
+    monthlyPrice: 'price_1TFHY9IhTLSI9ce8dNcKm4Wm',  // Monthly Plan — Cornerstone   $97/mo
+    name: 'Cornerstone',
   },
   visibilidad: {
-    setupPrice:   'price_1TFHY9IhTLSI9ce8wGs7otlx',  // Website Build — Visibilidad  $897 one-time
-    monthlyPrice: 'price_1TFHYAIhTLSI9ce8PxXfDPRk',  // Monthly Plan — Visibilidad   $247/mo
-    name: 'Visibilidad',
+    setupPrice:   'price_1TFHY9IhTLSI9ce8wGs7otlx',  // Website Build — Spotlight    $897 one-time
+    monthlyPrice: 'price_1TFHYAIhTLSI9ce8PxXfDPRk',  // Monthly Plan — Spotlight     $247/mo
+    name: 'Spotlight',
   },
   crecimiento: {
-    setupPrice:   'price_1TFHYAIhTLSI9ce8QoRIAuiM',  // Website Build — Crecimiento  $1,247 one-time
-    monthlyPrice: 'price_1TFHYBIhTLSI9ce89Z8NKQDU',  // Monthly Plan — Crecimiento   $597/mo
-    name: 'Crecimiento',
+    setupPrice:   'price_1TFHYAIhTLSI9ce8QoRIAuiM',  // Website Build — Full House   $1,247 one-time
+    monthlyPrice: 'price_1TFHYBIhTLSI9ce89Z8NKQDU',  // Monthly Plan — Full House    $597/mo
+    name: 'Full House',
   },
 };
 
