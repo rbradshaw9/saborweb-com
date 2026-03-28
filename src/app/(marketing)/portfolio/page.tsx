@@ -19,7 +19,7 @@ const SITES: Site[] = [
   {
     name: 'Rebar Gastronomía & Cocteles',
     location: 'Aguadilla, PR',
-    // url intentionally omitted — show lightbox only
+    url: 'https://rebarpr.com',
     image: '/images/portfolio-rebar.png',
     description: {
       en: 'Upscale cocktail bar and gastronomy restaurant in northwest Puerto Rico.',
@@ -29,7 +29,6 @@ const SITES: Site[] = [
       en: ['Fine Dining', 'Cocktail Bar', 'Reservations'],
       es: ['Alta Cocina', 'Bar de Cocteles', 'Reservaciones'],
     },
-    preview: true,
   },
 ];
 
