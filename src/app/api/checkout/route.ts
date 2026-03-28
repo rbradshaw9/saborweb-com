@@ -38,6 +38,7 @@ const PACKAGES: Record<string, { setupPrice: string; monthlyPrice: string; name:
 export async function GET(req: NextRequest) {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
   const pkg = req.nextUrl.searchParams.get('pkg')?.toLowerCase();
+  const client = req.nextUrl.searchParams.get('client') ?? 'unknown';
 
   if (!pkg || !PACKAGES[pkg]) {
     return NextResponse.json({ error: 'Invalid package. Use pkg=presencia, visibilidad, or crecimiento.' }, { status: 400 });
@@ -55,14 +56,14 @@ export async function GET(req: NextRequest) {
       ],
       subscription_data: {
         trial_period_days: 30,
-        metadata: { package: pkg, package_name: name },
+        metadata: { package: pkg, package_name: name, client },
       },
       payment_method_types: ['card'],
       billing_address_collection: 'required',
       allow_promotion_codes: true,
       success_url: `${origin}/thank-you?pkg=${pkg}&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url:  `${origin}/services`,
-      metadata: { package: pkg, package_name: name },
+      metadata: { package: pkg, package_name: name, client },
     });
 
     return NextResponse.redirect(session.url!, 303);
