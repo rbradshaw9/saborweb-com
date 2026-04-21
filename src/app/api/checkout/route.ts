@@ -18,6 +18,17 @@ function getGaClientId(req: NextRequest) {
   return parts.slice(-2).join('.');
 }
 
+function getCheckoutOrigin(req: NextRequest) {
+  const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  const origin = configured
+    ? configured.startsWith('http://') || configured.startsWith('https://')
+      ? configured
+      : `https://${configured}`
+    : req.nextUrl.origin;
+
+  return origin.replace(/\/$/, '');
+}
+
 export async function GET(req: NextRequest) {
   const secretKey = process.env.STRIPE_SECRET_KEY;
   if (!secretKey) {
@@ -42,7 +53,7 @@ export async function GET(req: NextRequest) {
   }
 
   const stripe = new Stripe(secretKey);
-  const origin = (process.env.NEXT_PUBLIC_SITE_URL ?? req.nextUrl.origin).replace(/\/$/, '');
+  const origin = getCheckoutOrigin(req);
   const clientSlug =
     req.nextUrl.searchParams.get('client_slug') ??
     req.nextUrl.searchParams.get('client') ??
