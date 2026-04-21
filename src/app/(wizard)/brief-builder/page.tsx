@@ -248,6 +248,13 @@ function stringValue(value: unknown) {
   return typeof value === 'string' ? value : '';
 }
 
+function errorMessageFromResponse(data: unknown, fallback: string) {
+  if (data && typeof data === 'object' && 'error' in data && typeof data.error === 'string') {
+    return data.error;
+  }
+  return fallback;
+}
+
 function mergeResumeData(request: ResumeRequest, intake: ResumeIntake | null) {
   const intakeData = intake ?? {};
   const featureRequests = Array.isArray(intake?.featureRequests)
@@ -297,6 +304,7 @@ export default function BriefBuilderPage() {
           submit: 'Submit',
           saving: 'Saving…',
           error: 'Something went wrong. Please try again.',
+          requiredError: 'Please fill out your name, restaurant, phone, and city before continuing.',
           draftWarning: 'We could not save this step, but you can keep going.',
           complete: 'You\'re all set.',
           completeSub: 'We\'ll use this to build your preview. Expect to hear from us within 1–2 business days.',
@@ -304,7 +312,6 @@ export default function BriefBuilderPage() {
           step0: {
             heading: 'Let\'s get started.',
             sub: 'Your info so we can reach you.',
-            cta: 'Open my preview',
           },
           step1: {
             heading: 'Your restaurant.',
@@ -350,6 +357,7 @@ export default function BriefBuilderPage() {
           submit: 'Enviar',
           saving: 'Guardando…',
           error: 'Algo salió mal. Intenta de nuevo.',
+          requiredError: 'Completa tu nombre, restaurante, teléfono y pueblo antes de continuar.',
           draftWarning: 'No pudimos guardar este paso, pero puedes continuar.',
           complete: 'Listo.',
           completeSub: 'Usaremos esto para construir tu preview. Te contactamos en 1–2 días hábiles.',
@@ -357,7 +365,6 @@ export default function BriefBuilderPage() {
           step0: {
             heading: 'Empecemos.',
             sub: 'Tu info para podernos comunicar.',
-            cta: 'Abrir mi preview',
           },
           step1: {
             heading: 'Tu restaurante.',
@@ -488,6 +495,12 @@ export default function BriefBuilderPage() {
   };
 
   const createPreviewRequest = async () => {
+    if (!form.ownerName.trim() || !form.restaurantName.trim() || !form.phone.trim() || !form.city.trim()) {
+      setStatus('idle');
+      setMessage(copy.requiredError);
+      return;
+    }
+
     if (createdRequest) {
       await saveDraft(createdRequest.token, 0);
       syncWizardUrl(createdRequest.token, 1);
@@ -515,7 +528,9 @@ export default function BriefBuilderPage() {
         }),
       });
       const data: unknown = await res.json();
-      if (!res.ok || typeof data !== 'object' || data === null) throw new Error('Request failed');
+      if (!res.ok || typeof data !== 'object' || data === null) {
+        throw new Error(errorMessageFromResponse(data, copy.error));
+      }
       const intakeUrl = 'intakeUrl' in data && typeof data.intakeUrl === 'string' ? data.intakeUrl : '';
       const clientSlug = 'clientSlug' in data && typeof data.clientSlug === 'string' ? data.clientSlug : '';
       const token = new URL(intakeUrl, window.location.origin).searchParams.get('token') ?? '';
@@ -535,9 +550,9 @@ export default function BriefBuilderPage() {
       });
       setStatus('idle');
       setStep(1);
-    } catch {
+    } catch (error) {
       setStatus('error');
-      setMessage(copy.error);
+      setMessage(error instanceof Error ? error.message : copy.error);
     }
   };
 
@@ -782,7 +797,7 @@ export default function BriefBuilderPage() {
                   >
                     {status === 'saving'
                       ? <><Loader2 size={16} className="spin" /> {copy.saving}</>
-                      : <>{copy.step0.cta} <ArrowRight size={16} /></>}
+                      : <>{copy.next} <ArrowRight size={16} /></>}
                   </button>
                 </div>
               </div>
