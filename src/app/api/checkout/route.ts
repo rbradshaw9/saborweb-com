@@ -3,6 +3,7 @@ import Stripe from 'stripe';
 import { getDomainSetupAddonPrice, getServicePackage, getStripePrices } from '@/lib/packages';
 import type { PackageKey } from '@/lib/packages';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
+import { logSiteEvent } from '@/lib/site-events';
 
 function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : 'Unknown error';
@@ -80,6 +81,19 @@ export async function GET(req: NextRequest) {
       console.error('[Checkout] Site checkout status update failed:', error);
     }
   }
+
+  await logSiteEvent({
+    eventType: 'checkout_started',
+    siteId: siteId || null,
+    requestId: previewRequestId || null,
+    actorType: 'owner',
+    message: `Checkout started for ${pkg.name}`,
+    metadata: {
+      package_key: pkg.key,
+      client_slug: clientSlug,
+      domain_addon: includeDomainAddon,
+    },
+  });
 
   try {
     const session = await stripe.checkout.sessions.create({

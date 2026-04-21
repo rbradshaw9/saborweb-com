@@ -9,6 +9,7 @@ import {
   readString,
   sendIntakeCompleteEmail,
 } from '@/lib/intake/server';
+import { logSiteEvent } from '@/lib/site-events';
 
 type IntakePatch = Partial<IntakeRecord> & {
   request_id?: string;
@@ -442,6 +443,18 @@ export async function PATCH(req: NextRequest) {
       })
       .eq('id', requestRecord.id);
 
+    await logSiteEvent({
+      eventType: 'intake_draft_saved',
+      requestId: requestRecord.id,
+      intakeId: (intake as { id?: string }).id ?? null,
+      actorType: 'visitor',
+      message: `Draft saved at step ${step}`,
+      metadata: {
+        step,
+        client_slug: requestRecord.client_slug,
+      },
+    });
+
     return NextResponse.json({
       ok: true,
       intake: toSafeIntakePayload(intake as unknown as Record<string, unknown>),
@@ -544,6 +557,18 @@ export async function POST(req: NextRequest) {
         brief_json: briefJson,
       })
       .eq('id', requestRecord.id);
+
+    await logSiteEvent({
+      eventType: 'intake_completed',
+      requestId: requestRecord.id,
+      intakeId: (intake as { id?: string }).id ?? null,
+      actorType: 'visitor',
+      message: `Intake completed for ${requestRecord.restaurant_name}`,
+      metadata: {
+        client_slug: requestRecord.client_slug,
+        uploaded_file_count: fileNames.length,
+      },
+    });
 
     try {
       await sendIntakeCompleteEmail(requestRecord, generatedBrief);

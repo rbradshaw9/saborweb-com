@@ -11,6 +11,7 @@ import {
   readString,
   sendPreviewRequestEmail,
 } from '@/lib/intake/server';
+import { logSiteEvent } from '@/lib/site-events';
 
 function makePath(path: string) {
   return path.startsWith('/') ? path : `/${path}`;
@@ -77,7 +78,7 @@ export async function POST(req: NextRequest) {
     const previewUrl = makePath(`/preview/${clientSlug}`);
     const claimUrl = makePath(`/claim/${clientSlug}`);
 
-    const { error: siteError } = await supabase
+    const { data: siteRecord, error: siteError } = await supabase
       .from('restaurant_sites')
       .upsert(
         {
@@ -101,12 +102,27 @@ export async function POST(req: NextRequest) {
           },
         },
         { onConflict: 'request_id' }
-      );
+      )
+      .select('id')
+      .single();
 
     if (siteError) {
       console.error('[Preview Request] Site upsert failed:', siteError);
       return NextResponse.json({ error: 'Could not create preview site record.' }, { status: 500 });
     }
+
+    await logSiteEvent({
+      eventType: 'preview_request_created',
+      siteId: siteRecord?.id ?? null,
+      requestId: requestRecord.id,
+      actorType: 'visitor',
+      message: `Preview request created for ${requestRecord.restaurant_name}`,
+      metadata: {
+        source: requestRecord.source,
+        client_slug: requestRecord.client_slug,
+        preferred_language: requestRecord.preferred_language,
+      },
+    });
 
     try {
       await sendPreviewRequestEmail(requestRecord, intakeUrl);

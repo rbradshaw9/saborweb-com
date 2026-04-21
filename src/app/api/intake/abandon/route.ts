@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { escapeHtml, getRequestOrigin } from '@/lib/intake/server';
+import { logSiteEvent } from '@/lib/site-events';
 
 type PreviewRequestCandidate = {
   id: string;
@@ -221,6 +222,17 @@ export async function GET(req: NextRequest) {
       .from('preview_requests')
       .update({ [sentColumn]: new Date().toISOString() })
       .eq('id', candidate.id);
+
+    await logSiteEvent({
+      eventType: 'abandon_email_sent',
+      requestId: candidate.id,
+      actorType: 'cron',
+      message: `Abandon reminder ${reminderNumber} sent`,
+      metadata: {
+        reminder_number: reminderNumber,
+        last_step: step,
+      },
+    });
 
     results.push({ requestId: candidate.id, action: 'sent', reminderNumber });
   }

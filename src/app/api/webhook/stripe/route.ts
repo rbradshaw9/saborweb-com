@@ -3,6 +3,7 @@ import Stripe from 'stripe';
 import { Resend } from 'resend';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { getServicePackage } from '@/lib/packages';
+import { logSiteEvent } from '@/lib/site-events';
 
 function getClientProjects() {
   const raw = process.env.VERCEL_CLIENT_PROJECTS_JSON;
@@ -201,7 +202,24 @@ async function markRestaurantSiteClaimed(session: Stripe.Checkout.Session) {
 
   if (error) {
     console.error('[Webhook] Failed to mark restaurant site claimed:', error);
+    return;
   }
+
+  await logSiteEvent({
+    eventType: 'payment_completed',
+    siteId: siteId || null,
+    actorType: 'stripe',
+    actorId: session.id,
+    message: 'Stripe checkout session completed',
+    metadata: {
+      client_slug: clientSlug,
+      package_key: session.metadata?.package ?? null,
+      stripe_customer_id: stripeCustomerId,
+      stripe_subscription_id: stripeSubscriptionId,
+      amount_total: session.amount_total,
+      currency: session.currency,
+    },
+  });
 }
 
 export async function POST(req: NextRequest) {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { escapeHtml, hashIntakeToken } from '@/lib/intake/server';
+import { logSiteEvent } from '@/lib/site-events';
 
 function html(status: number, title: string, body: string) {
   return new NextResponse(
@@ -49,6 +50,13 @@ export async function GET(req: NextRequest) {
     console.error('[Intake Abandon Opt-Out] Update failed:', error);
     return html(500, 'Could not update preferences', 'Please reply to the email and we will help.');
   }
+
+  await logSiteEvent({
+    eventType: 'abandon_opted_out',
+    requestId: requestRecord.id,
+    actorType: 'owner',
+    message: 'Owner opted out of abandon reminders',
+  });
 
   return html(200, 'Reminder emails stopped', 'We will not send more unfinished-brief reminders for this preview request.');
 }
