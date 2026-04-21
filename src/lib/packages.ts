@@ -115,8 +115,8 @@ export function getServicePackage(key: string | null): ServicePackage | null {
 
 export function getStripePrices(key: PackageKey) {
   const envKeys = STRIPE_ENV_KEYS[key];
-  const setupPrice = process.env[envKeys.setup];
-  const monthlyPrice = process.env[envKeys.monthly];
+  const setupPrice = process.env[envKeys.setup]?.trim();
+  const monthlyPrice = process.env[envKeys.monthly]?.trim();
 
   if (!setupPrice || !monthlyPrice) {
     throw new Error(`Missing Stripe price env vars: ${envKeys.setup}, ${envKeys.monthly}`);
@@ -126,7 +126,7 @@ export function getStripePrices(key: PackageKey) {
 }
 
 export function getDomainSetupAddonPrice() {
-  const price = process.env.STRIPE_PRICE_DOMAIN_SETUP_ADDON;
+  const price = process.env.STRIPE_PRICE_DOMAIN_SETUP_ADDON?.trim();
   if (!price) {
     throw new Error('Missing Stripe price env var: STRIPE_PRICE_DOMAIN_SETUP_ADDON');
   }
