@@ -56,6 +56,7 @@ export async function POST(req: NextRequest) {
       website_url: normalizeUrl(asNullableString(body.websiteUrl)),
       client_slug: clientSlug,
       intake_token_hash: intakeTokenHash,
+      intake_resume_token: token,
     };
 
     const { data, error } = await supabase
