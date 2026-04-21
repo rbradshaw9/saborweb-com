@@ -8,7 +8,6 @@ import {
   CheckCircle,
   Loader2,
   Upload,
-  X,
 } from 'lucide-react';
 import {
   FEATURE_OPTIONS,
@@ -115,6 +114,8 @@ const INITIAL_FORM: BriefBuilderState = {
   featureRequests: [],
 };
 
+const MAX_WIZARD_STEP = 6;
+
 type CreatedRequest = { token: string; clientSlug: string };
 type ResumeRequest = {
   owner_name?: string;
@@ -184,7 +185,7 @@ function ChipSingle({
 function clampStep(value: string | null) {
   const parsed = Number.parseInt(value ?? '1', 10);
   if (!Number.isFinite(parsed)) return 1;
-  return Math.min(Math.max(parsed, 0), 5);
+  return Math.min(Math.max(parsed, 0), MAX_WIZARD_STEP);
 }
 
 function syncWizardUrl(token: string, nextStep: number) {
@@ -205,12 +206,20 @@ function getDraftPayloadForStep(step: number, form: BriefBuilderState) {
   switch (step) {
     case 1:
       return {
+        currentWebsite: form.currentWebsite,
+        googleBusinessUrl: form.googleBusinessUrl,
+        instagramUrl: form.instagramUrl,
+        facebookUrl: form.facebookUrl,
+        otherSocialLinks: form.otherSocialLinks,
+      };
+    case 2:
+      return {
         address: form.address,
         neighborhood: form.neighborhood,
         cuisine: form.cuisine,
         hours: form.hours,
       };
-    case 2:
+    case 3:
       return {
         menuUrl: form.menuUrl,
         orderingUrl: form.orderingUrl,
@@ -218,7 +227,7 @@ function getDraftPayloadForStep(step: number, form: BriefBuilderState) {
         menuNotes: form.menuNotes,
         menuHighlights: form.menuHighlights,
       };
-    case 3:
+    case 4:
       return {
         brandStyle: form.brandStyle,
         fontMood: form.fontMood,
@@ -226,14 +235,14 @@ function getDraftPayloadForStep(step: number, form: BriefBuilderState) {
         colorNotes: form.colorNotes,
         visualReferences: form.visualReferences,
       };
-    case 4:
+    case 5:
       return {
         primaryAction: form.primaryAction,
         featureRequests: form.featureRequests,
         idealGuest: form.idealGuest,
         ownerGoals: form.ownerGoals,
       };
-    case 5:
+    case 6:
       return {
         logoStatus: form.logoStatus,
         photoStatus: form.photoStatus,
@@ -286,9 +295,8 @@ export default function BriefBuilderPage() {
   const [files, setFiles] = useState<FileList | null>(null);
   const [status, setStatus] = useState<'idle' | 'saving' | 'complete' | 'error'>('idle');
   const [message, setMessage] = useState('');
-  const [showLinks, setShowLinks] = useState(false);
 
-  const TOTAL_STEPS = 6;
+  const TOTAL_STEPS = MAX_WIZARD_STEP + 1;
 
   const copy = useMemo(
     () =>
@@ -298,7 +306,7 @@ export default function BriefBuilderPage() {
           exitLabel: 'Back to site',
           langSwitch: 'Español',
           langTarget: 'es' as const,
-          stepLabels: ['Contact', 'Restaurant', 'Menu', 'Look & Feel', 'Goals', 'Assets'],
+          stepLabels: ['Contact', 'Web Presence', 'Restaurant', 'Menu', 'Look & Feel', 'Goals', 'Assets'],
           next: 'Continue',
           back: 'Back',
           submit: 'Submit',
@@ -312,6 +320,10 @@ export default function BriefBuilderPage() {
           step0: {
             heading: 'Let\'s get started.',
             sub: 'Your info so we can reach you.',
+          },
+          stepLinks: {
+            heading: 'Where can we research you?',
+            sub: 'Add any current web presence you have. Skip anything that does not exist yet.',
           },
           step1: {
             heading: 'Your restaurant.',
@@ -351,7 +363,7 @@ export default function BriefBuilderPage() {
           exitLabel: 'Volver al sitio',
           langSwitch: 'English',
           langTarget: 'en' as const,
-          stepLabels: ['Contacto', 'Restaurante', 'Menú', 'Estilo', 'Objetivos', 'Assets'],
+          stepLabels: ['Contacto', 'Presencia web', 'Restaurante', 'Menú', 'Estilo', 'Objetivos', 'Assets'],
           next: 'Continuar',
           back: 'Atrás',
           submit: 'Enviar',
@@ -365,6 +377,10 @@ export default function BriefBuilderPage() {
           step0: {
             heading: 'Empecemos.',
             sub: 'Tu info para podernos comunicar.',
+          },
+          stepLinks: {
+            heading: '¿Dónde podemos investigar?',
+            sub: 'Agrega cualquier presencia web que tengas. Puedes saltar lo que no exista todavía.',
           },
           step1: {
             heading: 'Tu restaurante.',
@@ -766,27 +782,6 @@ export default function BriefBuilderPage() {
                     </div>
                   </div>
 
-                  <button
-                    type="button"
-                    className="wz-toggle-links"
-                    onClick={() => setShowLinks((v) => !v)}
-                    aria-expanded={showLinks}
-                  >
-                    {showLinks
-                      ? <><X size={13} /> {lang === 'es' ? 'Ocultar enlaces' : 'Hide links'}</>
-                      : lang === 'es' ? '+ Agregar links (Instagram, Google, web)' : '+ Add links (Instagram, Google, website)'}
-                  </button>
-
-                  {showLinks && (
-                    <div className="wz-optional-links">
-                      <div className="wz-row wz-row--2">
-                        <input className="wz-input" value={form.instagramUrl} onChange={(e) => update('instagramUrl', e.target.value)} placeholder="Instagram URL" />
-                        <input className="wz-input" value={form.googleBusinessUrl} onChange={(e) => update('googleBusinessUrl', e.target.value)} placeholder="Google Business URL" />
-                        <input className="wz-input" value={form.currentWebsite} onChange={(e) => update('currentWebsite', e.target.value)} placeholder={lang === 'es' ? 'Página web actual' : 'Current website'} />
-                        <input className="wz-input" value={form.facebookUrl} onChange={(e) => update('facebookUrl', e.target.value)} placeholder="Facebook URL" />
-                      </div>
-                    </div>
-                  )}
                 </div>
 
                 <div className="wz-actions wz-actions--end">
@@ -803,8 +798,97 @@ export default function BriefBuilderPage() {
               </div>
             )}
 
-            {/* ── STEP 1 — Restaurant ── */}
+            {/* ── STEP 1 — Web Presence ── */}
             {step === 1 && (
+              <div className="wz-step">
+                <div className="wz-step__head">
+                  <h1>{copy.stepLinks.heading}</h1>
+                  <p>{copy.stepLinks.sub}</p>
+                </div>
+
+                <div className="wz-fields">
+                  <div className="wz-row wz-row--2">
+                    <div className="wz-field">
+                      <label className="wz-label" htmlFor="currentWebsite">
+                        {lang === 'es' ? 'Página web actual' : 'Current website'}
+                      </label>
+                      <input
+                        id="currentWebsite"
+                        className="wz-input"
+                        value={form.currentWebsite}
+                        onChange={(e) => update('currentWebsite', e.target.value)}
+                        placeholder="https://..."
+                      />
+                    </div>
+                    <div className="wz-field">
+                      <label className="wz-label" htmlFor="instagramUrl">
+                        Instagram
+                      </label>
+                      <input
+                        id="instagramUrl"
+                        className="wz-input"
+                        value={form.instagramUrl}
+                        onChange={(e) => update('instagramUrl', e.target.value)}
+                        placeholder="https://instagram.com/..."
+                      />
+                    </div>
+                  </div>
+
+                  <div className="wz-row wz-row--2">
+                    <div className="wz-field">
+                      <label className="wz-label" htmlFor="googleBusinessUrl">
+                        Google Business Profile
+                      </label>
+                      <input
+                        id="googleBusinessUrl"
+                        className="wz-input"
+                        value={form.googleBusinessUrl}
+                        onChange={(e) => update('googleBusinessUrl', e.target.value)}
+                        placeholder="https://g.page/..."
+                      />
+                    </div>
+                    <div className="wz-field">
+                      <label className="wz-label" htmlFor="facebookUrl">
+                        Facebook
+                      </label>
+                      <input
+                        id="facebookUrl"
+                        className="wz-input"
+                        value={form.facebookUrl}
+                        onChange={(e) => update('facebookUrl', e.target.value)}
+                        placeholder="https://facebook.com/..."
+                      />
+                    </div>
+                  </div>
+
+                  <div className="wz-field">
+                    <label className="wz-label" htmlFor="otherSocialLinks">
+                      {lang === 'es' ? 'Otros links útiles' : 'Other useful links'}
+                    </label>
+                    <textarea
+                      id="otherSocialLinks"
+                      className="wz-input wz-textarea"
+                      rows={2}
+                      value={form.otherSocialLinks}
+                      onChange={(e) => update('otherSocialLinks', e.target.value)}
+                      placeholder={lang === 'es' ? 'TikTok, TripAdvisor, prensa, menú público…' : 'TikTok, TripAdvisor, press, public menu…'}
+                    />
+                  </div>
+                </div>
+
+                <div className="wz-actions">
+                  <button type="button" className="wz-btn wz-btn--ghost" onClick={() => setStep(0)}>
+                    <ArrowLeft size={15} /> {copy.back}
+                  </button>
+                  <button type="submit" className="wz-btn wz-btn--primary">
+                    {copy.next} <ArrowRight size={15} />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* ── STEP 2 — Restaurant ── */}
+            {step === 2 && (
               <div className="wz-step">
                 <div className="wz-step__head">
                   <h1>{copy.step1.heading}</h1>
@@ -868,7 +952,7 @@ export default function BriefBuilderPage() {
                 </div>
 
                 <div className="wz-actions">
-                  <button type="button" className="wz-btn wz-btn--ghost" onClick={() => setStep(0)}>
+                  <button type="button" className="wz-btn wz-btn--ghost" onClick={() => setStep(1)}>
                     <ArrowLeft size={15} /> {copy.back}
                   </button>
                   <button type="submit" className="wz-btn wz-btn--primary">
@@ -878,8 +962,8 @@ export default function BriefBuilderPage() {
               </div>
             )}
 
-            {/* ── STEP 2 — Menu ── */}
-            {step === 2 && (
+            {/* ── STEP 3 — Menu ── */}
+            {step === 3 && (
               <div className="wz-step">
                 <div className="wz-step__head">
                   <h1>{copy.step2.heading}</h1>
@@ -957,7 +1041,7 @@ export default function BriefBuilderPage() {
                 </div>
 
                 <div className="wz-actions">
-                  <button type="button" className="wz-btn wz-btn--ghost" onClick={() => setStep(1)}>
+                  <button type="button" className="wz-btn wz-btn--ghost" onClick={() => setStep(2)}>
                     <ArrowLeft size={15} /> {copy.back}
                   </button>
                   <button type="submit" className="wz-btn wz-btn--primary">
@@ -967,8 +1051,8 @@ export default function BriefBuilderPage() {
               </div>
             )}
 
-            {/* ── STEP 3 — Look & Feel ── */}
-            {step === 3 && (
+            {/* ── STEP 4 — Look & Feel ── */}
+            {step === 4 && (
               <div className="wz-step">
                 <div className="wz-step__head">
                   <h1>{copy.step3.heading}</h1>
@@ -1046,7 +1130,7 @@ export default function BriefBuilderPage() {
                 </div>
 
                 <div className="wz-actions">
-                  <button type="button" className="wz-btn wz-btn--ghost" onClick={() => setStep(2)}>
+                  <button type="button" className="wz-btn wz-btn--ghost" onClick={() => setStep(3)}>
                     <ArrowLeft size={15} /> {copy.back}
                   </button>
                   <button type="submit" className="wz-btn wz-btn--primary">
@@ -1056,8 +1140,8 @@ export default function BriefBuilderPage() {
               </div>
             )}
 
-            {/* ── STEP 4 — Goals ── */}
-            {step === 4 && (
+            {/* ── STEP 5 — Goals ── */}
+            {step === 5 && (
               <div className="wz-step">
                 <div className="wz-step__head">
                   <h1>{copy.step4.heading}</h1>
@@ -1124,7 +1208,7 @@ export default function BriefBuilderPage() {
                 </div>
 
                 <div className="wz-actions">
-                  <button type="button" className="wz-btn wz-btn--ghost" onClick={() => setStep(3)}>
+                  <button type="button" className="wz-btn wz-btn--ghost" onClick={() => setStep(4)}>
                     <ArrowLeft size={15} /> {copy.back}
                   </button>
                   <button type="submit" className="wz-btn wz-btn--primary">
@@ -1134,8 +1218,8 @@ export default function BriefBuilderPage() {
               </div>
             )}
 
-            {/* ── STEP 5 — Assets ── */}
-            {step === 5 && (
+            {/* ── STEP 6 — Assets ── */}
+            {step === 6 && (
               <div className="wz-step">
                 <div className="wz-step__head">
                   <h1>{copy.step5.heading}</h1>
@@ -1204,7 +1288,7 @@ export default function BriefBuilderPage() {
                 </div>
 
                 <div className="wz-actions">
-                  <button type="button" className="wz-btn wz-btn--ghost" onClick={() => setStep(4)}>
+                  <button type="button" className="wz-btn wz-btn--ghost" onClick={() => setStep(5)}>
                     <ArrowLeft size={15} /> {copy.back}
                   </button>
                   <button type="submit" className="wz-btn wz-btn--primary" disabled={status === 'saving'}>

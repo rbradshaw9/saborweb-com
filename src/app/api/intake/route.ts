@@ -240,7 +240,7 @@ function buildCompleteIntakeRecord(
     feature_requests: toStringArray(body.featureRequests),
     asset_links: readAssetLinks(body.assetLinks),
     status: 'complete',
-    last_step: 5,
+    last_step: 6,
   };
 }
 
@@ -392,7 +392,7 @@ export async function PATCH(req: NextRequest) {
     if (!token) {
       return NextResponse.json({ error: 'Missing intake token.' }, { status: 400 });
     }
-    if (!Number.isInteger(step) || step < 0 || step > 5) {
+    if (!Number.isInteger(step) || step < 0 || step > 6) {
       return NextResponse.json({ error: 'Invalid wizard step.' }, { status: 400 });
     }
 
@@ -523,7 +523,7 @@ export async function POST(req: NextRequest) {
           generated_brief: generatedBrief,
           brief_json: briefJson,
           status: 'complete',
-          last_step: 5,
+          last_step: 6,
         },
         { onConflict: 'request_id' }
       )
