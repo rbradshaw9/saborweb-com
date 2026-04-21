@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { Resend } from 'resend';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
+import { getServicePackage } from '@/lib/packages';
 
 function getClientProjects() {
   const raw = process.env.VERCEL_CLIENT_PROJECTS_JSON;
@@ -31,6 +32,21 @@ function getDeployHook(clientSlug: string) {
 
 function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : 'Unknown error';
+}
+
+function cleanGa4Params(params: Record<string, unknown>) {
+  return Object.fromEntries(
+    Object.entries(params).filter(([, value]) => value !== undefined && value !== null && value !== '')
+  );
+}
+
+function getStripeObjectId(value: string | { id?: string } | null) {
+  if (!value) return '';
+  return typeof value === 'string' ? value : value.id;
+}
+
+function getGa4ClientId(session: Stripe.Checkout.Session) {
+  return session.metadata?.ga_client_id || `stripe.${session.id}`;
 }
 
 async function vercelRequest(path: string, method: string, body?: object) {
@@ -99,6 +115,63 @@ async function sendPaymentEmail(session: Stripe.Checkout.Session, clientSlug: st
   });
 }
 
+async function sendGa4PurchaseEvent(session: Stripe.Checkout.Session) {
+  const measurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
+  const apiSecret = process.env.GA4_API_SECRET;
+  if (!measurementId || !apiSecret) return;
+
+  const packageKey = session.metadata?.package ?? '';
+  const servicePackage = getServicePackage(packageKey);
+  const packageName = session.metadata?.package_name ?? servicePackage?.name ?? 'Unknown';
+  const currency = session.currency?.toUpperCase() ?? 'USD';
+  const value = session.amount_total ? session.amount_total / 100 : servicePackage?.setup ?? 0;
+  const customerId = getStripeObjectId(session.customer);
+
+  const params = cleanGa4Params({
+    transaction_id: session.id,
+    affiliation: 'Stripe Checkout',
+    currency,
+    value,
+    engagement_time_msec: 1,
+    package_key: packageKey,
+    package_name: packageName,
+    setup_fee: servicePackage?.setup,
+    monthly_value: servicePackage?.monthly,
+    client_slug: session.metadata?.client_slug ?? session.metadata?.client,
+    preview_request_id: session.metadata?.preview_request_id,
+    site_id: session.metadata?.site_id,
+    payment_type: 'setup_now_subscription_after_30_days',
+    items: [
+      cleanGa4Params({
+        item_id: packageKey || session.id,
+        item_name: packageName,
+        item_category: 'service_plan',
+        price: value,
+        quantity: 1,
+      }),
+    ],
+  });
+
+  const url = new URL('https://www.google-analytics.com/mp/collect');
+  url.searchParams.set('measurement_id', measurementId);
+  url.searchParams.set('api_secret', apiSecret);
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      client_id: getGa4ClientId(session),
+      user_id: customerId || undefined,
+      events: [{ name: 'purchase', params }],
+    }),
+  });
+
+  if (!res.ok) {
+    const detail = await res.text().catch(() => '');
+    throw new Error(`GA4 Measurement Protocol error ${res.status}: ${detail}`);
+  }
+}
+
 async function markRestaurantSiteClaimed(session: Stripe.Checkout.Session) {
   const siteId = session.metadata?.site_id ?? '';
   const clientSlug = session.metadata?.client_slug ?? session.metadata?.client ?? '';
@@ -165,6 +238,12 @@ export async function POST(req: NextRequest) {
     let autoLive = false;
 
     await markRestaurantSiteClaimed(session);
+
+    try {
+      await sendGa4PurchaseEvent(session);
+    } catch (error) {
+      console.error('[Webhook] GA4 purchase tracking failed:', error);
+    }
 
     if (projectId) {
       try {

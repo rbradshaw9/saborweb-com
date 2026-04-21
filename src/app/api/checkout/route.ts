@@ -8,6 +8,16 @@ function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : 'Unknown error';
 }
 
+function getGaClientId(req: NextRequest) {
+  const cookieValue = req.cookies.get('_ga')?.value;
+  if (!cookieValue) return '';
+
+  const parts = cookieValue.split('.');
+  if (parts.length < 4) return '';
+
+  return parts.slice(-2).join('.');
+}
+
 export async function GET(req: NextRequest) {
   const secretKey = process.env.STRIPE_SECRET_KEY;
   if (!secretKey) {
@@ -39,6 +49,7 @@ export async function GET(req: NextRequest) {
     'unknown';
   const previewRequestId = req.nextUrl.searchParams.get('request_id') ?? '';
   const siteId = req.nextUrl.searchParams.get('site_id') ?? '';
+  const gaClientId = getGaClientId(req);
 
   if (siteId || clientSlug !== 'unknown') {
     const supabase = getSupabaseAdmin();
@@ -72,6 +83,7 @@ export async function GET(req: NextRequest) {
           client_slug: clientSlug,
           preview_request_id: previewRequestId,
           site_id: siteId,
+          ga_client_id: gaClientId,
         },
       },
       client_reference_id: siteId || previewRequestId || clientSlug,
@@ -91,6 +103,7 @@ export async function GET(req: NextRequest) {
         client_slug: clientSlug,
         preview_request_id: previewRequestId,
         site_id: siteId,
+        ga_client_id: gaClientId,
       },
     });
 
