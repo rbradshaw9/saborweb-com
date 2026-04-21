@@ -45,3 +45,6 @@ next-env.d.ts
 
 # supabase local temp
 supabase/.temp/
+
+# local Google OAuth tokens
+.google/
