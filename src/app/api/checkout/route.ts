@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { getServicePackage, getStripePrices } from '@/lib/packages';
 import type { PackageKey } from '@/lib/packages';
+import { getSupabaseAdmin } from '@/lib/supabase/admin';
 
 function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : 'Unknown error';
@@ -37,6 +38,24 @@ export async function GET(req: NextRequest) {
     req.nextUrl.searchParams.get('client') ??
     'unknown';
   const previewRequestId = req.nextUrl.searchParams.get('request_id') ?? '';
+  const siteId = req.nextUrl.searchParams.get('site_id') ?? '';
+
+  if (siteId || clientSlug !== 'unknown') {
+    const supabase = getSupabaseAdmin();
+    const checkoutPatch = {
+      status: 'claim_started',
+      owner_status: 'claim_started',
+      payment_status: 'checkout_started',
+      selected_package: pkg.key,
+    };
+    const query = siteId
+      ? supabase.from('restaurant_sites').update(checkoutPatch).eq('id', siteId)
+      : supabase.from('restaurant_sites').update(checkoutPatch).eq('slug', clientSlug);
+    const { error } = await query;
+    if (error) {
+      console.error('[Checkout] Site checkout status update failed:', error);
+    }
+  }
 
   try {
     const session = await stripe.checkout.sessions.create({
@@ -52,18 +71,26 @@ export async function GET(req: NextRequest) {
           package_name: pkg.name,
           client_slug: clientSlug,
           preview_request_id: previewRequestId,
+          site_id: siteId,
         },
       },
+      client_reference_id: siteId || previewRequestId || clientSlug,
       payment_method_types: ['card'],
       billing_address_collection: 'required',
       allow_promotion_codes: true,
       success_url: `${origin}/thank-you?pkg=${pkg.key}&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/services`,
+      cancel_url: clientSlug !== 'unknown' ? `${origin}/claim/${clientSlug}` : `${origin}/services`,
+      custom_text: {
+        submit: {
+          message: 'Setup is charged today. Monthly service begins 30 days after checkout.',
+        },
+      },
       metadata: {
         package: pkg.key,
         package_name: pkg.name,
         client_slug: clientSlug,
         preview_request_id: previewRequestId,
+        site_id: siteId,
       },
     });
 

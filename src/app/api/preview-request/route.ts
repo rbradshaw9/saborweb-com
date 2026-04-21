@@ -12,6 +12,10 @@ import {
   sendPreviewRequestEmail,
 } from '@/lib/intake/server';
 
+function makePath(path: string) {
+  return path.startsWith('/') ? path : `/${path}`;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body: unknown = await req.json();
@@ -69,6 +73,39 @@ export async function POST(req: NextRequest) {
 
     const requestRecord = data as PreviewRequestRecord;
     const intakeUrl = `${origin}/intake?token=${encodeURIComponent(token)}`;
+    const previewUrl = makePath(`/preview/${clientSlug}`);
+    const claimUrl = makePath(`/claim/${clientSlug}`);
+
+    const { error: siteError } = await supabase
+      .from('restaurant_sites')
+      .upsert(
+        {
+          request_id: requestRecord.id,
+          slug: clientSlug,
+          restaurant_name: requestRecord.restaurant_name,
+          city: requestRecord.city,
+          preview_type: 'native',
+          preview_url: previewUrl,
+          external_preview_url: null,
+          claim_url: claimUrl,
+          status: 'draft',
+          owner_name: requestRecord.owner_name,
+          owner_email: requestRecord.email,
+          owner_phone: requestRecord.phone,
+          owner_status: 'unclaimed',
+          payment_status: 'unpaid',
+          metadata: {
+            source: requestRecord.source,
+            preferred_language: requestRecord.preferred_language,
+          },
+        },
+        { onConflict: 'request_id' }
+      );
+
+    if (siteError) {
+      console.error('[Preview Request] Site upsert failed:', siteError);
+      return NextResponse.json({ error: 'Could not create preview site record.' }, { status: 500 });
+    }
 
     try {
       await sendPreviewRequestEmail(requestRecord, intakeUrl);
@@ -80,6 +117,8 @@ export async function POST(req: NextRequest) {
       success: true,
       requestId: requestRecord.id,
       clientSlug: requestRecord.client_slug,
+      previewUrl,
+      claimUrl,
       intakeUrl,
     });
   } catch (error) {

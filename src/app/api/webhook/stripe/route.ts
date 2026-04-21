@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { Resend } from 'resend';
+import { getSupabaseAdmin } from '@/lib/supabase/admin';
 
 function getClientProjects() {
   const raw = process.env.VERCEL_CLIENT_PROJECTS_JSON;
@@ -98,6 +99,38 @@ async function sendPaymentEmail(session: Stripe.Checkout.Session, clientSlug: st
   });
 }
 
+async function markRestaurantSiteClaimed(session: Stripe.Checkout.Session) {
+  const siteId = session.metadata?.site_id ?? '';
+  const clientSlug = session.metadata?.client_slug ?? session.metadata?.client ?? '';
+  if (!siteId && !clientSlug) return;
+
+  const stripeCustomerId = typeof session.customer === 'string' ? session.customer : session.customer?.id ?? null;
+  const stripeSubscriptionId =
+    typeof session.subscription === 'string' ? session.subscription : session.subscription?.id ?? null;
+
+  const patch = {
+    status: 'paid',
+    owner_status: 'claimed',
+    payment_status: 'paid',
+    selected_package: session.metadata?.package ?? null,
+    stripe_customer_id: stripeCustomerId,
+    stripe_subscription_id: stripeSubscriptionId,
+    stripe_checkout_session_id: session.id,
+    claimed_at: new Date().toISOString(),
+    paid_at: new Date().toISOString(),
+  };
+
+  const supabase = getSupabaseAdmin();
+  const query = siteId
+    ? supabase.from('restaurant_sites').update(patch).eq('id', siteId)
+    : supabase.from('restaurant_sites').update(patch).eq('slug', clientSlug);
+  const { error } = await query;
+
+  if (error) {
+    console.error('[Webhook] Failed to mark restaurant site claimed:', error);
+  }
+}
+
 export async function POST(req: NextRequest) {
   const secretKey = process.env.STRIPE_SECRET_KEY;
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -130,6 +163,8 @@ export async function POST(req: NextRequest) {
     const deployHookUrl = clientSlug !== 'unknown' ? getDeployHook(clientSlug) : null;
 
     let autoLive = false;
+
+    await markRestaurantSiteClaimed(session);
 
     if (projectId) {
       try {
