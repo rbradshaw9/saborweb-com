@@ -1,14 +1,10 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowRight, ExternalLink } from 'lucide-react';
-import { SERVICE_PACKAGES } from '@/lib/packages';
 import { getRestaurantSiteBySlug, siteHref } from '@/lib/sites';
+import ClaimPackageGrid from '@/components/ClaimPackageGrid';
 
 export const dynamic = 'force-dynamic';
-
-function dollars(value: number) {
-  return `$${value.toLocaleString()}`;
-}
 
 export default async function ClaimPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -67,38 +63,10 @@ export default async function ClaimPage({ params }: { params: Promise<{ slug: st
         <div className="section-v2__inner">
           <div className="section-heading">
             <h2>Pick your launch package</h2>
-            <p>All packages include production launch, SSL, hosting setup, care, and a direct path to request changes.</p>
+            <p>All packages include production launch, SSL, hosting setup, care, and a direct path to request changes. Visibilidad and Crecimiento include custom domain support; Presencia can add it at checkout.</p>
           </div>
 
-          <div className="package-grid">
-            {SERVICE_PACKAGES.map((pkg) => {
-              const checkoutHref = `/api/checkout?pkg=${pkg.key}&client_slug=${encodeURIComponent(site.slug)}&site_id=${encodeURIComponent(site.id)}${site.request_id ? `&request_id=${encodeURIComponent(site.request_id)}` : ''}`;
-
-              return (
-                <article className={`package-card ${pkg.popular ? 'package-card--featured' : ''}`} key={pkg.key}>
-                  {pkg.popular && <span className="package-badge">Most chosen</span>}
-                  <p className="eyebrow">{pkg.name}</p>
-                  <h3>{pkg.summary.en}</h3>
-                  <div className="price-line">
-                    <span>{dollars(pkg.monthly)}</span>
-                    <small>/mo</small>
-                  </div>
-                  <p className="setup-line">+ {dollars(pkg.setup)} setup today</p>
-                  <ul className="check-list">
-                    {pkg.features.en.map((feature) => (
-                      <li key={feature}>
-                        <span aria-hidden="true">✓</span>
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <Link className={pkg.popular ? 'button button--primary' : 'button button--secondary'} href={checkoutHref}>
-                    Claim with {pkg.name} <ArrowRight size={16} />
-                  </Link>
-                </article>
-              );
-            })}
-          </div>
+          <ClaimPackageGrid site={{ id: site.id, slug: site.slug, request_id: site.request_id }} />
         </div>
       </section>
     </div>

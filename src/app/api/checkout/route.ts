@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { getServicePackage, getStripePrices } from '@/lib/packages';
+import { getDomainSetupAddonPrice, getServicePackage, getStripePrices } from '@/lib/packages';
 import type { PackageKey } from '@/lib/packages';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 
@@ -50,6 +50,8 @@ export async function GET(req: NextRequest) {
   const previewRequestId = req.nextUrl.searchParams.get('request_id') ?? '';
   const siteId = req.nextUrl.searchParams.get('site_id') ?? '';
   const gaClientId = getGaClientId(req);
+  const includeDomainAddon = pkg.key === 'presencia' && req.nextUrl.searchParams.get('domain_addon') === '1';
+  const domainAddonPrice = includeDomainAddon ? getDomainSetupAddonPrice() : null;
 
   if (siteId || clientSlug !== 'unknown') {
     const supabase = getSupabaseAdmin();
@@ -73,6 +75,7 @@ export async function GET(req: NextRequest) {
       mode: 'subscription',
       line_items: [
         { price: prices.setupPrice, quantity: 1 },
+        ...(domainAddonPrice ? [{ price: domainAddonPrice, quantity: 1 }] : []),
         { price: prices.monthlyPrice, quantity: 1 },
       ],
       subscription_data: {
@@ -84,6 +87,7 @@ export async function GET(req: NextRequest) {
           preview_request_id: previewRequestId,
           site_id: siteId,
           ga_client_id: gaClientId,
+          domain_addon: includeDomainAddon ? 'true' : 'false',
         },
       },
       client_reference_id: siteId || previewRequestId || clientSlug,
@@ -104,6 +108,7 @@ export async function GET(req: NextRequest) {
         preview_request_id: previewRequestId,
         site_id: siteId,
         ga_client_id: gaClientId,
+        domain_addon: includeDomainAddon ? 'true' : 'false',
       },
     });
 

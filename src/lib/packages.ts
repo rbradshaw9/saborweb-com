@@ -124,3 +124,12 @@ export function getStripePrices(key: PackageKey) {
 
   return { setupPrice, monthlyPrice };
 }
+
+export function getDomainSetupAddonPrice() {
+  const price = process.env.STRIPE_PRICE_DOMAIN_SETUP_ADDON;
+  if (!price) {
+    throw new Error('Missing Stripe price env var: STRIPE_PRICE_DOMAIN_SETUP_ADDON');
+  }
+
+  return price;
+}
