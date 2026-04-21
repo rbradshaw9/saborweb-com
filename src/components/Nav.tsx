@@ -3,9 +3,10 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useLanguage } from '@/lib/LanguageContext';
 import { Menu, X } from 'lucide-react';
+import BrandMark from '@/components/BrandMark';
 
 export default function Nav() {
-  const { t, lang, toggle } = useLanguage();
+  const { t, lang, setLang } = useLanguage();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -38,18 +39,7 @@ export default function Nav() {
       }}
     >
       <div className="container" style={{ display: 'flex', alignItems: 'center', height: '72px', gap: '2rem' }}>
-        {/* Logo */}
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
-          <span style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: '1.3rem',
-            fontWeight: 600,
-            color: 'var(--color-sw-cream)',
-            letterSpacing: '-0.01em',
-          }}>
-            Sabor<span style={{ color: 'var(--color-sw-coral)' }}>Web</span>
-          </span>
-        </Link>
+        <BrandMark />
 
         {/* Desktop Nav */}
         <nav
@@ -77,35 +67,32 @@ export default function Nav() {
             </Link>
           ))}
 
-          {/* Language Toggle */}
-          <button
-            onClick={toggle}
-            aria-label="Toggle language"
-            style={{
-              fontFamily: 'var(--font-label)',
-              fontSize: '0.72rem',
-              fontWeight: 600,
-              letterSpacing: '0.08em',
-              color: 'var(--color-sw-coral)',
-              border: '1px solid var(--color-sw-coral)',
-              padding: '4px 10px',
-              borderRadius: '2px',
-              transition: 'all 200ms ease',
-            }}
-          >
-            {lang === 'es' ? 'EN' : 'ES'}
-          </button>
+          <div className="language-switcher" aria-label="Site language">
+            <button type="button" onClick={() => setLang('es')} aria-pressed={lang === 'es'} className={lang === 'es' ? 'active' : ''}>
+              Español
+            </button>
+            <span aria-hidden="true">/</span>
+            <button type="button" onClick={() => setLang('en')} aria-pressed={lang === 'en'} className={lang === 'en' ? 'active' : ''}>
+              English
+            </button>
+          </div>
 
-          <Link href="/contact" className="btn-primary" style={{ padding: '10px 24px' }}>
+          <Link href="/brief-builder" className="button button--primary" style={{ minHeight: '38px', padding: '8px 18px' }}>
             {t.nav.cta}
           </Link>
         </nav>
 
         {/* Mobile right side */}
         <div style={{ marginLeft: 'auto', display: 'flex', gap: '1rem', alignItems: 'center' }} className="show-mobile">
-          <button onClick={toggle} style={{ fontFamily: 'var(--font-label)', fontSize: '0.72rem', fontWeight: 600, color: 'var(--color-sw-coral)', border: '1px solid var(--color-sw-coral)', padding: '4px 10px', borderRadius: '2px' }}>
-            {lang === 'es' ? 'EN' : 'ES'}
-          </button>
+          <div className="language-switcher language-switcher--compact" aria-label="Site language">
+            <button type="button" onClick={() => setLang('es')} aria-pressed={lang === 'es'} className={lang === 'es' ? 'active' : ''}>
+              ES
+            </button>
+            <span aria-hidden="true">/</span>
+            <button type="button" onClick={() => setLang('en')} aria-pressed={lang === 'en'} className={lang === 'en' ? 'active' : ''}>
+              EN
+            </button>
+          </div>
           <button
             onClick={() => setOpen(!open)}
             aria-label="Open menu"
@@ -137,7 +124,7 @@ export default function Nav() {
               {link.label}
             </Link>
           ))}
-          <Link href="/contact" className="btn-primary" onClick={() => setOpen(false)} style={{ textAlign: 'center', justifyContent: 'center' }}>
+          <Link href="/brief-builder" className="button button--primary" onClick={() => setOpen(false)} style={{ textAlign: 'center', justifyContent: 'center' }}>
             {t.nav.cta}
           </Link>
         </div>

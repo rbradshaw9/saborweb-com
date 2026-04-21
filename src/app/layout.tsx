@@ -6,23 +6,25 @@ const inter        = Inter({ subsets: ['latin'], variable: '--font-inter',   dis
 const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-grotesk', display: 'swap', weight: ['500', '600', '700'] });
 
 export const metadata: Metadata = {
-  title: 'Sabor Web — Restaurant Websites for Puerto Rico',
-  description: 'We build stunning, fast, bilingual websites for Puerto Rico restaurants. See your free preview before you buy — no deposit, no risk.',
+  title: 'Sabor Web - Restaurant Websites for Puerto Rico',
+  description: 'Premium restaurant websites for Puerto Rico. Request a free live preview before you pay.',
   metadataBase: new URL('https://saborweb.com'),
   alternates: { canonical: 'https://saborweb.com' },
-  keywords: 'restaurant website Puerto Rico, página web restaurante Puerto Rico, web design PR, diseño web restaurante PR, Google My Business restaurante',
+  keywords: 'restaurant website Puerto Rico, pagina web restaurante Puerto Rico, web design PR, diseno web restaurante PR, Google Business restaurant',
   openGraph: {
-    title: 'Sabor Web — Restaurant Websites for Puerto Rico',
-    description: 'Bilingual restaurant websites built for PR. See your site before you pay.',
+    title: 'Sabor Web - Restaurant Websites for Puerto Rico',
+    description: 'See your restaurant website preview before you pay.',
     type: 'website',
     locale: 'es_PR',
     siteName: 'Sabor Web',
     url: 'https://saborweb.com',
+    images: ['/opengraph-image'],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Sabor Web — Restaurant Websites for Puerto Rico',
-    description: 'Bilingual restaurant websites for PR. See your site before you pay.',
+    title: 'Sabor Web - Restaurant Websites for Puerto Rico',
+    description: 'Premium restaurant websites for PR. Preview first, pay after.',
+    images: ['/opengraph-image'],
   },
   robots: { index: true, follow: true },
   other: {
@@ -33,7 +35,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" translate="no" className={`${inter.variable} ${spaceGrotesk.variable}`}>
+    <html lang="es" translate="no" className={`${inter.variable} ${spaceGrotesk.variable}`}>
       <body>{children}</body>
     </html>
   );

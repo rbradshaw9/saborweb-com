@@ -2,8 +2,9 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import en from '@/locales/en.json';
 import es from '@/locales/es.json';
+import type { SiteLang } from '@/lib/language';
 
-type Lang = 'en' | 'es';
+type Lang = SiteLang;
 type Translations = typeof en;
 
 interface LanguageContextValue {
@@ -14,31 +15,40 @@ interface LanguageContextValue {
 }
 
 const LanguageContext = createContext<LanguageContextValue>({
-  lang: 'en',
-  t: en,
+  lang: 'es',
+  t: es,
   toggle: () => {},
   setLang: () => {},
 });
 
-export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  // Default to 'en'. Restore any previously saved manual preference on mount.
-  const [lang, setLangState] = useState<Lang>('en');
+function readInitialLang(initialLang: Lang): Lang {
+  return initialLang;
+}
+
+function persistLang(lang: Lang) {
+  if (typeof window === 'undefined') return;
+  window.sessionStorage.setItem('sw-lang', lang);
+  window.localStorage.setItem('sw-lang', lang);
+  document.cookie = `sw-lang=${lang}; path=/; max-age=31536000; samesite=lax`;
+}
+
+export function LanguageProvider({ children, initialLang = 'es' }: { children: React.ReactNode; initialLang?: Lang }) {
+  const [lang, setLangState] = useState<Lang>(() => readInitialLang(initialLang));
 
   useEffect(() => {
-    const saved = localStorage.getItem('sw-lang') as Lang | null;
-    if (saved === 'en' || saved === 'es') setLangState(saved);
-  }, []);
+    document.documentElement.lang = lang;
+  }, [lang]);
 
   const toggle = useCallback(() => {
     setLangState(prev => {
       const next: Lang = prev === 'es' ? 'en' : 'es';
-      localStorage.setItem('sw-lang', next);
+      persistLang(next);
       return next;
     });
   }, []);
 
   const setLang = useCallback((l: Lang) => {
-    localStorage.setItem('sw-lang', l);
+    persistLang(l);
     setLangState(l);
   }, []);
 

@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import { useLanguage } from '@/lib/LanguageContext';
 import { MessageCircle } from 'lucide-react';
+import BrandMark from '@/components/BrandMark';
 
 function InstagramIcon({ size = 20 }: { size?: number }) {
   return (
@@ -35,11 +36,7 @@ export default function Footer() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '3rem', marginBottom: '3rem' }}>
           {/* Brand */}
           <div>
-            <Link href="/" style={{ display: 'inline-block', marginBottom: '1rem' }}>
-              <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.5rem', fontWeight: 600, color: 'var(--color-sw-cream)' }}>
-                Sabor<span style={{ color: 'var(--color-sw-coral)' }}>Web</span>
-              </span>
-            </Link>
+            <div style={{ marginBottom: '1rem' }}><BrandMark /></div>
             <p style={{ color: 'var(--color-sw-muted)', fontSize: '0.9rem', lineHeight: 1.7, marginBottom: '1.5rem' }}>
               {t.footer.tagline}
             </p>
@@ -121,7 +118,7 @@ export default function Footer() {
                 ? 'Solicita tu preview gratis. Sin compromisos.'
                 : 'Request your free preview. No commitment.'}
             </p>
-            <Link href="/contacto" className="btn-primary" style={{ fontSize: '0.72rem', padding: '12px 24px' }}>
+            <Link href="/brief-builder" className="button button--primary" style={{ fontSize: '0.72rem', padding: '10px 18px' }}>
               {t.nav.cta}
             </Link>
           </div>
@@ -134,7 +131,7 @@ export default function Footer() {
             © {year} Sabor Web — {t.footer.rights}
           </p>
           <p style={{ color: 'var(--color-sw-dim)', fontSize: '0.8rem' }}>
-            Puerto Rico 🇵🇷
+            Puerto Rico
           </p>
         </div>
       </div>

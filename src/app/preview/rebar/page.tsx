@@ -705,8 +705,13 @@ export default function RebarPage() {
             <div className="gallery-grid">
               {GALLERY.map((img) => (
                 <div key={img.src} className="gallery-item">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={img.src} alt={img.alt} loading="lazy" />
+                  <Image
+                    src={img.src}
+                    alt={img.alt}
+                    width={img.wide ? 920 : 460}
+                    height={img.wide ? 560 : 560}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
                 </div>
               ))}
             </div>
