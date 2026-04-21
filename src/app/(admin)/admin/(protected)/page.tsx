@@ -165,7 +165,12 @@ export default async function AdminDashboardPage({
                   <tr className="border-b border-white/5 align-top" key={row.id}>
                     <td className="py-4 pr-4">
                       <div className="grid gap-1">
-                        <span className="font-bold text-[var(--color-sw-cream)]">{row.restaurant_name}</span>
+                        <Link
+                          className="font-bold text-[var(--color-sw-cream)] hover:text-[var(--color-sw-coral)]"
+                          href={`/admin/sites/${row.slug}`}
+                        >
+                          {row.restaurant_name}
+                        </Link>
                         <span className="text-xs text-[var(--color-sw-muted)]">
                           {row.city ?? 'City unknown'} · {row.slug}
                         </span>
@@ -237,6 +242,12 @@ export default async function AdminDashboardPage({
                         >
                           Claim <ExternalLink size={13} />
                         </a>
+                        <Link
+                          className="inline-flex h-8 items-center rounded-sm border border-white/10 px-2 text-xs font-bold text-[var(--color-sw-cream)] hover:border-[var(--color-sw-coral)]"
+                          href={`/admin/sites/${row.slug}`}
+                        >
+                          Open
+                        </Link>
                       </div>
                     </td>
                   </tr>
