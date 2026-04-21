@@ -28,7 +28,7 @@ export default function PortfolioPage() {
       name: 'Rebar Gastronomia & Cocteles',
       location: 'Aguadilla',
       image: '/images/portfolio-rebar.png',
-      href: '/preview/rebar',
+      href: 'https://rebar.saborweb.com',
       body: lang === 'es' ? 'Elegante, atmosferico y orientado a menu/reservaciones.' : 'Elegant, atmospheric, and built around menu/reservations.',
     },
     {
@@ -57,17 +57,29 @@ export default function PortfolioPage() {
       <section className="section-v2">
         <div className="section-v2__inner">
           <div className="portfolio-grid">
-            {sites.map((site) => (
-              <Link className="portfolio-card" href={site.href} key={site.name}>
-                <Image src={site.image} alt={`${site.name} website preview`} fill sizes="(max-width: 900px) 100vw, 50vw" />
-                <div className="portfolio-card__body">
-                  <p className="eyebrow">{site.location}</p>
-                  <h3>{site.name}</h3>
-                  <p>{site.body}</p>
-                  <span className="button button--primary" style={{ marginTop: '1rem' }}>{lang === 'es' ? 'Abrir preview' : 'Open preview'} <ArrowRight size={16} /></span>
-                </div>
-              </Link>
-            ))}
+            {sites.map((site) => {
+              const card = (
+                <>
+                  <Image src={site.image} alt={`${site.name} website preview`} fill sizes="(max-width: 900px) 100vw, 50vw" />
+                  <div className="portfolio-card__body">
+                    <p className="eyebrow">{site.location}</p>
+                    <h3>{site.name}</h3>
+                    <p>{site.body}</p>
+                    <span className="button button--primary" style={{ marginTop: '1rem' }}>{lang === 'es' ? 'Abrir preview' : 'Open preview'} <ArrowRight size={16} /></span>
+                  </div>
+                </>
+              );
+
+              return site.href.startsWith('http') ? (
+                <a className="portfolio-card" href={site.href} key={site.name}>
+                  {card}
+                </a>
+              ) : (
+                <Link className="portfolio-card" href={site.href} key={site.name}>
+                  {card}
+                </Link>
+              );
+            })}
             <article className="proof-card">
               <p className="eyebrow">{lang === 'es' ? 'Siguiente' : 'Next'}</p>
               <h3>{lang === 'es' ? 'Tu restaurante puede tener una prueba asi.' : 'Your restaurant can get a proof piece like this.'}</h3>

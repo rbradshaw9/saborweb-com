@@ -178,14 +178,14 @@ export default function Home() {
             <p>{copy.examplesSub}</p>
           </div>
           <div className="portfolio-grid">
-            <Link className="portfolio-card" href="/preview/rebar">
+            <a className="portfolio-card" href="https://rebar.saborweb.com">
               <Image src="/images/portfolio-rebar.png" alt="Rebar Gastronomía preview" fill sizes="(max-width: 900px) 100vw, 50vw" />
               <div className="portfolio-card__body">
                 <p className="eyebrow">Aguadilla</p>
                 <h3>Rebar Gastronomía &amp; Cocteles</h3>
                 <p>{lang === 'es' ? 'Coctelería de autor, cocina local, y sistema de reservaciones en línea.' : 'Craft cocktails, local kitchen, and online reservations — fully functional.'}</p>
               </div>
-            </Link>
+            </a>
             <Link className="portfolio-card" href="/preview/cinco-de-maya">
               <Image src="/sites/cinco-de-maya/hero.png" alt="Cinco de Maya preview" fill sizes="(max-width: 900px) 100vw, 50vw" />
               <div className="portfolio-card__body">

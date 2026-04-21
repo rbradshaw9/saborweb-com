@@ -353,7 +353,7 @@ p.wide { max-width: none; }
   z-index: -2;
   background-image:
     linear-gradient(108deg, rgba(12,12,12,0.96) 0%, rgba(12,12,12,0.74) 55%, rgba(12,12,12,0.52) 100%),
-    url('/sites/rebar/images/instagram/rebar_food_01.jpg');
+    url('/images/portfolio-rebar.png');
   background-size: cover;
   background-position: center 30%;
 }
