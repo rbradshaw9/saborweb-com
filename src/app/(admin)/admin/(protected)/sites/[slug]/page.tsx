@@ -230,6 +230,16 @@ export default async function AdminSiteDetailPage({
                     <p className="break-all text-xs text-[var(--color-sw-dim)]">
                       {file.storage_bucket}/{file.storage_path}
                     </p>
+                    {file.signed_url && (
+                      <a
+                        className="mt-3 inline-flex h-8 items-center gap-1 rounded-sm border border-white/10 px-2 text-xs font-bold text-[var(--color-sw-cream)] hover:border-[var(--color-sw-coral)]"
+                        href={file.signed_url}
+                        rel="noreferrer"
+                        target="_blank"
+                      >
+                        Open file <ExternalLink size={13} />
+                      </a>
+                    )}
                   </div>
                 ))}
                 {!detail.files.length && <p className="text-sm text-[var(--color-sw-muted)]">No uploaded files yet.</p>}

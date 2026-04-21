@@ -71,6 +71,7 @@ type FileRecord = {
   file_name: string;
   content_type: string | null;
   size_bytes: number | null;
+  signed_url?: string | null;
 };
 
 export type AdminLeadRow = SiteRecord & {
@@ -118,6 +119,29 @@ function latestEventBySite(events: EventRecord[] | null) {
   }
 
   return map;
+}
+
+async function withSignedFileUrls(files: FileRecord[]) {
+  const supabase = getSupabaseAdmin();
+
+  return Promise.all(
+    files.map(async (file) => {
+      const { data, error } = await supabase.storage
+        .from(file.storage_bucket)
+        .createSignedUrl(file.storage_path, 60 * 15);
+
+      if (error) {
+        console.error('[Admin Dashboard] Signed file URL failed:', {
+          fileId: file.id,
+          bucket: file.storage_bucket,
+          path: file.storage_path,
+          error,
+        });
+      }
+
+      return { ...file, signed_url: data?.signedUrl ?? null };
+    })
+  );
 }
 
 export async function getAdminLeadRows() {
@@ -321,7 +345,7 @@ export async function getAdminSiteDetail(slug: string): Promise<AdminSiteDetail 
 
   const request = (requestResult.data ?? null) as unknown as PreviewRequestRecord | null;
   const intake = (intakeResult.data ?? null) as unknown as IntakeDetailRecord | null;
-  const files = (filesResult.data ?? []) as unknown as FileRecord[];
+  const files = await withSignedFileUrls((filesResult.data ?? []) as unknown as FileRecord[]);
   const fileNames = files.map((file) => file.file_name);
   const buildBrief =
     intake?.generated_brief ??
