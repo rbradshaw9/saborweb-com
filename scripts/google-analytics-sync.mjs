@@ -5,12 +5,14 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const config = {
   gtmAccountId: process.env.GTM_ACCOUNT_ID ?? '6351125681',
   gtmContainerId: process.env.GTM_CONTAINER_ID ?? '250120383',
-  gtmWorkspaceId: process.env.GTM_WORKSPACE_ID ?? '3',
+  gtmWorkspaceId: process.env.GTM_WORKSPACE_ID ?? '5',
   ga4PropertyId: process.env.GA4_PROPERTY_ID ?? '534026680',
   ga4MeasurementId: process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID ?? 'G-HQTS3GVK6E',
 };
 
 const funnelEvents = [
+  { name: 'preview_viewed', parameters: ['restaurant_slug', 'preview_type', 'language'] },
+  { name: 'claim_page_viewed', parameters: ['restaurant_slug', 'preview_type', 'language'] },
   { name: 'preview_cta_clicked', parameters: ['location', 'package_key', 'package_name'] },
   { name: 'brief_builder_started', parameters: ['step', 'language', 'has_token'] },
   { name: 'brief_builder_step_completed', parameters: ['step', 'language', 'has_token'] },
@@ -20,7 +22,22 @@ const funnelEvents = [
     name: 'select_item',
     parameters: ['item_list_name', 'package_key', 'package_name', 'currency', 'value', 'monthly_value', 'items'],
   },
-  { name: 'begin_checkout', parameters: ['package_key', 'package_name', 'currency', 'value', 'monthly_value', 'items'] },
+  { name: 'package_selected', parameters: ['restaurant_slug', 'preview_type', 'package_key', 'language'] },
+  {
+    name: 'begin_checkout',
+    parameters: [
+      'restaurant_slug',
+      'preview_type',
+      'package_key',
+      'language',
+      'package_name',
+      'currency',
+      'value',
+      'monthly_value',
+      'items',
+    ],
+  },
+  { name: 'domain_addon_selected', parameters: ['restaurant_slug', 'preview_type', 'package_key', 'language'] },
   {
     name: 'purchase',
     parameters: [
@@ -39,6 +56,8 @@ const funnelEvents = [
 const customDimensions = [
   ['package_key', 'Package Key'],
   ['package_name', 'Package Name'],
+  ['restaurant_slug', 'Restaurant Slug'],
+  ['preview_type', 'Preview Type'],
   ['step', 'Wizard Step'],
   ['location', 'CTA Location'],
   ['language', 'Language'],

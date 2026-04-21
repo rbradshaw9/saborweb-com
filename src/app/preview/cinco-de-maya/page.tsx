@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
+import { ANALYTICS_EVENTS, track } from '@/lib/analytics';
 
 // ─── RESTAURANT DATA ─────────────────────────────────────────────────────────
 
@@ -164,6 +165,12 @@ export default function CincoDeMayaPage() {
   const TODAY = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][new Date().getDay()];
 
   useEffect(() => {
+    track(ANALYTICS_EVENTS.PREVIEW_VIEWED, {
+      restaurant_slug: 'cinco-de-maya',
+      preview_type: 'native',
+      language: 'en',
+    });
+
     const onScroll = () => setNavScrolled(window.scrollY > 60);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);

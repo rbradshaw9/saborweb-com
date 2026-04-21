@@ -2,13 +2,15 @@
 
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { ANALYTICS_EVENTS, track } from '@/lib/analytics';
 import { SERVICE_PACKAGES } from '@/lib/packages';
 
 type ClaimSite = {
   id: string;
   slug: string;
   request_id: string | null;
+  preview_type: 'native' | 'external';
 };
 
 function dollars(value: number) {
@@ -30,6 +32,14 @@ function checkoutHref(site: ClaimSite, packageKey: string, includeDomainAddon: b
 
 export default function ClaimPackageGrid({ site }: { site: ClaimSite }) {
   const [includeDomainAddon, setIncludeDomainAddon] = useState(false);
+
+  useEffect(() => {
+    track(ANALYTICS_EVENTS.CLAIM_PAGE_VIEWED, {
+      restaurant_slug: site.slug,
+      preview_type: site.preview_type,
+      language: 'en',
+    });
+  }, [site.preview_type, site.slug]);
 
   return (
     <div className="package-grid">
@@ -59,7 +69,17 @@ export default function ClaimPackageGrid({ site }: { site: ClaimSite }) {
                   <input
                     aria-label="Add custom domain setup"
                     checked={includeDomainAddon}
-                    onChange={(event) => setIncludeDomainAddon(event.target.checked)}
+                    onChange={(event) => {
+                      setIncludeDomainAddon(event.target.checked);
+                      if (event.target.checked) {
+                        track(ANALYTICS_EVENTS.DOMAIN_ADDON_SELECTED, {
+                          restaurant_slug: site.slug,
+                          preview_type: site.preview_type,
+                          package_key: pkg.key,
+                          language: 'en',
+                        });
+                      }
+                    }}
                     type="checkbox"
                   />
                   <span>Add custom domain setup for $197</span>
@@ -71,7 +91,20 @@ export default function ClaimPackageGrid({ site }: { site: ClaimSite }) {
                 </li>
               )}
             </ul>
-            <Link className={pkg.popular ? 'button button--primary' : 'button button--secondary'} href={href}>
+            <Link
+              className={pkg.popular ? 'button button--primary' : 'button button--secondary'}
+              href={href}
+              onClick={() => {
+                const payload = {
+                  restaurant_slug: site.slug,
+                  preview_type: site.preview_type,
+                  package_key: pkg.key,
+                  language: 'en',
+                };
+                track(ANALYTICS_EVENTS.FUNNEL_PACKAGE_SELECTED, payload);
+                track(ANALYTICS_EVENTS.CHECKOUT_STARTED, payload);
+              }}
+            >
               Claim with {pkg.name} <ArrowRight size={16} />
             </Link>
           </article>

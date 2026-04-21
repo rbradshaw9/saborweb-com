@@ -66,7 +66,9 @@ export default async function ClaimPage({ params }: { params: Promise<{ slug: st
             <p>All packages include production launch, SSL, hosting setup, care, and a direct path to request changes. Visibilidad and Crecimiento include custom domain support; Presencia can add it at checkout.</p>
           </div>
 
-          <ClaimPackageGrid site={{ id: site.id, slug: site.slug, request_id: site.request_id }} />
+          <ClaimPackageGrid
+            site={{ id: site.id, slug: site.slug, request_id: site.request_id, preview_type: site.preview_type }}
+          />
         </div>
       </section>
     </div>

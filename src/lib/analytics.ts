@@ -15,10 +15,14 @@ declare global {
 
 export const ANALYTICS_EVENTS = {
   PAGE_VIEW: 'page_view',
+  PREVIEW_VIEWED: 'preview_viewed',
+  CLAIM_PAGE_VIEWED: 'claim_page_viewed',
   PREVIEW_CTA_CLICKED: 'preview_cta_clicked',
   PACKAGE_SELECTED: 'select_item',
+  FUNNEL_PACKAGE_SELECTED: 'package_selected',
   CHECKOUT_STARTED: 'begin_checkout',
   PURCHASE: 'purchase',
+  DOMAIN_ADDON_SELECTED: 'domain_addon_selected',
   BRIEF_BUILDER_STARTED: 'brief_builder_started',
   BRIEF_BUILDER_STEP_COMPLETED: 'brief_builder_step_completed',
   BRIEF_BUILDER_RESUMED: 'brief_builder_resumed',
