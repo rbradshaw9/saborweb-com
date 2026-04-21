@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import {
   ArrowLeft,
@@ -16,6 +16,7 @@ import {
   PHOTO_DIRECTION_OPTIONS,
   STYLE_OPTIONS,
 } from '@/lib/intake/shared';
+import { ANALYTICS_EVENTS, track } from '@/lib/analytics';
 import { useLanguage } from '@/lib/LanguageContext';
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
@@ -115,6 +116,23 @@ const INITIAL_FORM: BriefBuilderState = {
 };
 
 type CreatedRequest = { token: string; clientSlug: string };
+type ResumeRequest = {
+  owner_name?: string;
+  restaurant_name?: string;
+  phone?: string;
+  email?: string | null;
+  city?: string;
+  notes?: string | null;
+  instagram_url?: string | null;
+  google_url?: string | null;
+  website_url?: string | null;
+  client_slug?: string;
+  preferred_language?: 'en' | 'es';
+};
+type ResumeIntake = Partial<BriefBuilderState> & {
+  status?: string;
+  lastStep?: number;
+};
 
 /* ─── Chip ───────────────────────────────────────────────────────────────── */
 
@@ -163,6 +181,94 @@ function ChipSingle({
   );
 }
 
+function clampStep(value: string | null) {
+  const parsed = Number.parseInt(value ?? '1', 10);
+  if (!Number.isFinite(parsed)) return 1;
+  return Math.min(Math.max(parsed, 0), 5);
+}
+
+function syncWizardUrl(token: string, nextStep: number) {
+  const url = new URL(window.location.href);
+  url.searchParams.set('token', token);
+  url.searchParams.set('step', String(nextStep));
+  window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
+}
+
+function splitLines(value: string) {
+  return value
+    .split('\n')
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function getDraftPayloadForStep(step: number, form: BriefBuilderState) {
+  switch (step) {
+    case 1:
+      return {
+        address: form.address,
+        neighborhood: form.neighborhood,
+        cuisine: form.cuisine,
+        hours: form.hours,
+      };
+    case 2:
+      return {
+        menuUrl: form.menuUrl,
+        orderingUrl: form.orderingUrl,
+        reservationsUrl: form.reservationsUrl,
+        menuNotes: form.menuNotes,
+        menuHighlights: form.menuHighlights,
+      };
+    case 3:
+      return {
+        brandStyle: form.brandStyle,
+        fontMood: form.fontMood,
+        photoDirection: form.photoDirection,
+        colorNotes: form.colorNotes,
+        visualReferences: form.visualReferences,
+      };
+    case 4:
+      return {
+        primaryAction: form.primaryAction,
+        featureRequests: form.featureRequests,
+        idealGuest: form.idealGuest,
+        ownerGoals: form.ownerGoals,
+      };
+    case 5:
+      return {
+        logoStatus: form.logoStatus,
+        photoStatus: form.photoStatus,
+        assetLinks: splitLines(form.assetLinks),
+      };
+    default:
+      return {};
+  }
+}
+
+function stringValue(value: unknown) {
+  return typeof value === 'string' ? value : '';
+}
+
+function mergeResumeData(request: ResumeRequest, intake: ResumeIntake | null) {
+  const intakeData = intake ?? {};
+  const featureRequests = Array.isArray(intake?.featureRequests)
+    ? intake.featureRequests.filter((item): item is string => typeof item === 'string')
+    : [];
+
+  return {
+    ...intakeData,
+    ownerName: stringValue(request.owner_name),
+    restaurantName: stringValue(request.restaurant_name),
+    phone: stringValue(request.phone),
+    email: stringValue(request.email),
+    city: stringValue(request.city),
+    notes: stringValue(request.notes),
+    instagramUrl: stringValue(intakeData.instagramUrl) || stringValue(request.instagram_url),
+    googleBusinessUrl: stringValue(intakeData.googleBusinessUrl) || stringValue(request.google_url),
+    currentWebsite: stringValue(intakeData.currentWebsite) || stringValue(request.website_url),
+    featureRequests,
+  };
+}
+
 /* ─── Main ───────────────────────────────────────────────────────────────── */
 
 export default function BriefBuilderPage() {
@@ -191,6 +297,7 @@ export default function BriefBuilderPage() {
           submit: 'Submit',
           saving: 'Saving…',
           error: 'Something went wrong. Please try again.',
+          draftWarning: 'We could not save this step, but you can keep going.',
           complete: 'You\'re all set.',
           completeSub: 'We\'ll use this to build your preview. Expect to hear from us within 1–2 business days.',
 
@@ -243,6 +350,7 @@ export default function BriefBuilderPage() {
           submit: 'Enviar',
           saving: 'Guardando…',
           error: 'Algo salió mal. Intenta de nuevo.',
+          draftWarning: 'No pudimos guardar este paso, pero puedes continuar.',
           complete: 'Listo.',
           completeSub: 'Usaremos esto para construir tu preview. Te contactamos en 1–2 días hábiles.',
 
@@ -301,10 +409,91 @@ export default function BriefBuilderPage() {
         : [...cur.featureRequests, feature],
     }));
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+    if (!token) return;
+
+    let active = true;
+    const resumeToken = token;
+    const resumeStep = clampStep(params.get('step'));
+
+    async function loadResumeData() {
+      setStatus('saving');
+      setMessage('');
+      try {
+        const res = await fetch(`/api/intake?token=${encodeURIComponent(resumeToken)}`);
+        const data: unknown = await res.json();
+        if (!res.ok || typeof data !== 'object' || data === null) {
+          throw new Error('Resume failed');
+        }
+
+        const request = 'request' in data && data.request && typeof data.request === 'object'
+          ? data.request as ResumeRequest
+          : {};
+        const intake = 'intake' in data && data.intake && typeof data.intake === 'object'
+          ? data.intake as ResumeIntake
+          : null;
+
+        if (!active) return;
+        if (request.preferred_language === 'en' || request.preferred_language === 'es') {
+          setLang(request.preferred_language);
+        }
+        setCreatedRequest({ token: resumeToken, clientSlug: stringValue(request.client_slug) });
+        setForm((current) => ({ ...current, ...mergeResumeData(request, intake) }));
+        setStep(resumeStep);
+        setStatus('idle');
+        track(ANALYTICS_EVENTS.BRIEF_BUILDER_RESUMED, {
+          step: resumeStep,
+          language: request.preferred_language,
+          has_token: true,
+        });
+      } catch (error) {
+        console.warn('[BriefBuilder] Resume failed:', error);
+        if (!active) return;
+        setCreatedRequest({ token: resumeToken, clientSlug: '' });
+        setStep(resumeStep);
+        setStatus('idle');
+        setMessage('We could not reload your saved answers, but you can continue.');
+      }
+    }
+
+    loadResumeData();
+    return () => {
+      active = false;
+    };
+  }, [setLang]);
+
   /* ─── API ──────────────────────────────────────────────────────────────── */
 
+  const saveDraft = async (token: string, draftStep: number) => {
+    try {
+      const res = await fetch('/api/intake', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token,
+          step: draftStep,
+          ...getDraftPayloadForStep(draftStep, form),
+        }),
+      });
+      if (!res.ok) throw new Error('Draft save failed');
+      setMessage('');
+      return true;
+    } catch (error) {
+      console.warn('[BriefBuilder] Draft save failed:', error);
+      setMessage(copy.draftWarning);
+      return false;
+    }
+  };
+
   const createPreviewRequest = async () => {
-    if (createdRequest) { setStep(1); return; }
+    if (createdRequest) {
+      await saveDraft(createdRequest.token, 0);
+      syncWizardUrl(createdRequest.token, 1);
+      setStep(1);
+      return;
+    }
     setStatus('saving');
     setMessage('');
     try {
@@ -332,6 +521,18 @@ export default function BriefBuilderPage() {
       const token = new URL(intakeUrl, window.location.origin).searchParams.get('token') ?? '';
       if (!token) throw new Error('Missing token');
       setCreatedRequest({ token, clientSlug });
+      await saveDraft(token, 0);
+      syncWizardUrl(token, 1);
+      track(ANALYTICS_EVENTS.BRIEF_BUILDER_STARTED, {
+        step: 0,
+        language: lang,
+        has_token: true,
+      });
+      track(ANALYTICS_EVENTS.BRIEF_BUILDER_STEP_COMPLETED, {
+        step: 0,
+        language: lang,
+        has_token: true,
+      });
       setStatus('idle');
       setStep(1);
     } catch {
@@ -362,10 +563,15 @@ export default function BriefBuilderPage() {
         body: JSON.stringify({
           ...form,
           token: createdRequest.token,
-          assetLinks: form.assetLinks.split('\n').map((s) => s.trim()).filter(Boolean),
+          assetLinks: splitLines(form.assetLinks),
         }),
       });
       if (!res.ok) throw new Error('Save failed');
+      track(ANALYTICS_EVENTS.BRIEF_BUILDER_SUBMITTED, {
+        step: 5,
+        language: lang,
+        has_token: true,
+      });
       setStatus('complete');
     } catch {
       setStatus('error');
@@ -376,7 +582,19 @@ export default function BriefBuilderPage() {
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (step === 0) { await createPreviewRequest(); return; }
-    if (step < TOTAL_STEPS - 1) { setStep((s) => s + 1); return; }
+    if (step < TOTAL_STEPS - 1) {
+      const token = createdRequest?.token;
+      if (token) await saveDraft(token, step);
+      track(ANALYTICS_EVENTS.BRIEF_BUILDER_STEP_COMPLETED, {
+        step,
+        language: lang,
+        has_token: Boolean(token),
+      });
+      const nextStep = step + 1;
+      if (token) syncWizardUrl(token, nextStep);
+      setStep(nextStep);
+      return;
+    }
     await submitBrief();
   };
 
@@ -446,6 +664,7 @@ export default function BriefBuilderPage() {
       <main className="wz-main">
         <div className="wz-shell">
           <form onSubmit={onSubmit} noValidate>
+            {message && <p className="wz-error">{message}</p>}
 
             {/* ── STEP 0 — Contact ── */}
             {step === 0 && (
@@ -554,8 +773,6 @@ export default function BriefBuilderPage() {
                     </div>
                   )}
                 </div>
-
-                {message && <p className="wz-error">{message}</p>}
 
                 <div className="wz-actions wz-actions--end">
                   <button
@@ -970,8 +1187,6 @@ export default function BriefBuilderPage() {
 
                   <p className="wz-research-note">{copy.step5.researchNote}</p>
                 </div>
-
-                {message && <p className="wz-error">{message}</p>}
 
                 <div className="wz-actions">
                   <button type="button" className="wz-btn wz-btn--ghost" onClick={() => setStep(4)}>
