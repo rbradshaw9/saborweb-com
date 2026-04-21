@@ -1,7 +1,11 @@
 'use client';
 
 type AnalyticsValue = string | number | boolean | null | undefined;
-type AnalyticsProperties = Record<string, AnalyticsValue>;
+type AnalyticsPayloadValue =
+  | AnalyticsValue
+  | AnalyticsPayloadValue[]
+  | { [key: string]: AnalyticsPayloadValue };
+type AnalyticsProperties = Record<string, AnalyticsPayloadValue>;
 
 declare global {
   interface Window {
@@ -11,6 +15,10 @@ declare global {
 
 export const ANALYTICS_EVENTS = {
   PAGE_VIEW: 'page_view',
+  PREVIEW_CTA_CLICKED: 'preview_cta_clicked',
+  PACKAGE_SELECTED: 'select_item',
+  CHECKOUT_STARTED: 'begin_checkout',
+  PURCHASE: 'purchase',
   BRIEF_BUILDER_STARTED: 'brief_builder_started',
   BRIEF_BUILDER_STEP_COMPLETED: 'brief_builder_step_completed',
   BRIEF_BUILDER_RESUMED: 'brief_builder_resumed',

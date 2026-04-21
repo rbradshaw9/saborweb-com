@@ -3,7 +3,9 @@ import Link from 'next/link';
 import { CheckCircle, ArrowRight } from 'lucide-react';
 import { useLanguage } from '@/lib/LanguageContext';
 import { useSearchParams } from 'next/navigation';
-import { Suspense } from 'react';
+import { Suspense, useEffect } from 'react';
+import { ANALYTICS_EVENTS, track } from '@/lib/analytics';
+import { SERVICE_PACKAGES } from '@/lib/packages';
 
 const PKG_NAMES: Record<string, { en: string; es: string }> = {
   presencia:   { en: 'Presencia',   es: 'Presencia'   },
@@ -15,7 +17,36 @@ function GraciasContent() {
   const { lang } = useLanguage();
   const params = useSearchParams();
   const pkg = params.get('pkg') ?? '';
+  const sessionId = params.get('session_id') ?? '';
+  const servicePackage = SERVICE_PACKAGES.find((item) => item.key === pkg);
   const pkgName = PKG_NAMES[pkg]?.[lang] ?? '';
+
+  useEffect(() => {
+    if (!servicePackage || !sessionId) return;
+
+    const storageKey = `sw-purchase-tracked:${sessionId}`;
+    if (window.sessionStorage.getItem(storageKey)) return;
+
+    track(ANALYTICS_EVENTS.PURCHASE, {
+      transaction_id: sessionId,
+      currency: 'USD',
+      value: servicePackage.setup,
+      package_key: servicePackage.key,
+      package_name: servicePackage.name,
+      setup_fee: servicePackage.setup,
+      monthly_value: servicePackage.monthly,
+      items: [
+        {
+          item_id: servicePackage.key,
+          item_name: servicePackage.name,
+          item_category: 'service_plan',
+          price: servicePackage.setup,
+          quantity: 1,
+        },
+      ],
+    });
+    window.sessionStorage.setItem(storageKey, 'true');
+  }, [servicePackage, sessionId]);
 
   const copy = {
     en: {

@@ -3,6 +3,7 @@
 import { ArrowRight, Check } from 'lucide-react';
 import { useLanguage } from '@/lib/LanguageContext';
 import { SERVICE_PACKAGES } from '@/lib/packages';
+import { ANALYTICS_EVENTS, track } from '@/lib/analytics';
 
 export default function PackageGrid({
   homeMode = false,
@@ -33,6 +34,43 @@ export default function PackageGrid({
     },
   }[lang];
 
+  const handlePackageCtaClick = (pkg: (typeof SERVICE_PACKAGES)[number]) => {
+    const item = {
+      item_id: pkg.key,
+      item_name: pkg.name,
+      item_category: 'service_plan',
+      price: pkg.setup,
+      quantity: 1,
+    };
+
+    if (homeMode) {
+      track(ANALYTICS_EVENTS.PREVIEW_CTA_CLICKED, {
+        location: 'package_grid',
+        package_key: pkg.key,
+        package_name: pkg.name,
+      });
+      return;
+    }
+
+    track(ANALYTICS_EVENTS.PACKAGE_SELECTED, {
+      item_list_name: 'service_packages',
+      package_key: pkg.key,
+      package_name: pkg.name,
+      currency: 'USD',
+      value: pkg.setup,
+      monthly_value: pkg.monthly,
+      items: [item],
+    });
+    track(ANALYTICS_EVENTS.CHECKOUT_STARTED, {
+      package_key: pkg.key,
+      package_name: pkg.name,
+      currency: 'USD',
+      value: pkg.setup,
+      monthly_value: pkg.monthly,
+      items: [item],
+    });
+  };
+
   return (
     <div>
       <div className="package-grid">
@@ -57,6 +95,7 @@ export default function PackageGrid({
             <a
               className={pkg.popular ? 'button button--primary' : 'button button--secondary'}
               href={homeMode ? requestHref : `/api/checkout?pkg=${pkg.key}`}
+              onClick={() => handlePackageCtaClick(pkg)}
             >
               {homeMode ? copy.homeCta : copy.cta} <ArrowRight size={16} />
             </a>
