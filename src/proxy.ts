@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
+import { isAdminEmail } from '@/lib/admin/allowlist';
 import { chooseInitialLanguage } from '@/lib/language';
 
 const ROOT_HOSTS = new Set(['saborweb.com', 'www.saborweb.com']);
@@ -45,7 +47,68 @@ function withLanguageCookie(request: NextRequest, response: NextResponse) {
   return response;
 }
 
-export function proxy(request: NextRequest) {
+function isAdminPath(request: NextRequest) {
+  return request.nextUrl.pathname === '/admin' || request.nextUrl.pathname.startsWith('/admin/');
+}
+
+function isAdminLoginPath(request: NextRequest) {
+  return request.nextUrl.pathname === '/admin/login';
+}
+
+function createSupabaseProxyClient(request: NextRequest, response: NextResponse) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey =
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseKey) {
+    return null;
+  }
+
+  return createServerClient(supabaseUrl, supabaseKey, {
+    cookies: {
+      getAll() {
+        return request.cookies.getAll();
+      },
+      setAll(cookiesToSet) {
+        cookiesToSet.forEach(({ name, value }) => {
+          request.cookies.set(name, value);
+        });
+        cookiesToSet.forEach(({ name, value, options }) => {
+          response.cookies.set(name, value, options);
+        });
+      },
+    },
+  });
+}
+
+function copyCookies(from: NextResponse, to: NextResponse) {
+  from.cookies.getAll().forEach((cookie) => {
+    to.cookies.set(cookie);
+  });
+}
+
+async function guardAdminRoute(request: NextRequest, response: NextResponse) {
+  if (!isAdminPath(request) || isAdminLoginPath(request)) return response;
+
+  const supabase = createSupabaseProxyClient(request, response);
+  const {
+    data: { user },
+  } = supabase ? await supabase.auth.getUser() : { data: { user: null } };
+
+  if (isAdminEmail(user?.email)) return response;
+
+  const loginUrl = request.nextUrl.clone();
+  loginUrl.pathname = '/admin/login';
+  loginUrl.search = '';
+  loginUrl.searchParams.set('next', request.nextUrl.pathname + request.nextUrl.search);
+
+  const redirect = NextResponse.redirect(loginUrl);
+  copyCookies(response, redirect);
+  return redirect;
+}
+
+export async function proxy(request: NextRequest) {
   const host = hostWithoutPort(request);
   const subdomain = previewSubdomain(host);
 
@@ -67,7 +130,7 @@ export function proxy(request: NextRequest) {
     }
   }
 
-  return withLanguageCookie(request, NextResponse.next());
+  return guardAdminRoute(request, withLanguageCookie(request, NextResponse.next({ request })));
 }
 
 export const config = {
