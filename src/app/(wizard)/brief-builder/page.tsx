@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import {
   ArrowLeft,
   ArrowRight,
@@ -115,6 +116,29 @@ const INITIAL_FORM: BriefBuilderState = {
 };
 
 const MAX_WIZARD_STEP = 6;
+const STEP_TRANSITION = {
+  duration: 0.24,
+  ease: [0.22, 1, 0.36, 1] as const,
+};
+const STEP_VARIANTS = {
+  enter: (direction: number) => ({
+    opacity: 0,
+    x: direction > 0 ? 34 : -34,
+  }),
+  center: {
+    opacity: 1,
+    x: 0,
+  },
+  exit: (direction: number) => ({
+    opacity: 0,
+    x: direction > 0 ? -34 : 34,
+  }),
+};
+const REDUCED_STEP_VARIANTS = {
+  enter: { opacity: 1, x: 0 },
+  center: { opacity: 1, x: 0 },
+  exit: { opacity: 1, x: 0 },
+};
 
 type CreatedRequest = { token: string; clientSlug: string };
 type ResumeRequest = {
@@ -289,7 +313,9 @@ function mergeResumeData(request: ResumeRequest, intake: ResumeIntake | null) {
 
 export default function BriefBuilderPage() {
   const { lang, setLang } = useLanguage();
+  const shouldReduceMotion = useReducedMotion();
   const [step, setStep] = useState(0);
+  const [stepDirection, setStepDirection] = useState(1);
   const [form, setForm] = useState<BriefBuilderState>(INITIAL_FORM);
   const [createdRequest, setCreatedRequest] = useState<CreatedRequest | null>(null);
   const [files, setFiles] = useState<FileList | null>(null);
@@ -424,6 +450,13 @@ export default function BriefBuilderPage() {
   const update = (key: keyof BriefBuilderState, value: string) =>
     setForm((cur) => ({ ...cur, [key]: value }));
 
+  const goToStep = (nextStep: number) => {
+    const boundedStep = Math.min(Math.max(nextStep, 0), MAX_WIZARD_STEP);
+    setStepDirection(boundedStep >= step ? 1 : -1);
+    if (createdRequest?.token) syncWizardUrl(createdRequest.token, boundedStep);
+    setStep(boundedStep);
+  };
+
   const toggleFeature = (feature: string) =>
     setForm((cur) => ({
       ...cur,
@@ -464,6 +497,7 @@ export default function BriefBuilderPage() {
         }
         setCreatedRequest({ token: resumeToken, clientSlug: stringValue(request.client_slug) });
         setForm((current) => ({ ...current, ...mergeResumeData(request, intake) }));
+        setStepDirection(1);
         setStep(resumeStep);
         setStatus('idle');
         track(ANALYTICS_EVENTS.BRIEF_BUILDER_RESUMED, {
@@ -475,6 +509,7 @@ export default function BriefBuilderPage() {
         console.warn('[BriefBuilder] Resume failed:', error);
         if (!active) return;
         setCreatedRequest({ token: resumeToken, clientSlug: '' });
+        setStepDirection(1);
         setStep(resumeStep);
         setStatus('idle');
         setMessage('We could not reload your saved answers, but you can continue.');
@@ -519,8 +554,7 @@ export default function BriefBuilderPage() {
 
     if (createdRequest) {
       await saveDraft(createdRequest.token, 0);
-      syncWizardUrl(createdRequest.token, 1);
-      setStep(1);
+      goToStep(1);
       return;
     }
     setStatus('saving');
@@ -565,6 +599,7 @@ export default function BriefBuilderPage() {
         has_token: true,
       });
       setStatus('idle');
+      setStepDirection(1);
       setStep(1);
     } catch (error) {
       setStatus('error');
@@ -622,8 +657,7 @@ export default function BriefBuilderPage() {
         has_token: Boolean(token),
       });
       const nextStep = step + 1;
-      if (token) syncWizardUrl(token, nextStep);
-      setStep(nextStep);
+      goToStep(nextStep);
       return;
     }
     await submitBrief();
@@ -697,6 +731,17 @@ export default function BriefBuilderPage() {
           <form onSubmit={onSubmit} noValidate>
             {message && <p className="wz-error">{message}</p>}
 
+            <AnimatePresence custom={stepDirection} initial={false} mode="wait">
+              <motion.div
+                key={step}
+                animate="center"
+                className="wz-step-frame"
+                custom={stepDirection}
+                exit="exit"
+                initial="enter"
+                transition={shouldReduceMotion ? { duration: 0 } : STEP_TRANSITION}
+                variants={shouldReduceMotion ? REDUCED_STEP_VARIANTS : STEP_VARIANTS}
+              >
             {/* ── STEP 0 — Contact ── */}
             {step === 0 && (
               <div className="wz-step">
@@ -877,7 +922,7 @@ export default function BriefBuilderPage() {
                 </div>
 
                 <div className="wz-actions">
-                  <button type="button" className="wz-btn wz-btn--ghost" onClick={() => setStep(0)}>
+                  <button type="button" className="wz-btn wz-btn--ghost" onClick={() => goToStep(0)}>
                     <ArrowLeft size={15} /> {copy.back}
                   </button>
                   <button type="submit" className="wz-btn wz-btn--primary">
@@ -952,7 +997,7 @@ export default function BriefBuilderPage() {
                 </div>
 
                 <div className="wz-actions">
-                  <button type="button" className="wz-btn wz-btn--ghost" onClick={() => setStep(1)}>
+                  <button type="button" className="wz-btn wz-btn--ghost" onClick={() => goToStep(1)}>
                     <ArrowLeft size={15} /> {copy.back}
                   </button>
                   <button type="submit" className="wz-btn wz-btn--primary">
@@ -1041,7 +1086,7 @@ export default function BriefBuilderPage() {
                 </div>
 
                 <div className="wz-actions">
-                  <button type="button" className="wz-btn wz-btn--ghost" onClick={() => setStep(2)}>
+                  <button type="button" className="wz-btn wz-btn--ghost" onClick={() => goToStep(2)}>
                     <ArrowLeft size={15} /> {copy.back}
                   </button>
                   <button type="submit" className="wz-btn wz-btn--primary">
@@ -1130,7 +1175,7 @@ export default function BriefBuilderPage() {
                 </div>
 
                 <div className="wz-actions">
-                  <button type="button" className="wz-btn wz-btn--ghost" onClick={() => setStep(3)}>
+                  <button type="button" className="wz-btn wz-btn--ghost" onClick={() => goToStep(3)}>
                     <ArrowLeft size={15} /> {copy.back}
                   </button>
                   <button type="submit" className="wz-btn wz-btn--primary">
@@ -1208,7 +1253,7 @@ export default function BriefBuilderPage() {
                 </div>
 
                 <div className="wz-actions">
-                  <button type="button" className="wz-btn wz-btn--ghost" onClick={() => setStep(4)}>
+                  <button type="button" className="wz-btn wz-btn--ghost" onClick={() => goToStep(4)}>
                     <ArrowLeft size={15} /> {copy.back}
                   </button>
                   <button type="submit" className="wz-btn wz-btn--primary">
@@ -1288,7 +1333,7 @@ export default function BriefBuilderPage() {
                 </div>
 
                 <div className="wz-actions">
-                  <button type="button" className="wz-btn wz-btn--ghost" onClick={() => setStep(5)}>
+                  <button type="button" className="wz-btn wz-btn--ghost" onClick={() => goToStep(5)}>
                     <ArrowLeft size={15} /> {copy.back}
                   </button>
                   <button type="submit" className="wz-btn wz-btn--primary" disabled={status === 'saving'}>
@@ -1299,6 +1344,9 @@ export default function BriefBuilderPage() {
                 </div>
               </div>
             )}
+
+              </motion.div>
+            </AnimatePresence>
 
           </form>
         </div>
