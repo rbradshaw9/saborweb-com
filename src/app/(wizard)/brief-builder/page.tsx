@@ -158,6 +158,11 @@ type ResumeIntake = Partial<BriefBuilderState> & {
   status?: string;
   lastStep?: number;
 };
+type LocalizedOption = {
+  value: string;
+  label: string;
+  aliases?: string[];
+};
 
 /* ─── Chip ───────────────────────────────────────────────────────────────── */
 
@@ -188,7 +193,7 @@ function ChipSingle({
   value,
   onChange,
 }: {
-  options: string[];
+  options: LocalizedOption[];
   value: string;
   onChange: (v: string) => void;
 }) {
@@ -196,10 +201,10 @@ function ChipSingle({
     <div className="wz-chip-grid">
       {options.map((opt) => (
         <Chip
-          key={opt}
-          label={opt}
-          selected={value === opt}
-          onClick={() => onChange(value === opt ? '' : opt)}
+          key={opt.value}
+          label={opt.label}
+          selected={optionSelected(value, opt)}
+          onClick={() => onChange(optionSelected(value, opt) ? '' : opt.value)}
         />
       ))}
     </div>
@@ -224,6 +229,10 @@ function splitLines(value: string) {
     .split('\n')
     .map((item) => item.trim())
     .filter(Boolean);
+}
+
+function optionSelected(value: string, option: LocalizedOption) {
+  return [option.value, option.label, ...(option.aliases ?? [])].includes(value);
 }
 
 function getDraftPayloadForStep(step: number, form: BriefBuilderState) {
@@ -333,6 +342,12 @@ export default function BriefBuilderPage() {
           langSwitch: 'Español',
           langTarget: 'es' as const,
           stepLabels: ['Contact', 'Web Presence', 'Restaurant', 'Menu', 'Look & Feel', 'Goals', 'Assets'],
+          options: {
+            styles: STYLE_OPTIONS.map((value) => ({ value, label: value })),
+            fontMoods: FONT_MOOD_OPTIONS.map((value) => ({ value, label: value })),
+            photoDirections: PHOTO_DIRECTION_OPTIONS.map((value) => ({ value, label: value })),
+            features: FEATURE_OPTIONS.map((value) => ({ value, label: value })),
+          },
           next: 'Continue',
           back: 'Back',
           submit: 'Submit',
@@ -371,15 +386,30 @@ export default function BriefBuilderPage() {
             sub: 'Help us build for your actual goals.',
             primaryActionLabel: 'When someone visits, they should…',
             featuresLabel: 'Must-have features',
-            primaryActions: ['Call us', 'WhatsApp', 'Order online', 'Make a reservation', 'Get directions', 'View the menu'],
+            primaryActions: [
+              { value: 'Call us', label: 'Call us', aliases: ['Llamar'] },
+              { value: 'WhatsApp', label: 'WhatsApp' },
+              { value: 'Order online', label: 'Order online', aliases: ['Ordenar online'] },
+              { value: 'Make a reservation', label: 'Make a reservation', aliases: ['Hacer reservación'] },
+              { value: 'Get directions', label: 'Get directions', aliases: ['Ver dirección'] },
+              { value: 'View the menu', label: 'View the menu', aliases: ['Ver el menú'] },
+            ],
           },
           step5: {
             heading: 'Almost done.',
             sub: 'Tell us what you have, and we\'ll fill in the rest.',
             logoLabel: 'Do you have a logo?',
-            logoOptions: ['Yes, ready to share', 'Yes, need to find it', 'No logo yet'],
+            logoOptions: [
+              { value: 'Yes, ready to share', label: 'Yes, ready to share', aliases: ['Sí, listo para compartir'] },
+              { value: 'Yes, need to find it', label: 'Yes, need to find it', aliases: ['Sí, tengo que buscarlo'] },
+              { value: 'No logo yet', label: 'No logo yet', aliases: ['No tengo logo'] },
+            ],
             photoLabel: 'Do you have photos?',
-            photoOptions: ['Yes, great ones', 'Some, not great', 'No photos yet'],
+            photoOptions: [
+              { value: 'Yes, great ones', label: 'Yes, great ones', aliases: ['Sí, muy buenas'] },
+              { value: 'Some, not great', label: 'Some, not great', aliases: ['Algunas, no muy buenas'] },
+              { value: 'No photos yet', label: 'No photos yet', aliases: ['No tengo fotos'] },
+            ],
             uploadLabel: 'Upload files (logo, photos, menu PDF)',
             researchNote: 'We\'ll also check your Instagram, Google, and Facebook to build the most complete preview possible.',
           },
@@ -389,7 +419,47 @@ export default function BriefBuilderPage() {
           exitLabel: 'Volver al sitio',
           langSwitch: 'English',
           langTarget: 'en' as const,
-          stepLabels: ['Contacto', 'Presencia web', 'Restaurante', 'Menú', 'Estilo', 'Objetivos', 'Assets'],
+          stepLabels: ['Contacto', 'Presencia web', 'Restaurante', 'Menú', 'Estilo', 'Objetivos', 'Archivos'],
+          options: {
+            styles: [
+              { value: 'Premium, elegant, date-night', label: 'Premium, elegante, para cita' },
+              { value: 'Warm, local, neighborhood favorite', label: 'Cálido, local, favorito del barrio' },
+              { value: 'Bold, colorful, energetic', label: 'Atrevido, colorido, con energía' },
+              { value: 'Clean, modern, minimal', label: 'Limpio, moderno, minimalista' },
+              { value: 'Family-friendly and approachable', label: 'Familiar y accesible' },
+              { value: 'Nightlife, cocktails, late-night energy', label: 'Vida nocturna, cocteles, energía tarde' },
+              { value: 'Fast casual, simple, high-conversion', label: 'Rápido casual, simple, enfocado en conversión' },
+              { value: 'Traditional, heritage, authentic', label: 'Tradicional, con herencia, auténtico' },
+            ],
+            fontMoods: [
+              { value: 'Modern and clean', label: 'Moderna y limpia' },
+              { value: 'Elegant and editorial', label: 'Elegante y editorial' },
+              { value: 'Bold and punchy', label: 'Fuerte y llamativa' },
+              { value: 'Warm and handmade', label: 'Cálida y artesanal' },
+              { value: 'Classic and traditional', label: 'Clásica y tradicional' },
+              { value: 'No preference - choose what fits', label: 'Sin preferencia - elijan lo que encaje' },
+            ],
+            photoDirections: [
+              { value: 'Food should be the hero', label: 'La comida debe ser protagonista' },
+              { value: 'Space/interior should be the hero', label: 'El espacio/interior debe ser protagonista' },
+              { value: 'People and atmosphere should lead', label: 'Personas y ambiente deben liderar' },
+              { value: 'Cocktails/drinks should lead', label: 'Cocteles/bebidas deben liderar' },
+              { value: 'Use what you can find publicly', label: 'Usen lo que encuentren públicamente' },
+              { value: 'We will upload photos', label: 'Subiremos fotos' },
+            ],
+            features: [
+              { value: 'Digital menu', label: 'Menú digital' },
+              { value: 'WhatsApp contact', label: 'Contacto por WhatsApp' },
+              { value: 'Google Maps/directions', label: 'Google Maps / direcciones' },
+              { value: 'Reservations', label: 'Reservaciones' },
+              { value: 'Online ordering', label: 'Ordenar online' },
+              { value: 'Catering/private events', label: 'Catering / eventos privados' },
+              { value: 'Photo gallery', label: 'Galería de fotos' },
+              { value: 'Reviews/social proof', label: 'Reseñas / prueba social' },
+              { value: 'Spanish + English pages', label: 'Páginas en español e inglés' },
+              { value: 'Local SEO', label: 'SEO local' },
+            ],
+          },
           next: 'Continuar',
           back: 'Atrás',
           submit: 'Enviar',
@@ -417,7 +487,7 @@ export default function BriefBuilderPage() {
             sub: '¿No tienes todo? No importa — investigamos el resto.',
           },
           step3: {
-            heading: 'Look & feel.',
+            heading: 'Estilo visual.',
             sub: 'Elige lo que te guste. Lo puedes cambiar.',
             styleLabel: 'Estilo general',
             fontLabel: 'Tipografía',
@@ -428,15 +498,30 @@ export default function BriefBuilderPage() {
             sub: 'Construimos para tus objetivos reales.',
             primaryActionLabel: 'Cuando alguien visita, debe…',
             featuresLabel: 'Funciones principales',
-            primaryActions: ['Llamar', 'WhatsApp', 'Ordenar online', 'Hacer reservación', 'Ver dirección', 'Ver el menú'],
+            primaryActions: [
+              { value: 'Call us', label: 'Llamar' },
+              { value: 'WhatsApp', label: 'WhatsApp' },
+              { value: 'Order online', label: 'Ordenar online' },
+              { value: 'Make a reservation', label: 'Hacer reservación' },
+              { value: 'Get directions', label: 'Ver dirección' },
+              { value: 'View the menu', label: 'Ver el menú' },
+            ],
           },
           step5: {
             heading: 'Casi listo.',
             sub: 'Dinos lo que tienes y llenamos el resto.',
             logoLabel: '¿Tienes logo?',
-            logoOptions: ['Sí, listo para compartir', 'Sí, tengo que buscarlo', 'No tengo logo'],
+            logoOptions: [
+              { value: 'Yes, ready to share', label: 'Sí, listo para compartir' },
+              { value: 'Yes, need to find it', label: 'Sí, tengo que buscarlo' },
+              { value: 'No logo yet', label: 'No tengo logo' },
+            ],
             photoLabel: '¿Tienes fotos?',
-            photoOptions: ['Sí, muy buenas', 'Algunas, no muy buenas', 'No tengo fotos'],
+            photoOptions: [
+              { value: 'Yes, great ones', label: 'Sí, muy buenas' },
+              { value: 'Some, not great', label: 'Algunas, no muy buenas' },
+              { value: 'No photos yet', label: 'No tengo fotos' },
+            ],
             uploadLabel: 'Sube archivos (logo, fotos, menú PDF)',
             researchNote: 'También revisaremos tu Instagram, Google y Facebook para hacer el preview más completo.',
           },
@@ -798,7 +883,7 @@ export default function BriefBuilderPage() {
                     </div>
                     <div className="wz-field">
                       <label className="wz-label" htmlFor="email">
-                        Email
+                        {lang === 'es' ? 'Correo electrónico' : 'Email'}
                       </label>
                       <input
                         id="email"
@@ -882,7 +967,7 @@ export default function BriefBuilderPage() {
                   <div className="wz-row wz-row--2">
                     <div className="wz-field">
                       <label className="wz-label" htmlFor="googleBusinessUrl">
-                        Google Business Profile
+                        {lang === 'es' ? 'Perfil de Google Business' : 'Google Business Profile'}
                       </label>
                       <input
                         id="googleBusinessUrl"
@@ -1108,18 +1193,18 @@ export default function BriefBuilderPage() {
                   <div className="wz-field">
                     <label className="wz-label">{copy.step3.styleLabel}</label>
                     <div className="wz-card-chip-grid">
-                      {STYLE_OPTIONS.map((opt) => (
+                      {copy.options.styles.map((opt) => (
                         <button
-                          key={opt}
+                          key={opt.value}
                           type="button"
-                          className={`wz-card-chip${form.brandStyle === opt ? ' wz-card-chip--selected' : ''}`}
-                          onClick={() => update('brandStyle', form.brandStyle === opt ? '' : opt)}
-                          aria-pressed={form.brandStyle === opt}
+                          className={`wz-card-chip${optionSelected(form.brandStyle, opt) ? ' wz-card-chip--selected' : ''}`}
+                          onClick={() => update('brandStyle', optionSelected(form.brandStyle, opt) ? '' : opt.value)}
+                          aria-pressed={optionSelected(form.brandStyle, opt)}
                         >
                           <span className="wz-card-chip__check">
-                            {form.brandStyle === opt && <CheckCircle size={10} strokeWidth={3} />}
+                            {optionSelected(form.brandStyle, opt) && <CheckCircle size={10} strokeWidth={3} />}
                           </span>
-                          {opt}
+                          {opt.label}
                         </button>
                       ))}
                     </div>
@@ -1129,7 +1214,7 @@ export default function BriefBuilderPage() {
                     <div className="wz-field">
                       <label className="wz-label">{copy.step3.fontLabel}</label>
                       <ChipSingle
-                        options={FONT_MOOD_OPTIONS}
+                        options={copy.options.fontMoods}
                         value={form.fontMood}
                         onChange={(v) => update('fontMood', v)}
                       />
@@ -1137,7 +1222,7 @@ export default function BriefBuilderPage() {
                     <div className="wz-field">
                       <label className="wz-label">{copy.step3.photoLabel}</label>
                       <ChipSingle
-                        options={PHOTO_DIRECTION_OPTIONS}
+                        options={copy.options.photoDirections}
                         value={form.photoDirection}
                         onChange={(v) => update('photoDirection', v)}
                       />
@@ -1199,10 +1284,10 @@ export default function BriefBuilderPage() {
                     <div className="wz-chip-grid">
                       {copy.step4.primaryActions.map((action) => (
                         <Chip
-                          key={action}
-                          label={action}
-                          selected={form.primaryAction === action}
-                          onClick={() => update('primaryAction', form.primaryAction === action ? '' : action)}
+                          key={action.value}
+                          label={action.label}
+                          selected={optionSelected(form.primaryAction, action)}
+                          onClick={() => update('primaryAction', optionSelected(form.primaryAction, action) ? '' : action.value)}
                         />
                       ))}
                     </div>
@@ -1211,12 +1296,12 @@ export default function BriefBuilderPage() {
                   <div className="wz-field">
                     <label className="wz-label">{copy.step4.featuresLabel}</label>
                     <div className="wz-chip-grid">
-                      {FEATURE_OPTIONS.map((feat) => (
+                      {copy.options.features.map((feat) => (
                         <Chip
-                          key={feat}
-                          label={feat}
-                          selected={form.featureRequests.includes(feat)}
-                          onClick={() => toggleFeature(feat)}
+                          key={feat.value}
+                          label={feat.label}
+                          selected={form.featureRequests.includes(feat.value) || form.featureRequests.includes(feat.label)}
+                          onClick={() => toggleFeature(feat.value)}
                         />
                       ))}
                     </div>
@@ -1277,8 +1362,8 @@ export default function BriefBuilderPage() {
                       <label className="wz-label">{copy.step5.logoLabel}</label>
                       <div className="wz-chip-grid">
                         {copy.step5.logoOptions.map((o) => (
-                          <Chip key={o} label={o} selected={form.logoStatus === o}
-                            onClick={() => update('logoStatus', form.logoStatus === o ? '' : o)} />
+                          <Chip key={o.value} label={o.label} selected={optionSelected(form.logoStatus, o)}
+                            onClick={() => update('logoStatus', optionSelected(form.logoStatus, o) ? '' : o.value)} />
                         ))}
                       </div>
                     </div>
@@ -1286,8 +1371,8 @@ export default function BriefBuilderPage() {
                       <label className="wz-label">{copy.step5.photoLabel}</label>
                       <div className="wz-chip-grid">
                         {copy.step5.photoOptions.map((o) => (
-                          <Chip key={o} label={o} selected={form.photoStatus === o}
-                            onClick={() => update('photoStatus', form.photoStatus === o ? '' : o)} />
+                          <Chip key={o.value} label={o.label} selected={optionSelected(form.photoStatus, o)}
+                            onClick={() => update('photoStatus', optionSelected(form.photoStatus, o) ? '' : o.value)} />
                         ))}
                       </div>
                     </div>
