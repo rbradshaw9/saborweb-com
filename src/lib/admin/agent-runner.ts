@@ -745,12 +745,12 @@ function assessResearchProfile(profile: ReturnType<typeof summarizeResearchProfi
   const blockers: string[] = [];
   if (!hasAddress) blockers.push('Missing address');
   if (!hasHours) blockers.push('Missing hours');
-  if (!hasMenu) blockers.push('Missing menu source');
-  if (!hasWebsite) blockers.push('Missing official website');
   if (!hasStyleSignals) blockers.push('Missing enough style/content cues');
 
   const helpfulGaps: string[] = [];
   if (!hasPhone) helpfulGaps.push('Phone not confirmed');
+  if (!hasMenu) helpfulGaps.push('Menu source not confirmed; use a clearly marked starter menu.');
+  if (!hasWebsite) helpfulGaps.push('Official website not confirmed; use Google/social/contact links.');
   if (!hasSocial) helpfulGaps.push('Social profiles not confirmed');
   if (!hasImages) helpfulGaps.push('Image/logo candidates not found');
 
@@ -761,8 +761,24 @@ function assessResearchProfile(profile: ReturnType<typeof summarizeResearchProfi
     score: Math.round(score),
     blockers,
     helpfulGaps,
-    readyForPacket: blockers.length === 0 && score >= 62,
+    readyForPacket: blockers.length === 0 && score >= 50,
   };
+}
+
+function isLaunchNonBlockingGap(message: string) {
+  const normalized = message.toLowerCase();
+  return (
+    normalized.includes('missing menu') ||
+    normalized.includes('menu source') ||
+    normalized.includes('structured menu') ||
+    normalized.includes('official website') ||
+    normalized.includes('standalone website') ||
+    normalized.includes('no website')
+  );
+}
+
+function launchBlockingGaps(blockers: string[]) {
+  return blockers.filter((blocker) => !isLaunchNonBlockingGap(blocker));
 }
 
 function asBlockedResult(message: string, detail: Record<string, unknown>) {
@@ -2032,17 +2048,22 @@ async function processResearch(run: AgentRun) {
     });
   }
 
-  const effectiveBuildable = audit?.summary.buildable ?? researchQa.readyForPacket;
   const effectiveBlockers = audit?.blockers?.length ? audit.blockers : researchQa.blockers;
+  const hardBlockers = launchBlockingGaps(effectiveBlockers);
+  const effectiveBuildable = hardBlockers.length === 0 && (audit ? true : researchQa.readyForPacket);
+  const reviewStateForSummary = effectiveBuildable && effectiveReviewState.status === 'needs_more_research'
+    ? { ...effectiveReviewState, status: 'in_review' as const }
+    : effectiveReviewState;
   const effectiveReviewSummary = summarizeResearchReview({
     ...reviewInputs,
     siteMetadata: {
       ...previousMetadata,
       resolved_menu: resolvedMenu,
-      research_review: effectiveReviewState,
+      research_review: reviewStateForSummary,
     },
   });
-  const readyForPacket = effectiveBuildable && effectiveReviewSummary.readyForPacket;
+  const reviewBlockers = launchBlockingGaps(effectiveReviewSummary.blockers);
+  const readyForPacket = effectiveBuildable && reviewBlockers.length === 0;
   const queuedBuildPacketId = readyForPacket
     ? await queueWorkerRun({
         site,
@@ -2113,7 +2134,7 @@ async function processResearch(run: AgentRun) {
         detail: readyForPacket
           ? 'AI picked the best available info and packet generation is starting automatically.'
           : effectiveBuildable
-            ? effectiveReviewSummary.blockers.join(' | ') || 'There are a couple of low-confidence items worth checking.'
+            ? reviewBlockers.join(' | ') || 'There are a couple of low-confidence items worth checking.'
             : effectiveBlockers.join(' | '),
         status: readyForPacket ? 'queued' : 'blocked',
         phase: finalResearchPhase,
@@ -2128,7 +2149,7 @@ async function processResearch(run: AgentRun) {
     detail: readyForPacket
       ? 'Packet generation was queued automatically using the best available research.'
       : effectiveBuildable
-        ? effectiveReviewSummary.blockers.join(' | ') || 'The AI finished research, but one or two low-confidence choices still need a human glance.'
+        ? reviewBlockers.join(' | ') || 'The AI finished research, but one or two low-confidence choices still need a human glance.'
         : effectiveBlockers.join(' | '),
     status: readyForPacket ? 'succeeded' : 'blocked',
   });
@@ -2201,12 +2222,14 @@ async function processBuildPacket(run: AgentRun) {
     extracted_facts: source.extracted_facts,
     metadata: source.metadata,
   })));
-  const packetBlockers = [...detail.researchReview.blockers];
-  if (detail.researchAudit && detail.researchAudit.summary.buildable === false) {
+  const packetBlockers = launchBlockingGaps([...detail.researchReview.blockers]);
+  const auditBlockers = launchBlockingGaps(detail.researchAudit?.blockers ?? []);
+  if (detail.researchAudit && detail.researchAudit.summary.buildable === false && auditBlockers.length) {
     packetBlockers.unshift(
       detail.researchAudit.summary.rationale || 'AI research marked this project as not buildable yet.',
     );
   }
+  packetBlockers.unshift(...auditBlockers);
   const missingCoreResearch = !detail.researchAudit && !detail.resolvedProfile;
 
   if (missingCoreResearch || packetBlockers.length) {
