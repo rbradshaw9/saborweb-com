@@ -8,6 +8,7 @@ import {
   getPacketSourceHash,
 } from '@/lib/admin/dashboard';
 import { getProviderCredential } from '@/lib/admin/credentials';
+import { openAiReasoningEffort } from '@/lib/admin/openai-settings';
 import { logSiteEvent } from '@/lib/site-events';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 
@@ -443,6 +444,7 @@ async function requestOpenAiAnalysis(detail: AdminSiteDetail, model: string): Pr
     },
     body: JSON.stringify({
       model,
+      reasoning: { effort: openAiReasoningEffort('high') },
       input: [
         {
           role: 'system',

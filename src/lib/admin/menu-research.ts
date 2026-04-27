@@ -1,6 +1,7 @@
 import 'server-only';
 
 import { cookieHeaderForUrl, getProviderCredential, readStoredBrowserSession } from '@/lib/admin/credentials';
+import { openAiReasoningEffort } from '@/lib/admin/openai-settings';
 import { uploadImageToCloudinary } from '@/lib/admin/cloudinary';
 import { captureMenuPageEvidence } from '@/lib/admin/qa-runner';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
@@ -867,7 +868,7 @@ async function requestResolvedMenu(params: {
     },
     body: JSON.stringify({
       model: DEFAULT_MENU_MODEL,
-      reasoning: { effort: params.evidence.length >= 3 ? 'medium' : 'low' },
+      reasoning: { effort: openAiReasoningEffort('high') },
       input: [
         {
           role: 'system',

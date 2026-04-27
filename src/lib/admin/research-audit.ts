@@ -7,6 +7,7 @@ import {
 } from '@/lib/admin/research-review';
 import { type ResolvedMenu, normalizeResolvedMenu } from '@/lib/admin/menu-research';
 import { cookieHeaderForUrl, getProviderCredential, readStoredBrowserSession } from '@/lib/admin/credentials';
+import { openAiReasoningEffort } from '@/lib/admin/openai-settings';
 
 const DEFAULT_AUDITOR_MODEL = process.env.OPENAI_AUDITOR_MODEL || process.env.OPENAI_MODEL || 'gpt-5.5';
 
@@ -1234,14 +1235,6 @@ async function requestOpenAiAudit(detail: AuditDetailInput): Promise<ResearchAud
   }
 
   const dossier = await createResearchAuditDossier(detail);
-  const missingSignals = [
-    !dossier.factualEvidence.phone ? 'phone' : null,
-    !dossier.factualEvidence.address ? 'address' : null,
-    !dossier.candidateSources.menuCandidates.length ? 'menu' : null,
-    !dossier.visualEvidence.logoCandidates.length ? 'logo' : null,
-    !dossier.visualEvidence.photoCandidates.length ? 'photos' : null,
-    dossier.conflicts.length ? 'conflicts' : null,
-  ].filter(Boolean);
   const imageInputs = [
     ...dossier.visualEvidence.logoCandidates.slice(0, 2),
     ...dossier.visualEvidence.menuAssetCandidates.slice(0, 2),
@@ -1265,7 +1258,7 @@ async function requestOpenAiAudit(detail: AuditDetailInput): Promise<ResearchAud
     body: JSON.stringify({
       model: DEFAULT_AUDITOR_MODEL,
       reasoning: {
-        effort: missingSignals.length >= 2 ? 'medium' : 'low',
+        effort: openAiReasoningEffort('high'),
       },
       tools: [
         {
