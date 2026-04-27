@@ -7,6 +7,7 @@ import { uploadImageToCloudinary } from '@/lib/admin/cloudinary';
 import { credentialValue, getProviderCredential, readStoredBrowserSession } from '@/lib/admin/credentials';
 import { getAdminSiteDetail } from '@/lib/admin/dashboard';
 import { generatedSiteSubdomain } from '@/lib/generated-sites';
+import { openAiReasoningEffort } from '@/lib/admin/openai-settings';
 import {
   applyAuditSuggestionsToReviewState,
   generateResearchAudit,
@@ -130,6 +131,237 @@ function hashJson(value: unknown) {
 
 function productionDeployBranch() {
   return process.env.SABORWEB_PRODUCTION_BRANCH || process.env.GITHUB_PRODUCTION_BRANCH || process.env.VERCEL_GIT_COMMIT_REF || 'main';
+}
+
+function githubRepoParts() {
+  const fullName = process.env.GITHUB_REPO_FULL_NAME || process.env.GITHUB_REPOSITORY || process.env.SABORWEB_GITHUB_REPO;
+  if (fullName?.includes('/')) {
+    const [owner, repo] = fullName.split('/');
+    return owner && repo ? { owner, repo } : null;
+  }
+  const owner = process.env.GITHUB_REPO_OWNER;
+  const repo = process.env.GITHUB_REPO_NAME;
+  return owner && repo ? { owner, repo } : null;
+}
+
+async function githubApi(path: string, params: {
+  method?: string;
+  body?: Record<string, unknown>;
+  token: string;
+}) {
+  const response = await fetch(`https://api.github.com${path}`, {
+    method: params.method ?? 'GET',
+    headers: {
+      Accept: 'application/vnd.github+json',
+      Authorization: `Bearer ${params.token}`,
+      'Content-Type': 'application/json',
+      'X-GitHub-Api-Version': '2022-11-28',
+    },
+    body: params.body ? JSON.stringify(params.body) : undefined,
+    cache: 'no-store',
+  });
+  const json = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(`GitHub API ${params.method ?? 'GET'} ${path} failed: ${JSON.stringify(json)}`);
+  return asRecord(json);
+}
+
+function outputText(response: Record<string, unknown>) {
+  if (typeof response.output_text === 'string') return response.output_text;
+  const output = Array.isArray(response.output) ? response.output : [];
+
+  for (const item of output) {
+    const content = typeof item === 'object' && item !== null && 'content' in item ? (item as { content?: unknown }).content : null;
+    if (!Array.isArray(content)) continue;
+    for (const part of content) {
+      if (typeof part === 'object' && part !== null && 'text' in part && typeof (part as { text?: unknown }).text === 'string') {
+        return (part as { text: string }).text;
+      }
+    }
+  }
+
+  return '';
+}
+
+function pascalCaseSlug(slug: string) {
+  const name = slug
+    .split(/[^a-zA-Z0-9]+/)
+    .filter(Boolean)
+    .map((part) => `${part.slice(0, 1).toUpperCase()}${part.slice(1)}`)
+    .join('');
+  return `${name || 'Generated'}Site`;
+}
+
+function generatedSiteComponentsSource(currentSource: string | null, slug: string) {
+  const componentName = pascalCaseSlug(slug);
+  const imports = new Map<string, string>();
+  const entries = new Map<string, string>();
+  const source = currentSource ?? '';
+
+  for (const match of source.matchAll(/import\s+([A-Za-z_$][\w$]*)\s+from\s+'\.\/([^']+)\/Site';/g)) {
+    imports.set(match[2], match[1]);
+    entries.set(match[2], match[1]);
+  }
+  for (const match of source.matchAll(/['"]([^'"]+)['"]\s*:\s*([A-Za-z_$][\w$]*)/g)) {
+    entries.set(match[1], match[2]);
+  }
+  imports.set(slug, componentName);
+  entries.set(slug, componentName);
+
+  const importLines = [...imports.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([entrySlug, identifier]) => `import ${identifier} from './${entrySlug}/Site';`);
+  const entryLines = [...entries.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([entrySlug, identifier]) => `  '${entrySlug}': ${identifier},`);
+
+  return [
+    "import type { ComponentType } from 'react';",
+    "import type { RenderLanguage, RenderViewMode } from '@/lib/site-rendering';",
+    ...importLines,
+    '',
+    'export type GeneratedSiteComponentProps = {',
+    '  mode: RenderViewMode;',
+    '  lang: RenderLanguage;',
+    '};',
+    '',
+    'export type GeneratedSiteComponent = ComponentType<GeneratedSiteComponentProps>;',
+    '',
+    'export const GENERATED_SITE_COMPONENTS: Record<string, GeneratedSiteComponent> = {',
+    ...entryLines,
+    '};',
+    '',
+  ].join('\n');
+}
+
+async function readGithubTextFile(params: {
+  repo: { owner: string; repo: string };
+  token: string;
+  branch: string;
+  path: string;
+}) {
+  const encodedPath = params.path.split('/').map(encodeURIComponent).join('/');
+  const result = await githubApi(
+    `/repos/${encodeURIComponent(params.repo.owner)}/${encodeURIComponent(params.repo.repo)}/contents/${encodedPath}?ref=${encodeURIComponent(params.branch)}`,
+    { token: params.token },
+  ).catch((error) => {
+    const message = error instanceof Error ? error.message : '';
+    if (message.includes('404') || message.toLowerCase().includes('not found')) return null;
+    throw error;
+  });
+  if (!result) return null;
+  const content = asString(result.content);
+  if (!content) return null;
+  return Buffer.from(content.replace(/\s/g, ''), 'base64').toString('utf8');
+}
+
+async function commitCustomSiteToGitHub(params: {
+  slug: string;
+  siteFileContent: string;
+}) {
+  const repo = githubRepoParts();
+  const credential = await getProviderCredential('github');
+  const token =
+    credentialValue(credential.secret, 'GITHUB_REPO_TOKEN') ||
+    credentialValue(credential.secret, 'GITHUB_TOKEN') ||
+    process.env.GITHUB_REPO_TOKEN ||
+    process.env.GITHUB_TOKEN ||
+    null;
+  const branch = productionDeployBranch();
+  if (!repo || !token) {
+    return {
+      committed: false,
+      blocked: true,
+      branch,
+      reason: repo ? 'missing_github_repo_token' : 'missing_github_repo',
+    };
+  }
+
+  const currentComponentsSource = await readGithubTextFile({
+    repo,
+    token,
+    branch,
+    path: 'src/generated-sites/components.tsx',
+  });
+  const componentsSource = generatedSiteComponentsSource(currentComponentsSource, params.slug);
+  const files = [
+    {
+      path: `src/generated-sites/${params.slug}/Site.tsx`,
+      content: params.siteFileContent.endsWith('\n') ? params.siteFileContent : `${params.siteFileContent}\n`,
+    },
+    {
+      path: 'src/generated-sites/components.tsx',
+      content: componentsSource,
+    },
+  ];
+
+  const ref = await githubApi(
+    `/repos/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.repo)}/git/ref/heads/${encodeURIComponent(branch)}`,
+    { token },
+  );
+  const headSha = asString(asRecord(ref.object).sha);
+  if (!headSha) throw new Error(`Could not resolve ${branch} branch head before committing custom site files.`);
+
+  const headCommit = await githubApi(
+    `/repos/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.repo)}/git/commits/${encodeURIComponent(headSha)}`,
+    { token },
+  );
+  const baseTreeSha = asString(asRecord(headCommit.tree).sha);
+  if (!baseTreeSha) throw new Error(`Could not resolve ${branch} tree before committing custom site files.`);
+
+  const tree = await githubApi(
+    `/repos/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.repo)}/git/trees`,
+    {
+      method: 'POST',
+      token,
+      body: {
+        base_tree: baseTreeSha,
+        tree: files.map((file) => ({
+          path: file.path,
+          mode: '100644',
+          type: 'blob',
+          content: file.content,
+        })),
+      },
+    },
+  );
+  const treeSha = asString(tree.sha);
+  if (!treeSha) throw new Error('GitHub did not return a tree SHA for custom site files.');
+
+  const commit = await githubApi(
+    `/repos/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.repo)}/git/commits`,
+    {
+      method: 'POST',
+      token,
+      body: {
+        message: `Build ${params.slug} custom preview site`,
+        tree: treeSha,
+        parents: [headSha],
+      },
+    },
+  );
+  const commitSha = asString(commit.sha);
+  if (!commitSha) throw new Error('GitHub did not return a commit SHA for custom site files.');
+
+  await githubApi(
+    `/repos/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.repo)}/git/refs/heads/${encodeURIComponent(branch)}`,
+    {
+      method: 'PATCH',
+      token,
+      body: {
+        sha: commitSha,
+        force: false,
+      },
+    },
+  );
+
+  return {
+    committed: true,
+    blocked: false,
+    branch,
+    commitSha,
+    repo: `${repo.owner}/${repo.repo}`,
+    files: files.map((file) => file.path),
+  };
 }
 
 async function queueWorkerRun(params: {
@@ -2245,6 +2477,136 @@ async function processBuildPacket(run: AgentRun) {
   return { packet_id: packet.id, packet_status: packet.status, queued_next: 'code_build' };
 }
 
+const codeBuildSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['summary', 'files', 'qaNotes'],
+  properties: {
+    summary: { type: 'string' },
+    qaNotes: { type: 'array', items: { type: 'string' } },
+    files: {
+      type: 'array',
+      minItems: 1,
+      maxItems: 1,
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['path', 'content'],
+        properties: {
+          path: { type: 'string' },
+          content: { type: 'string' },
+        },
+      },
+    },
+  },
+};
+
+type CodeBuildOutput = {
+  summary: string;
+  qaNotes: string[];
+  files: Array<{ path: string; content: string }>;
+};
+
+function validateCodeBuildOutput(value: unknown, slug: string): CodeBuildOutput {
+  const output = asRecord(value);
+  const files = Array.isArray(output.files) ? output.files.map(asRecord) : [];
+  const expectedPath = `src/generated-sites/${slug}/Site.tsx`;
+  const siteFile = files.find((file) => asString(file.path) === expectedPath);
+  const content = asString(siteFile?.content);
+  if (!siteFile || !content) throw new Error(`OpenAI code builder did not return ${expectedPath}.`);
+  if (!content.includes('export default')) throw new Error('Generated Site.tsx must export a default React component.');
+  if (content.includes('GeneratedRestaurantSite') || content.includes('RestaurantSiteRenderer')) {
+    throw new Error('Generated Site.tsx attempted to use a generic renderer.');
+  }
+  return {
+    summary: asString(output.summary) ?? 'Generated a custom restaurant site component.',
+    qaNotes: Array.isArray(output.qaNotes) ? output.qaNotes.filter((item): item is string => typeof item === 'string') : [],
+    files: [{ path: expectedPath, content }],
+  };
+}
+
+function codeBuildInput(detail: NonNullable<Awaited<ReturnType<typeof getAdminSiteDetail>>>) {
+  return {
+    slug: detail.slug,
+    site: detail.site ? {
+      restaurant_name: detail.site.restaurant_name,
+      city: detail.site.city,
+      preview_url: detail.site.preview_url,
+      claim_url: detail.site.claim_url,
+      metadata: detail.site.metadata,
+    } : null,
+    resolvedProfile: detail.resolvedProfile,
+    resolvedMenu: detail.resolvedMenu,
+    buildPacket: detail.buildPacket ? {
+      id: detail.buildPacket.id,
+      packet_markdown: detail.buildPacket.packet_markdown,
+      analysis_json: detail.buildPacket.analysis_json,
+    } : null,
+    siteBrief: detail.siteBrief,
+    researchReview: detail.researchReview,
+    implementationContract: {
+      componentPath: `src/generated-sites/${detail.slug}/Site.tsx`,
+      registryPath: 'src/generated-sites/components.tsx',
+      componentPropsImport: "import type { GeneratedSiteComponentProps } from '@/generated-sites/components';",
+      requiredDefaultExport: `export default function ${pascalCaseSlug(detail.slug)}({ mode, lang }: GeneratedSiteComponentProps)`,
+      forbidden: ['GeneratedRestaurantSite', 'RestaurantSiteRenderer', 'site.json', 'renderPayload'],
+    },
+  };
+}
+
+async function requestOpenAiCodeBuild(detail: NonNullable<Awaited<ReturnType<typeof getAdminSiteDetail>>>, model: string) {
+  const credential = await getProviderCredential('openai');
+  const apiKey = credentialValue(credential.secret, 'OPENAI_API_KEY') || credential.secret || process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error('Missing OpenAI credentials. Connect OpenAI in admin integrations or add OPENAI_API_KEY server-side before running code builds.');
+  }
+
+  const response = await fetch('https://api.openai.com/v1/responses', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model,
+      reasoning: { effort: openAiReasoningEffort('high') },
+      input: [
+        {
+          role: 'system',
+          content:
+            'You are the SaborWeb build agent running inside the production app. Build like an expert Codex/IDE front-end engineer. Return actual TypeScript React source code, not a plan. You must create a unique restaurant-specific generated site component for the provided slug. Use the build brief as source of truth, but correct obvious spelling/brand issues only when owner/admin context is stronger. Never use GeneratedRestaurantSite, RestaurantSiteRenderer, site.json, renderPayload, external secrets, or a generic template. Create polished, mobile-first, accessible, SEO-conscious UI with structured local data for restaurant facts, hours, menu, CTAs, owner-confirmation notes, and JSON-LD. If photos are not approved, create a premium no-photo design using CSS, typography, cards, restaurant-specific motifs, and layout craft. The component must be self-contained, can be a client component, and must accept { mode, lang } using GeneratedSiteComponentProps. The registry will be updated by the app after you return the file.',
+        },
+        {
+          role: 'user',
+          content: JSON.stringify(codeBuildInput(detail), null, 2),
+        },
+      ],
+      text: {
+        format: {
+          type: 'json_schema',
+          name: 'saborweb_code_build',
+          strict: true,
+          schema: codeBuildSchema,
+        },
+      },
+    }),
+    signal: AbortSignal.timeout(Number(process.env.OPENAI_CODE_BUILD_TIMEOUT_MS ?? 180_000)),
+  });
+
+  const json = await response.json() as Record<string, unknown>;
+  if (!response.ok) {
+    const message =
+      typeof json.error === 'object' && json.error !== null && 'message' in json.error
+        ? String((json.error as { message?: unknown }).message)
+        : `OpenAI code build failed with status ${response.status}.`;
+    throw new Error(message);
+  }
+
+  const text = outputText(json);
+  if (!text) throw new Error('OpenAI code builder returned no structured output text.');
+  return validateCodeBuildOutput(JSON.parse(text), detail.slug);
+}
+
 async function processCodeBuild(run: AgentRun) {
   const site = await loadSite(run);
   if (!site) throw new Error('Code build run is missing a site.');
@@ -2257,43 +2619,158 @@ async function processCodeBuild(run: AgentRun) {
       launch_mode: shouldBuildThroughContentGaps() ? 'always_build' : 'gated',
     });
   }
+
+  const model = run.model || process.env.OPENAI_CODE_BUILD_MODEL || process.env.OPENAI_MODEL || 'gpt-5.5';
   await setRunProgress(run, site, {
     percent: 20,
-    label: 'Waiting for custom code build',
-    detail: 'Renderer builds are disabled. This project needs a restaurant-specific React component registered in src/generated-sites/components.tsx.',
-    status: 'blocked',
+    label: 'Generating custom React site',
+    detail: `Using ${model} to write restaurant-specific generated-site code.`,
   });
 
-  await getSupabaseAdmin().from('restaurant_sites').update({
+  const generatedCode = await requestOpenAiCodeBuild(detail, model);
+  const siteFile = generatedCode.files[0];
+
+  await setRunProgress(run, site, {
+    percent: 52,
+    label: 'Committing custom site code',
+    detail: `Committing ${siteFile.path} and generated-site registry wiring to the production deploy branch.`,
+  });
+
+  const githubCommit = await commitCustomSiteToGitHub({
+    slug: site.slug,
+    siteFileContent: siteFile.content,
+  }).catch((error) => ({
+    committed: false,
+    blocked: true,
+    branch: productionDeployBranch(),
+    reason: error instanceof Error ? error.message : 'github_commit_failed',
+  }));
+
+  if (githubCommit.blocked || !githubCommit.committed) {
+    await getSupabaseAdmin().from('restaurant_sites').update({
+      project_stage: 'building',
+      build_strategy: 'custom_component',
+      deployment_status: 'blocked',
+      generated_file_manifest: generatedCode.files.map((file) => ({ path: file.path, kind: 'component' })),
+      metadata: {
+        ...asRecord(site.metadata),
+        build_strategy: 'custom_component',
+        current_operation: {
+          task_type: run.task_type,
+          percent: 52,
+          label: 'Custom code commit blocked',
+          detail: `Connect GitHub repo credentials before deployment can continue: ${githubCommit.reason ?? 'missing GitHub configuration'}.`,
+          status: 'blocked',
+          updated_at: new Date().toISOString(),
+        },
+        generated_site_files: generatedCode.files.map((file) => file.path),
+        generated_site_commit: githubCommit,
+      },
+    }).eq('id', site.id);
+    return asBlockedResult('Custom generated-site code could not be committed to the production deploy branch.', {
+      github_commit: githubCommit,
+      generated_files: generatedCode.files.map((file) => file.path),
+    });
+  }
+
+  const supabase = getSupabaseAdmin();
+  const deploymentUrl = generatedSiteSubdomain(site.slug);
+  const branch = githubCommit.branch ?? productionDeployBranch();
+  const { data: version, error: versionError } = await supabase.from('site_versions').insert({
+    site_id: site.id,
+    status: 'staged',
+    release_channel: 'preview',
+    source_branch: branch,
+    deployment_url: deploymentUrl,
+    metadata: {
+      created_by_agent_run_id: run.id,
+      build_strategy: 'custom_component',
+      build_packet_id: detail.buildPacket?.id ?? null,
+      prompt_revision_id: typeof run.metadata.prompt_revision_id === 'string' ? run.metadata.prompt_revision_id : null,
+      github_status: 'custom_site_committed',
+      github_commit: githubCommit,
+      generated_files: [
+        ...generatedCode.files.map((file) => file.path),
+        'src/generated-sites/components.tsx',
+      ],
+      code_build_summary: generatedCode.summary,
+      qa_notes: generatedCode.qaNotes,
+    },
+  }).select('id, deployment_url').single();
+
+  if (versionError || !version) throw new Error(versionError?.message ?? 'Could not create staged custom site version.');
+
+  if (typeof run.metadata.prompt_revision_id === 'string') {
+    await updatePromptStudioRevision({
+      revisionId: run.metadata.prompt_revision_id,
+      resultingSiteVersionId: version.id,
+      status: 'draft_preview',
+      metadata: {
+        build_strategy: 'custom_component',
+        github_commit: githubCommit,
+      },
+    });
+  }
+
+  const generatedFiles = [
+    ...generatedCode.files.map((file) => ({ path: file.path, kind: 'component' })),
+    { path: 'src/generated-sites/components.tsx', kind: 'registry' },
+  ];
+
+  await supabase.from('restaurant_sites').update({
     project_stage: 'building',
     build_strategy: 'custom_component',
-    deployment_status: 'blocked',
-    generated_file_manifest: [],
+    deployment_status: 'queued',
+    staging_url: deploymentUrl,
+    generated_file_manifest: generatedFiles,
     metadata: {
       ...asRecord(site.metadata),
       build_strategy: 'custom_component',
-      custom_component_required: true,
       build_brief_id: detail.buildPacket?.id ?? null,
+      generated_site_files: generatedFiles,
+      generated_site_commit: githubCommit,
+      code_build_summary: generatedCode.summary,
+      code_build_qa_notes: generatedCode.qaNotes,
       current_operation: {
         task_type: run.task_type,
-        percent: 20,
-        label: 'Custom code build required',
-        detail: 'Generic renderer output is disabled. Build a unique site component under src/generated-sites/[slug]/ and register it in src/generated-sites/components.tsx before deploy/QA can continue.',
-        status: 'blocked',
+        percent: 76,
+        label: 'Custom site code committed',
+        detail: 'GPT-5.5 generated restaurant-specific React code and deploy was queued.',
+        status: 'running',
         updated_at: new Date().toISOString(),
       },
     },
   }).eq('id', site.id);
 
-  return asBlockedResult('Generic renderer builds are disabled. A real repo-editing build agent must create and register a custom generated-site component before deploy can continue.', {
-    slug: site.slug,
-    required_files: [
-      `src/generated-sites/${site.slug}/Site.tsx`,
-      'src/generated-sites/components.tsx',
-    ],
-    build_packet_id: detail.buildPacket?.id ?? null,
-    next_step: 'Run an IDE-quality build agent against the build brief, then commit the generated component and re-run deploy/QA.',
+  await queueRun({
+    siteId: site.id,
+    requestId: site.request_id,
+    taskType: 'deploy',
+    provider: 'vercel',
+    metadata: {
+      queued_after_agent_run_id: run.id,
+      site_version_id: version.id,
+      workflow_step: 'deploy',
+      github_commit: githubCommit,
+    },
   });
+
+  await setRunProgress(run, site, {
+    percent: 100,
+    label: 'Custom site code committed',
+    detail: 'Restaurant-specific React files were committed and deploy was queued.',
+    status: 'succeeded',
+  });
+
+  return {
+    site_version_id: version.id,
+    deployment_url: deploymentUrl,
+    source_branch: branch,
+    generated_site_files: generatedFiles,
+    github_commit: githubCommit,
+    code_build_summary: generatedCode.summary,
+    queued_next: 'deploy',
+  };
 }
 
 function projectEnvKey() {
