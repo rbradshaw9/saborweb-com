@@ -1,5 +1,3 @@
-"use client";
-
 import type { GeneratedSiteComponentProps } from '@/generated-sites/components';
 
 type MenuItem = {
@@ -9,6 +7,7 @@ type MenuItem = {
   badges: string[];
   sourceBacked: boolean;
   inferred: boolean;
+  visible?: boolean;
 };
 
 type MenuCategory = {
@@ -17,46 +16,43 @@ type MenuCategory = {
   items: MenuItem[];
 };
 
-type HourRow = {
+type HoursRow = {
   day: string;
-  schemaDay: string;
+  shortDay: string;
   opens: string;
   closes: string;
   display: string;
 };
 
 const restaurant = {
-  name: 'Good Start Costal Cafe',
+  name: 'Good Start Coastal Cafe',
   alternateName: 'Good Start 466',
   cuisine: 'Cafe',
-  city: 'Isabela, Puerto Rico',
-  addressLine: 'GW67+XCR, Isabela, 00690, Puerto Rico',
+  address: 'GW67+XCR, Isabela, 00690, Puerto Rico',
   streetAddress: 'GW67+XCR',
   locality: 'Isabela',
-  region: 'PR',
   postalCode: '00690',
+  region: 'Puerto Rico',
   country: 'PR',
   phone: '(787) 830-9500',
   phoneHref: 'tel:+17878309500',
   mapsUrl: 'https://maps.google.com/?cid=2958274291943456299',
   facebookUrl: 'https://www.facebook.com/goodstart466',
   instagramUrl: 'https://www.instagram.com/goodstart466',
-  previewUrl: '/preview/goodstart',
-  claimUrl: '/claim/goodstart',
 };
 
-const hours: HourRow[] = [
-  { day: 'Monday', schemaDay: 'Monday', opens: '08:00', closes: '14:00', display: '8:00 AM–2:00 PM' },
-  { day: 'Tuesday', schemaDay: 'Tuesday', opens: '08:00', closes: '14:00', display: '8:00 AM–2:00 PM' },
-  { day: 'Wednesday', schemaDay: 'Wednesday', opens: '08:00', closes: '14:00', display: '8:00 AM–2:00 PM' },
-  { day: 'Thursday', schemaDay: 'Thursday', opens: '08:00', closes: '14:00', display: '8:00 AM–2:00 PM' },
-  { day: 'Friday', schemaDay: 'Friday', opens: '08:00', closes: '14:00', display: '8:00 AM–2:00 PM' },
-  { day: 'Saturday', schemaDay: 'Saturday', opens: '08:00', closes: '14:00', display: '8:00 AM–2:00 PM' },
-  { day: 'Sunday', schemaDay: 'Sunday', opens: '08:00', closes: '14:00', display: '8:00 AM–2:00 PM' },
+const hours: HoursRow[] = [
+  { day: 'Monday', shortDay: 'Mon', opens: '08:00', closes: '14:00', display: '8:00 AM–2:00 PM' },
+  { day: 'Tuesday', shortDay: 'Tue', opens: '08:00', closes: '14:00', display: '8:00 AM–2:00 PM' },
+  { day: 'Wednesday', shortDay: 'Wed', opens: '08:00', closes: '14:00', display: '8:00 AM–2:00 PM' },
+  { day: 'Thursday', shortDay: 'Thu', opens: '08:00', closes: '14:00', display: '8:00 AM–2:00 PM' },
+  { day: 'Friday', shortDay: 'Fri', opens: '08:00', closes: '14:00', display: '8:00 AM–2:00 PM' },
+  { day: 'Saturday', shortDay: 'Sat', opens: '08:00', closes: '14:00', display: '8:00 AM–2:00 PM' },
+  { day: 'Sunday', shortDay: 'Sun', opens: '08:00', closes: '14:00', display: '8:00 AM–2:00 PM' },
 ];
 
-// Owner-facing implementation note: this menu is an editable starter menu generated from the provided café/breakfast concept.
-// Source-backed item names, descriptions, prices, options, and allergen details should be confirmed by the restaurant before public launch.
+// Menu provenance note for operators: this starter menu is fully generated from the structured brief.
+// There are currently no source-backed menu item names/descriptions and no prices; keep all fields editable.
 const menuCategories: MenuCategory[] = [
   {
     name: 'Breakfast Plates',
@@ -414,15 +410,7 @@ const menuCategories: MenuCategory[] = [
   },
 ];
 
-const ownerConfirmationNotes = [
-  'Confirm public name spelling and whether Good Start 466 should appear as the primary name.',
-  'Confirm the best public phone number before launch.',
-  'Replace starter menu details with owner-approved item names, descriptions, prices, and options.',
-  'Add approved logo, brand colors, and photography when available.',
-  'Confirm whether there is an official website beyond the current social profiles.',
-];
-
-const featuredMenuNames = [
+const featuredItemNames = [
   'Good Start Breakfast',
   'Café con Leche',
   'Avocado Toast',
@@ -431,1651 +419,1744 @@ const featuredMenuNames = [
   'Piña Colada Smoothie',
 ];
 
-const primaryActions = [
-  { label: 'View Menu', href: '#menu', kind: 'anchor' },
-  { label: 'Hours', href: '#hours', kind: 'anchor' },
-  { label: 'Directions', href: restaurant.mapsUrl, kind: 'external' },
-  { label: 'Call', href: restaurant.phoneHref, kind: 'phone' },
+const ownerConfirmationNotes = [
+  'Confirm final public name spelling and whether Good Start 466 should be used as the primary or alternate brand.',
+  'Confirm the best public phone number before launch.',
+  'Review menu item names, descriptions, badges, availability, and prices.',
+  'Confirm logo/brand assets and whether a standalone official website should be linked.',
 ];
+
+const copy = {
+  en: {
+    navMenu: 'Menu',
+    navAbout: 'About',
+    navHours: 'Hours',
+    navVisit: 'Visit',
+    viewMenu: 'View Menu',
+    call: 'Call',
+    callCafe: 'Call Cafe',
+    directions: 'Get Directions',
+    hours: 'Hours',
+    heroEyebrow: 'Isabela café • Open daily 8 AM–2 PM',
+    heroHeadline: 'A bright café start in Isabela.',
+    heroSubheadline:
+      'Good Start Coastal Cafe brings breakfast, coffee, easy lunch options, and cold drinks together in a warm Puerto Rico café experience.',
+    quickTitle: 'Everything for a good start',
+    quickSubtitle: 'Plan a café stop, check the daily hours, call ahead, or open directions in one tap.',
+    featuredTitle: 'Cafe favorites',
+    featuredSubtitle: 'A quick look at popular breakfast, coffee, lunch, and cold drink ideas from the editable menu.',
+    fullMenuTitle: 'Full menu',
+    fullMenuSubtitle: 'Browse breakfast plates, lighter starts, sandwiches, bowls, sides, coffee, and cold drinks.',
+    aboutTitle: 'A sunny café stop in Isabela',
+    aboutBody:
+      'Built for mornings and easy afternoons, Good Start Coastal Cafe keeps the experience simple: coffee, breakfast, lighter café bites, lunch-friendly options, and refreshing drinks in Isabela, Puerto Rico.',
+    hoursTitle: 'Visit Good Start Coastal Cafe',
+    hoursSubtitle: 'Open every day from 8:00 AM to 2:00 PM at GW67+XCR in Isabela.',
+    connectTitle: 'Connect with Good Start',
+    socialSubtitle: 'Social links are here for updates; this page is the primary menu, hours, and visit hub.',
+    openDaily: 'Open daily',
+    today: 'Today',
+    phone: 'Phone',
+    address: 'Address',
+    dailyHours: 'Daily hours',
+    menuSections: 'Menu sections',
+    items: 'items',
+    item: 'item',
+    skip: 'Skip to main content',
+    ownerChecklist: 'Owner preview checklist',
+  },
+  es: {
+    navMenu: 'Menú',
+    navAbout: 'Acerca',
+    navHours: 'Horario',
+    navVisit: 'Visítanos',
+    viewMenu: 'Ver menú',
+    call: 'Llamar',
+    callCafe: 'Llamar',
+    directions: 'Cómo llegar',
+    hours: 'Horario',
+    heroEyebrow: 'Café en Isabela • Abierto diario 8 AM–2 PM',
+    heroHeadline: 'Un comienzo brillante en Isabela.',
+    heroSubheadline:
+      'Good Start Coastal Cafe reúne desayunos, café, opciones sencillas de almuerzo y bebidas frías en una experiencia cálida de café en Puerto Rico.',
+    quickTitle: 'Todo para un buen comienzo',
+    quickSubtitle: 'Planifica tu visita, revisa el horario diario, llama o abre direcciones con un toque.',
+    featuredTitle: 'Favoritos del café',
+    featuredSubtitle: 'Una mirada rápida a ideas populares de desayuno, café, almuerzo y bebidas frías desde el menú editable.',
+    fullMenuTitle: 'Menú completo',
+    fullMenuSubtitle: 'Explora desayunos, opciones ligeras, sándwiches, bowls, acompañantes, café y bebidas frías.',
+    aboutTitle: 'Un café soleado en Isabela',
+    aboutBody:
+      'Pensado para mañanas y tardes fáciles, Good Start Coastal Cafe mantiene la experiencia sencilla: café, desayuno, bocados ligeros, opciones de almuerzo y bebidas refrescantes en Isabela, Puerto Rico.',
+    hoursTitle: 'Visita Good Start Coastal Cafe',
+    hoursSubtitle: 'Abierto todos los días de 8:00 AM a 2:00 PM en GW67+XCR en Isabela.',
+    connectTitle: 'Conecta con Good Start',
+    socialSubtitle: 'Los enlaces sociales están para actualizaciones; esta página es el centro principal de menú, horario y visita.',
+    openDaily: 'Abierto diario',
+    today: 'Hoy',
+    phone: 'Teléfono',
+    address: 'Dirección',
+    dailyHours: 'Horario diario',
+    menuSections: 'Secciones del menú',
+    items: 'platos',
+    item: 'plato',
+    skip: 'Saltar al contenido principal',
+    ownerChecklist: 'Lista de revisión del dueño',
+  },
+};
 
 function slugify(value: string) {
   return value
     .toLowerCase()
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
-    .replace(/&/g, 'and')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)/g, '');
 }
 
-function getFeaturedItems() {
-  return featuredMenuNames
-    .map((featureName) => {
-      for (const category of menuCategories) {
-        const item = category.items.find((candidate) => candidate.name === featureName);
-        if (item) {
-          return { ...item, categoryName: category.name };
-        }
-      }
-      return null;
-    })
-    .filter((item): item is MenuItem & { categoryName: string } => item !== null);
+function findFeaturedItems() {
+  const allItems = menuCategories.flatMap((category) =>
+    category.items
+      .filter((item) => item.visible !== false)
+      .map((item) => ({ ...item, category: category.name })),
+  );
+
+  return featuredItemNames
+    .map((name) => allItems.find((item) => item.name === name))
+    .filter((item): item is MenuItem & { category: string } => Boolean(item));
 }
 
-const featuredItems = getFeaturedItems();
-const menuItemCount = menuCategories.reduce((total, category) => total + category.items.length, 0);
-
-const jsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'CafeOrCoffeeShop',
-  name: restaurant.name,
-  alternateName: restaurant.alternateName,
-  servesCuisine: ['Cafe', 'Breakfast', 'Coffee'],
-  priceRange: undefined,
-  telephone: restaurant.phone,
-  address: {
-    '@type': 'PostalAddress',
-    streetAddress: restaurant.streetAddress,
-    addressLocality: restaurant.locality,
-    addressRegion: restaurant.region,
-    postalCode: restaurant.postalCode,
-    addressCountry: restaurant.country,
-  },
-  hasMap: restaurant.mapsUrl,
-  sameAs: [restaurant.facebookUrl, restaurant.instagramUrl],
-  openingHours: ['Mo-Su 08:00-14:00'],
-  openingHoursSpecification: hours.map((row) => ({
-    '@type': 'OpeningHoursSpecification',
-    dayOfWeek: `https://schema.org/${row.schemaDay}`,
-    opens: row.opens,
-    closes: row.closes,
-  })),
-  hasMenu: {
-    '@type': 'Menu',
-    name: `${restaurant.name} Menu`,
-    hasMenuSection: menuCategories.map((category) => ({
-      '@type': 'MenuSection',
-      name: category.name,
-      description: category.description,
-      hasMenuItem: category.items.map((item) => ({
-        '@type': 'MenuItem',
-        name: item.name,
-        description: item.description,
-        suitableForDiet: item.badges.includes('Vegetarian') ? 'https://schema.org/VegetarianDiet' : undefined,
-      })),
+function createJsonLd() {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'CafeOrCoffeeShop',
+    name: restaurant.name,
+    alternateName: restaurant.alternateName,
+    description:
+      'Cafe in Isabela, Puerto Rico serving breakfast, coffee, easy lunch options, and cold drinks. Open daily 8 AM to 2 PM.',
+    servesCuisine: ['Cafe', 'Breakfast', 'Coffee'],
+    telephone: restaurant.phone,
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: restaurant.streetAddress,
+      addressLocality: restaurant.locality,
+      postalCode: restaurant.postalCode,
+      addressRegion: restaurant.region,
+      addressCountry: restaurant.country,
+    },
+    hasMap: restaurant.mapsUrl,
+    openingHoursSpecification: hours.map((row) => ({
+      '@type': 'OpeningHoursSpecification',
+      dayOfWeek: `https://schema.org/${row.day}`,
+      opens: row.opens,
+      closes: row.closes,
     })),
-  },
-};
+    sameAs: [restaurant.facebookUrl, restaurant.instagramUrl],
+    hasMenu: {
+      '@type': 'Menu',
+      name: `${restaurant.name} Menu`,
+      hasMenuSection: menuCategories.map((category) => ({
+        '@type': 'MenuSection',
+        name: category.name,
+        description: category.description,
+        hasMenuItem: category.items
+          .filter((item) => item.visible !== false)
+          .map((item) => ({
+            '@type': 'MenuItem',
+            name: item.name,
+            description: item.description,
+          })),
+      })),
+    },
+  };
+}
 
 export default function GoodstartSite({ mode, lang }: GeneratedSiteComponentProps) {
-  const normalizedMode = String(mode ?? 'preview').toLowerCase();
-  const languageCode = String(lang ?? 'en').toLowerCase().startsWith('es') ? 'es' : 'en';
-  const showOwnerNotes = ['preview', 'claim', 'draft', 'admin'].includes(normalizedMode);
-  const robots = normalizedMode === 'live' || normalizedMode === 'published' ? 'index,follow' : 'noindex,nofollow';
-  const jsonLdText = JSON.stringify(jsonLd).replace(/</g, '\\u003c');
+  const langKey = String(lang || '').toLowerCase().startsWith('es') ? 'es' : 'en';
+  const t = copy[langKey];
+  const modeKey = String(mode || '').toLowerCase();
+  const showOwnerNotes = ['owner', 'draft', 'edit', 'internal'].includes(modeKey);
+  const featuredItems = findFeaturedItems();
+  const visibleItemsCount = menuCategories.reduce(
+    (count, category) => count + category.items.filter((item) => item.visible !== false).length,
+    0,
+  );
+  const jsonLd = createJsonLd();
+  const seoTitle = `${restaurant.name} | Cafe, Breakfast & Coffee in Isabela Puerto Rico`;
+  const seoDescription =
+    'Visit Good Start Coastal Cafe, a cafe in Isabela, Puerto Rico for breakfast, coffee, easy lunch options, and cold drinks. Open daily 8 AM–2 PM.';
 
   return (
     <>
-      <title>Good Start Costal Cafe | Breakfast & Coffee in Isabela, Puerto Rico</title>
-      <meta
-        name="description"
-        content="Good Start Costal Cafe is a bright cafe in Isabela, Puerto Rico serving breakfast, coffee, lunch-friendly cafe options, and cold drinks daily from 8 AM to 2 PM."
-      />
+      <title>{seoTitle}</title>
+      <meta name="description" content={seoDescription} />
       <meta
         name="keywords"
-        content="Good Start Costal Cafe, Good Start 466, cafe in Isabela Puerto Rico, breakfast in Isabela PR, coffee in Isabela, Puerto Rico breakfast cafe"
+        content="Good Start Coastal Cafe, Good Start 466, cafe in Isabela Puerto Rico, breakfast in Isabela PR, coffee in Isabela, Puerto Rico breakfast cafe"
       />
-      <meta name="robots" content={robots} />
-      <meta property="og:title" content="Good Start Costal Cafe | Isabela, Puerto Rico" />
-      <meta
-        property="og:description"
-        content="A sunny Isabela cafe for breakfast, coffee, easy lunch options, and cold drinks. Open daily 8 AM–2 PM."
-      />
+      <meta property="og:title" content={seoTitle} />
+      <meta property="og:description" content={seoDescription} />
       <meta property="og:type" content="website" />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdText }} />
+      <meta name="twitter:card" content="summary" />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-      <div id="top" className="gs-site" lang={languageCode} data-mode={normalizedMode}>
-        <a className="gs-skip" href="#menu">Skip to menu</a>
+      <div className="gs-site" id="top">
+        <a className="gs-skip" href="#main">
+          {t.skip}
+        </a>
 
-        <header className="gs-header" aria-label="Good Start Costal Cafe site header">
-          <div className="gs-header-inner">
-            <a className="gs-logo" href="#top" aria-label="Good Start Costal Cafe home">
-              <span className="gs-logo-mark" aria-hidden="true">GS</span>
-              <span className="gs-logo-copy">
-                <span className="gs-logo-primary">Good Start</span>
-                <span className="gs-logo-secondary">Costal Cafe • Isabela</span>
+        <header className="gs-header" aria-label="Good Start Coastal Cafe site header">
+          <div className="gs-shell gs-header-inner">
+            <a className="gs-brand" href="#top" aria-label={`${restaurant.name} home`}>
+              <span className="gs-brand-mark" aria-hidden="true">
+                <span className="gs-brand-sun" />
+                <span className="gs-brand-wave" />
+              </span>
+              <span>
+                <span className="gs-brand-name">Good Start</span>
+                <span className="gs-brand-sub">Coastal Cafe</span>
               </span>
             </a>
 
-            <nav className="gs-nav" aria-label="Primary navigation">
-              <a href="#featured">Favorites</a>
-              <a href="#menu">Menu</a>
-              <a href="#about">About</a>
-              <a href="#hours">Hours</a>
-              <a href="#connect">Connect</a>
+            <nav className="gs-primary-nav" aria-label="Primary navigation">
+              <a href="#menu">{t.navMenu}</a>
+              <a href="#about">{t.navAbout}</a>
+              <a href="#hours">{t.navHours}</a>
+              <a href="#visit">{t.navVisit}</a>
             </nav>
 
-            <div className="gs-header-actions" aria-label="Quick actions">
-              <a className="gs-pill-link" href="#menu">View Menu</a>
-              <a className="gs-pill-link gs-pill-link-strong" href={restaurant.phoneHref}>Call</a>
+            <div className="gs-header-actions" aria-label="Primary actions">
+              <a className="gs-link-button gs-link-button-soft" href="#menu">
+                {t.viewMenu}
+              </a>
+              <a className="gs-link-button gs-link-button-coral" href={restaurant.phoneHref}>
+                {t.call}
+              </a>
             </div>
           </div>
         </header>
 
-        <main>
-          <section className="gs-hero" aria-labelledby="hero-title">
+        <main id="main">
+          <section className="gs-hero gs-section" aria-labelledby="hero-title">
             <div className="gs-shell gs-hero-grid">
               <div className="gs-hero-copy">
-                <p className="gs-eyebrow">Isabela café • Open daily 8 AM–2 PM</p>
-                <h1 id="hero-title">A bright café start in Isabela.</h1>
-                <p className="gs-hero-lede">
-                  Good Start Costal Cafe brings breakfast, coffee, easy lunch options, and cold drinks together in a warm Puerto Rico café experience.
-                </p>
-
-                <div className="gs-hero-actions" aria-label="Primary visitor actions">
-                  <a className="gs-button gs-button-primary" href="#menu">View Menu</a>
-                  <a className="gs-button gs-button-secondary" href={restaurant.mapsUrl} target="_blank" rel="noreferrer">Get Directions</a>
+                <p className="gs-eyebrow">{t.heroEyebrow}</p>
+                <h1 id="hero-title">{t.heroHeadline}</h1>
+                <p className="gs-hero-lede">{t.heroSubheadline}</p>
+                <div className="gs-hero-actions" aria-label="Hero actions">
+                  <a className="gs-cta gs-cta-primary" href="#menu">
+                    {t.viewMenu}
+                  </a>
+                  <a className="gs-cta gs-cta-secondary" href={restaurant.mapsUrl} target="_blank" rel="noreferrer">
+                    {t.directions}
+                  </a>
                 </div>
-
-                <dl className="gs-hero-facts" aria-label="Restaurant quick facts">
+                <dl className="gs-hero-facts" aria-label="Cafe quick facts">
                   <div>
-                    <dt>Hours</dt>
-                    <dd>Daily 8 AM–2 PM</dd>
+                    <dt>{t.openDaily}</dt>
+                    <dd>8 AM–2 PM</dd>
                   </div>
                   <div>
-                    <dt>Location</dt>
-                    <dd>Isabela, PR</dd>
+                    <dt>{restaurant.cuisine}</dt>
+                    <dd>Breakfast • Coffee</dd>
                   </div>
                   <div>
-                    <dt>Call</dt>
-                    <dd><a href={restaurant.phoneHref}>{restaurant.phone}</a></dd>
+                    <dt>Isabela</dt>
+                    <dd>Puerto Rico</dd>
                   </div>
                 </dl>
               </div>
 
               <div className="gs-hero-art" aria-hidden="true">
-                <div className="gs-sunburst" />
-                <div className="gs-wave gs-wave-one" />
-                <div className="gs-wave gs-wave-two" />
                 <div className="gs-art-card gs-art-card-main">
-                  <span className="gs-art-kicker">Morning café rhythm</span>
-                  <div className="gs-cup">
-                    <span className="gs-steam gs-steam-one" />
-                    <span className="gs-steam gs-steam-two" />
-                    <span className="gs-steam gs-steam-three" />
-                    <span className="gs-cup-body" />
+                  <div className="gs-sunrise">
+                    <span className="gs-sun-core" />
+                    <span className="gs-wave gs-wave-one" />
+                    <span className="gs-wave gs-wave-two" />
+                    <span className="gs-wave gs-wave-three" />
                   </div>
-                  <strong>Daily 8–2</strong>
-                  <span>Breakfast • Coffee • Cold drinks</span>
+                  <div className="gs-art-caption">
+                    <span className="gs-art-kicker">Morning cafe rhythm</span>
+                    <strong>Open daily</strong>
+                    <span>8:00 AM–2:00 PM</span>
+                  </div>
                 </div>
-                <div className="gs-art-card gs-art-card-small">
-                  <span className="gs-route-badge">466</span>
-                  <span>Good Start in Isabela</span>
+                <div className="gs-art-card gs-art-card-mini gs-mini-one">
+                  <span className="gs-mini-icon">☕</span>
+                  <span>Coffee</span>
+                </div>
+                <div className="gs-art-card gs-art-card-mini gs-mini-two">
+                  <span className="gs-mini-icon">☀</span>
+                  <span>Breakfast</span>
                 </div>
               </div>
             </div>
           </section>
 
-          <section className="gs-quick-strip" aria-label="Quick restaurant information">
-            <div className="gs-shell gs-quick-grid">
-              <article>
-                <span className="gs-info-label">Today</span>
-                <strong>Open daily</strong>
-                <p>8:00 AM–2:00 PM</p>
-              </article>
-              <article>
-                <span className="gs-info-label">Call</span>
-                <strong><a href={restaurant.phoneHref}>{restaurant.phone}</a></strong>
-                <p>Tap to call the café</p>
-              </article>
-              <article>
-                <span className="gs-info-label">Address</span>
-                <strong>{restaurant.locality}, Puerto Rico</strong>
-                <p>{restaurant.addressLine}</p>
-              </article>
-              <article className="gs-quick-cta-card">
-                <span className="gs-info-label">Directions</span>
-                <strong>Open in Maps</strong>
-                <p><a href={restaurant.mapsUrl} target="_blank" rel="noreferrer">Get directions to Good Start</a></p>
-              </article>
+          <section className="gs-section gs-quick" aria-labelledby="quick-title">
+            <div className="gs-shell">
+              <div className="gs-section-heading gs-section-heading-center">
+                <p className="gs-eyebrow">{t.quickTitle}</p>
+                <h2 id="quick-title">{t.quickSubtitle}</h2>
+              </div>
+              <div className="gs-quick-grid">
+                <article className="gs-quick-card">
+                  <span className="gs-quick-icon" aria-hidden="true">🌤</span>
+                  <h3>{t.today}</h3>
+                  <p>{t.openDaily} · 8:00 AM–2:00 PM</p>
+                  <a href="#hours">{t.hours}</a>
+                </article>
+                <article className="gs-quick-card">
+                  <span className="gs-quick-icon" aria-hidden="true">☎</span>
+                  <h3>{t.phone}</h3>
+                  <p>{restaurant.phone}</p>
+                  <a href={restaurant.phoneHref}>{t.callCafe}</a>
+                </article>
+                <article className="gs-quick-card">
+                  <span className="gs-quick-icon" aria-hidden="true">📍</span>
+                  <h3>{t.address}</h3>
+                  <p>{restaurant.address}</p>
+                  <a href={restaurant.mapsUrl} target="_blank" rel="noreferrer">
+                    {t.directions}
+                  </a>
+                </article>
+              </div>
             </div>
           </section>
 
-          <section id="featured" className="gs-section gs-featured" aria-labelledby="featured-title">
+          <section className="gs-section gs-featured" aria-labelledby="featured-title">
             <div className="gs-shell">
               <div className="gs-section-heading">
-                <p className="gs-eyebrow">Cafe favorites</p>
-                <h2 id="featured-title">Start here for breakfast, coffee, and cool coastal café picks.</h2>
-                <p>
-                  A quick look at selected items from the café menu, with details organized for easy scanning before you visit.
-                </p>
+                <p className="gs-eyebrow">{t.featuredTitle}</p>
+                <h2 id="featured-title">Start here</h2>
+                <p>{t.featuredSubtitle}</p>
               </div>
 
-              <div className="gs-feature-grid">
-                {featuredItems.map((item) => (
+              <div className="gs-featured-grid">
+                {featuredItems.map((item, index) => (
                   <article className="gs-feature-card" key={item.name}>
-                    <span className="gs-card-category">{item.categoryName}</span>
-                    <div className="gs-card-title-row">
-                      <h3>{item.name}</h3>
-                      {item.priceText ? <span className="gs-price">{item.priceText}</span> : null}
+                    <div className="gs-feature-number" aria-hidden="true">
+                      {String(index + 1).padStart(2, '0')}
                     </div>
-                    <p>{item.description}</p>
-                    {item.badges.length > 0 ? (
-                      <ul className="gs-badges" aria-label={`${item.name} labels`}>
-                        {item.badges.map((badge) => <li key={badge}>{badge}</li>)}
-                      </ul>
-                    ) : null}
+                    <div>
+                      <p className="gs-card-category">{item.category}</p>
+                      <h3>{item.name}</h3>
+                      <p>{item.description}</p>
+                      {item.badges.length > 0 && (
+                        <ul className="gs-badge-list" aria-label={`${item.name} tags`}>
+                          {item.badges.map((badge) => (
+                            <li key={badge}>{badge}</li>
+                          ))}
+                        </ul>
+                      )}
+                      {item.priceText ? <p className="gs-price">{item.priceText}</p> : null}
+                    </div>
                   </article>
                 ))}
               </div>
             </div>
           </section>
 
-          <section id="menu" className="gs-section gs-menu-section" aria-labelledby="menu-title">
+          <section className="gs-section gs-menu" id="menu" aria-labelledby="menu-title">
             <div className="gs-shell">
-              <div className="gs-menu-intro">
-                <div className="gs-section-heading gs-menu-heading">
-                  <p className="gs-eyebrow">Full menu</p>
-                  <h2 id="menu-title">Browse the Good Start menu.</h2>
-                  <p>{menuCategories.length} categories and {menuItemCount} café items, organized for breakfast plans, coffee stops, and midday bites.</p>
+              <div className="gs-menu-top">
+                <div className="gs-section-heading">
+                  <p className="gs-eyebrow">{t.menuSections}</p>
+                  <h2 id="menu-title">{t.fullMenuTitle}</h2>
+                  <p>{t.fullMenuSubtitle}</p>
                 </div>
-                <div className="gs-menu-note" aria-label="Menu note">
-                  <strong>Prices</strong>
-                  <span>Ask at the café for current pricing.</span>
+                <div className="gs-menu-count" aria-label={`${visibleItemsCount} menu items`}>
+                  <strong>{visibleItemsCount}</strong>
+                  <span>{visibleItemsCount === 1 ? t.item : t.items}</span>
                 </div>
               </div>
 
               <nav className="gs-category-nav" aria-label="Menu categories">
                 {menuCategories.map((category) => (
-                  <a key={category.name} href={`#menu-${slugify(category.name)}`}>
-                    <span>{category.name}</span>
-                    <em>{category.items.length}</em>
+                  <a href={`#${slugify(category.name)}`} key={category.name}>
+                    {category.name}
+                    <span>{category.items.filter((item) => item.visible !== false).length}</span>
                   </a>
                 ))}
               </nav>
 
-              <div className="gs-menu-stack">
-                {menuCategories.map((category) => (
-                  <section className="gs-menu-category" id={`menu-${slugify(category.name)}`} key={category.name} aria-labelledby={`heading-${slugify(category.name)}`}>
-                    <div className="gs-category-heading">
-                      <div>
-                        <p className="gs-category-count">{category.items.length} items</p>
-                        <h3 id={`heading-${slugify(category.name)}`}>{category.name}</h3>
+              <div className="gs-menu-sections">
+                {menuCategories.map((category) => {
+                  const visibleItems = category.items.filter((item) => item.visible !== false);
+                  return (
+                    <section className="gs-menu-section" id={slugify(category.name)} key={category.name} aria-labelledby={`${slugify(category.name)}-title`}>
+                      <div className="gs-menu-section-heading">
+                        <div>
+                          <h3 id={`${slugify(category.name)}-title`}>{category.name}</h3>
+                          <p>{category.description}</p>
+                        </div>
+                        <span>
+                          {visibleItems.length} {visibleItems.length === 1 ? t.item : t.items}
+                        </span>
                       </div>
-                      <p>{category.description}</p>
-                    </div>
 
-                    <div className="gs-items-grid">
-                      {category.items.map((item) => (
-                        <article className="gs-menu-item" key={`${category.name}-${item.name}`}>
-                          <div className="gs-card-title-row">
-                            <h4>{item.name}</h4>
-                            {item.priceText ? <span className="gs-price">{item.priceText}</span> : null}
-                          </div>
-                          <p>{item.description}</p>
-                          {item.badges.length > 0 ? (
-                            <ul className="gs-badges" aria-label={`${item.name} labels`}>
-                              {item.badges.map((badge) => <li key={badge}>{badge}</li>)}
-                            </ul>
-                          ) : null}
-                        </article>
-                      ))}
-                    </div>
-                  </section>
-                ))}
+                      <div className="gs-item-grid">
+                        {visibleItems.map((item) => (
+                          <article className="gs-menu-item" key={`${category.name}-${item.name}`}>
+                            <div className="gs-menu-item-main">
+                              <h4>{item.name}</h4>
+                              <p>{item.description}</p>
+                              {item.badges.length > 0 && (
+                                <ul className="gs-badge-list" aria-label={`${item.name} tags`}>
+                                  {item.badges.map((badge) => (
+                                    <li key={badge}>{badge}</li>
+                                  ))}
+                                </ul>
+                              )}
+                            </div>
+                            {item.priceText ? <p className="gs-price">{item.priceText}</p> : null}
+                          </article>
+                        ))}
+                      </div>
+                    </section>
+                  );
+                })}
               </div>
             </div>
           </section>
 
-          <section id="about" className="gs-section gs-about" aria-labelledby="about-title">
+          <section className="gs-section gs-about" id="about" aria-labelledby="about-title">
             <div className="gs-shell gs-about-grid">
-              <div>
-                <p className="gs-eyebrow">A sunny café stop</p>
-                <h2 id="about-title">Breakfast and coffee, rooted in Isabela.</h2>
-                <p className="gs-large-copy">
-                  Good Start Costal Cafe is a café in Isabela, Puerto Rico built around a simple morning idea: make it easy to start the day with coffee, breakfast plates, lighter café bites, sandwiches, bowls, sides, and cold drinks.
-                </p>
-                <p>
-                  The site keeps the essentials close—menu, hours, directions, and call—so guests can plan a visit quickly from home or on the go.
-                </p>
+              <div className="gs-about-copy">
+                <p className="gs-eyebrow">Good Start in Isabela</p>
+                <h2 id="about-title">{t.aboutTitle}</h2>
+                <p>{t.aboutBody}</p>
               </div>
-
               <div className="gs-about-cards" aria-label="Cafe highlights">
                 <article>
-                  <span>01</span>
-                  <strong>Open every day</strong>
-                  <p>Daily 8:00 AM–2:00 PM hours make the café easy to fit into a morning or early afternoon plan.</p>
+                  <span aria-hidden="true">☕</span>
+                  <h3>Coffee & mornings</h3>
+                  <p>A simple stop for daily café hours, warm drinks, and morning-friendly plates.</p>
                 </article>
                 <article>
-                  <span>02</span>
-                  <strong>Café-focused menu</strong>
-                  <p>Breakfast, coffee, lunch-friendly options, bowls, sides, and cold drinks are organized in one complete menu.</p>
+                  <span aria-hidden="true">🥪</span>
+                  <h3>Easy lunch options</h3>
+                  <p>Sandwiches, wraps, salads, bowls, and sides keep the menu flexible for a midday visit.</p>
                 </article>
                 <article>
-                  <span>03</span>
-                  <strong>Easy Isabela directions</strong>
-                  <p>Use the map link for directions to GW67+XCR, Isabela, 00690, Puerto Rico.</p>
+                  <span aria-hidden="true">🌴</span>
+                  <h3>Isabela café energy</h3>
+                  <p>Bright colors, coastal cues, and clear visit details make planning your stop simple.</p>
                 </article>
               </div>
             </div>
           </section>
 
-          <section id="hours" className="gs-section gs-hours" aria-labelledby="hours-title">
-            <div className="gs-shell gs-hours-grid">
-              <div className="gs-hours-card">
-                <p className="gs-eyebrow">Hours</p>
-                <h2 id="hours-title">Visit Good Start Costal Cafe.</h2>
-                <p className="gs-hours-summary">Open Monday through Sunday from 8:00 AM to 2:00 PM.</p>
+          <section className="gs-section gs-visit" id="hours" aria-labelledby="hours-title">
+            <div className="gs-shell gs-visit-grid" id="visit">
+              <div className="gs-section-heading">
+                <p className="gs-eyebrow">{t.dailyHours}</p>
+                <h2 id="hours-title">{t.hoursTitle}</h2>
+                <p>{t.hoursSubtitle}</p>
+              </div>
 
-                <div className="gs-hours-table" role="table" aria-label="Good Start Costal Cafe hours">
+              <div className="gs-hours-card">
+                <h3>{t.hours}</h3>
+                <dl>
                   {hours.map((row) => (
-                    <div className="gs-hours-row" role="row" key={row.day}>
-                      <span role="cell">{row.day}</span>
-                      <strong role="cell">{row.display}</strong>
+                    <div key={row.day}>
+                      <dt>{row.day}</dt>
+                      <dd>{row.display}</dd>
                     </div>
                   ))}
-                </div>
+                </dl>
               </div>
 
               <div className="gs-location-card">
-                <div className="gs-map-abstract" aria-hidden="true">
+                <div className="gs-map-art" aria-hidden="true">
                   <span className="gs-map-pin" />
                   <span className="gs-map-line gs-map-line-one" />
                   <span className="gs-map-line gs-map-line-two" />
-                  <span className="gs-map-line gs-map-line-three" />
+                  <span className="gs-map-dot gs-map-dot-one" />
+                  <span className="gs-map-dot gs-map-dot-two" />
                 </div>
-                <p className="gs-eyebrow">Location</p>
-                <h3>{restaurant.addressLine}</h3>
-                <p>Find the café in Isabela, Puerto Rico. Use Google Maps for current routing and arrival details.</p>
-                <div className="gs-location-actions">
-                  <a className="gs-button gs-button-primary" href={restaurant.mapsUrl} target="_blank" rel="noreferrer">Get Directions</a>
-                  <a className="gs-button gs-button-secondary" href={restaurant.phoneHref}>Call {restaurant.phone}</a>
+                <div>
+                  <h3>{restaurant.name}</h3>
+                  <p>{restaurant.address}</p>
+                  <p>
+                    <a href={restaurant.phoneHref}>{restaurant.phone}</a>
+                  </p>
+                  <div className="gs-location-actions">
+                    <a className="gs-cta gs-cta-primary" href={restaurant.mapsUrl} target="_blank" rel="noreferrer">
+                      {t.directions}
+                    </a>
+                    <a className="gs-cta gs-cta-secondary" href={restaurant.phoneHref}>
+                      {t.callCafe}
+                    </a>
+                  </div>
                 </div>
               </div>
             </div>
           </section>
-        </main>
-
-        <footer id="connect" className="gs-footer" aria-labelledby="connect-title">
-          <div className="gs-shell gs-footer-grid">
-            <div>
-              <a className="gs-logo gs-footer-logo" href="#top" aria-label="Good Start Costal Cafe home">
-                <span className="gs-logo-mark" aria-hidden="true">GS</span>
-                <span className="gs-logo-copy">
-                  <span className="gs-logo-primary">Good Start</span>
-                  <span className="gs-logo-secondary">Costal Cafe</span>
-                </span>
-              </a>
-              <p className="gs-footer-copy">
-                A welcoming cafe in Isabela, Puerto Rico for breakfast, coffee, easy lunch options, and cold drinks. Also discoverable online as Good Start 466.
-              </p>
-            </div>
-
-            <div>
-              <h2 id="connect-title">Connect</h2>
-              <address>
-                <span>{restaurant.addressLine}</span>
-                <a href={restaurant.phoneHref}>{restaurant.phone}</a>
-              </address>
-              <div className="gs-socials" aria-label="Social links">
-                <a href={restaurant.facebookUrl} target="_blank" rel="noreferrer">Facebook</a>
-                <a href={restaurant.instagramUrl} target="_blank" rel="noreferrer">Instagram</a>
-              </div>
-            </div>
-
-            <div>
-              <h2>Quick actions</h2>
-              <ul className="gs-footer-actions">
-                {primaryActions.map((action) => (
-                  <li key={action.label}>
-                    <a href={action.href} target={action.kind === 'external' ? '_blank' : undefined} rel={action.kind === 'external' ? 'noreferrer' : undefined}>
-                      {action.label}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
 
           {showOwnerNotes ? (
-            <aside className="gs-owner-note" aria-label="Owner confirmation notes for preview">
-              <strong>Owner confirmation before launch</strong>
+            <aside className="gs-owner-notes gs-shell" aria-labelledby="owner-notes-title">
+              <h2 id="owner-notes-title">{t.ownerChecklist}</h2>
               <ul>
-                {ownerConfirmationNotes.map((note) => <li key={note}>{note}</li>)}
+                {ownerConfirmationNotes.map((note) => (
+                  <li key={note}>{note}</li>
+                ))}
               </ul>
             </aside>
           ) : null}
+        </main>
+
+        <footer className="gs-footer" aria-labelledby="footer-title">
+          <div className="gs-shell gs-footer-grid">
+            <div>
+              <h2 id="footer-title">{t.connectTitle}</h2>
+              <p>{t.socialSubtitle}</p>
+              <div className="gs-socials" aria-label="Social links">
+                <a href={restaurant.facebookUrl} target="_blank" rel="noreferrer">
+                  Facebook
+                </a>
+                <a href={restaurant.instagramUrl} target="_blank" rel="noreferrer">
+                  Instagram
+                </a>
+              </div>
+            </div>
+            <address>
+              <strong>{restaurant.name}</strong>
+              <span>{restaurant.address}</span>
+              <a href={restaurant.phoneHref}>{restaurant.phone}</a>
+              <span>{t.openDaily}: 8:00 AM–2:00 PM</span>
+            </address>
+          </div>
         </footer>
 
-        <nav className="gs-mobile-bar" aria-label="Mobile quick actions">
-          <a href="#menu"><span aria-hidden="true">☕</span>Menu</a>
-          <a href="#hours"><span aria-hidden="true">◷</span>Hours</a>
-          <a href={restaurant.mapsUrl} target="_blank" rel="noreferrer"><span aria-hidden="true">⌖</span>Directions</a>
-          <a href={restaurant.phoneHref}><span aria-hidden="true">☎</span>Call</a>
+        <nav className="gs-mobile-actions" aria-label="Mobile quick actions">
+          <a href="#menu">
+            <span aria-hidden="true">☰</span>
+            {t.navMenu}
+          </a>
+          <a href="#hours">
+            <span aria-hidden="true">◷</span>
+            {t.navHours}
+          </a>
+          <a href={restaurant.mapsUrl} target="_blank" rel="noreferrer">
+            <span aria-hidden="true">⌖</span>
+            {t.directions}
+          </a>
+          <a href={restaurant.phoneHref}>
+            <span aria-hidden="true">☎</span>
+            {t.call}
+          </a>
         </nav>
-      </div>
 
-      <style>{`
-        .gs-site,
-        .gs-site * {
-          box-sizing: border-box;
-        }
-
-        .gs-site {
-          --cream: #fff8ea;
-          --cream-strong: #fff1d3;
-          --sand: #f4d8b8;
-          --sand-deep: #dfb786;
-          --navy: #12324a;
-          --espresso: #432b21;
-          --ocean: #0e6674;
-          --teal: #128f95;
-          --mint: #def7ef;
-          --coral: #e85f43;
-          --citrus: #ffb84d;
-          --white: #ffffff;
-          --ink-muted: #5f6f73;
-          --line: rgba(18, 50, 74, 0.14);
-          --shadow: 0 22px 60px rgba(18, 50, 74, 0.14);
-          --soft-shadow: 0 12px 34px rgba(18, 50, 74, 0.1);
-          min-height: 100vh;
-          overflow-x: hidden;
-          color: var(--navy);
-          background:
-            radial-gradient(circle at 15% 8%, rgba(255, 184, 77, 0.28), transparent 28rem),
-            radial-gradient(circle at 92% 3%, rgba(18, 143, 149, 0.2), transparent 24rem),
-            linear-gradient(180deg, var(--cream) 0%, #fffaf1 42%, #f8ead8 100%);
-          font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-          line-height: 1.5;
-        }
-
-        .gs-site a {
-          color: inherit;
-          text-decoration: none;
-        }
-
-        .gs-site a:focus-visible,
-        .gs-site button:focus-visible {
-          outline: 3px solid var(--citrus);
-          outline-offset: 4px;
-          border-radius: 14px;
-        }
-
-        .gs-skip {
-          position: fixed;
-          top: 12px;
-          left: 12px;
-          z-index: 1000;
-          transform: translateY(-160%);
-          background: var(--navy);
-          color: var(--white);
-          padding: 0.75rem 1rem;
-          border-radius: 999px;
-          box-shadow: var(--soft-shadow);
-        }
-
-        .gs-skip:focus {
-          transform: translateY(0);
-        }
-
-        .gs-shell {
-          width: min(1160px, calc(100% - 32px));
-          margin: 0 auto;
-        }
-
-        .gs-header {
-          position: sticky;
-          top: 0;
-          z-index: 50;
-          background: rgba(255, 248, 234, 0.9);
-          border-bottom: 1px solid rgba(18, 50, 74, 0.1);
-          backdrop-filter: blur(18px);
-        }
-
-        .gs-header-inner {
-          width: min(1200px, calc(100% - 28px));
-          min-height: 76px;
-          margin: 0 auto;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 1rem;
-        }
-
-        .gs-logo {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.72rem;
-          min-width: max-content;
-        }
-
-        .gs-logo-mark {
-          width: 48px;
-          height: 48px;
-          display: grid;
-          place-items: center;
-          color: var(--navy);
-          font-family: Georgia, "Times New Roman", serif;
-          font-weight: 900;
-          letter-spacing: -0.08em;
-          background:
-            linear-gradient(135deg, rgba(255, 184, 77, 0.95), rgba(232, 95, 67, 0.82)),
-            var(--citrus);
-          border: 2px solid rgba(67, 43, 33, 0.12);
-          border-radius: 17px 17px 17px 6px;
-          box-shadow: 0 10px 22px rgba(232, 95, 67, 0.2);
-        }
-
-        .gs-logo-copy {
-          display: grid;
-          gap: 0.05rem;
-        }
-
-        .gs-logo-primary {
-          font-family: Georgia, "Times New Roman", serif;
-          font-size: 1.15rem;
-          font-weight: 900;
-          letter-spacing: -0.035em;
-          color: var(--espresso);
-        }
-
-        .gs-logo-secondary {
-          font-size: 0.74rem;
-          font-weight: 800;
-          letter-spacing: 0.12em;
-          text-transform: uppercase;
-          color: var(--ocean);
-        }
-
-        .gs-nav {
-          display: flex;
-          align-items: center;
-          gap: 0.18rem;
-          padding: 0.28rem;
-          border: 1px solid rgba(18, 50, 74, 0.09);
-          border-radius: 999px;
-          background: rgba(255, 255, 255, 0.52);
-        }
-
-        .gs-nav a,
-        .gs-pill-link {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          min-height: 40px;
-          padding: 0.58rem 0.86rem;
-          border-radius: 999px;
-          font-size: 0.9rem;
-          font-weight: 800;
-          color: var(--navy);
-        }
-
-        .gs-nav a:hover {
-          background: var(--mint);
-          color: var(--ocean);
-        }
-
-        .gs-header-actions {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-        }
-
-        .gs-pill-link {
-          border: 1px solid rgba(18, 50, 74, 0.14);
-          background: rgba(255, 255, 255, 0.62);
-        }
-
-        .gs-pill-link-strong {
-          border-color: transparent;
-          color: var(--white);
-          background: var(--ocean);
-          box-shadow: 0 12px 22px rgba(14, 102, 116, 0.18);
-        }
-
-        .gs-hero {
-          position: relative;
-          padding: clamp(3rem, 6vw, 6.5rem) 0 clamp(2.2rem, 5vw, 4.5rem);
-        }
-
-        .gs-hero::before {
-          content: "";
-          position: absolute;
-          inset: auto -8vw 0 -8vw;
-          height: 180px;
-          background:
-            radial-gradient(closest-side at 20% 72%, rgba(18, 143, 149, 0.18), transparent 70%),
-            linear-gradient(180deg, transparent, rgba(244, 216, 184, 0.42));
-          pointer-events: none;
-        }
-
-        .gs-hero-grid {
-          position: relative;
-          display: grid;
-          grid-template-columns: minmax(0, 1.04fr) minmax(340px, 0.82fr);
-          align-items: center;
-          gap: clamp(2rem, 6vw, 5rem);
-        }
-
-        .gs-eyebrow {
-          margin: 0 0 0.75rem;
-          color: var(--ocean);
-          font-size: 0.78rem;
-          font-weight: 950;
-          letter-spacing: 0.16em;
-          text-transform: uppercase;
-        }
-
-        .gs-hero h1,
-        .gs-section-heading h2,
-        .gs-about h2,
-        .gs-hours h2 {
-          margin: 0;
-          font-family: Georgia, "Times New Roman", serif;
-          font-weight: 950;
-          letter-spacing: -0.055em;
-          color: var(--espresso);
-          line-height: 0.98;
-        }
-
-        .gs-hero h1 {
-          max-width: 760px;
-          font-size: clamp(3.2rem, 9vw, 7.7rem);
-        }
-
-        .gs-hero-lede {
-          max-width: 690px;
-          margin: 1.35rem 0 0;
-          color: #425a61;
-          font-size: clamp(1.08rem, 2vw, 1.34rem);
-        }
-
-        .gs-hero-actions,
-        .gs-location-actions {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 0.8rem;
-          margin-top: 1.6rem;
-        }
-
-        .gs-button {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          min-height: 50px;
-          padding: 0.86rem 1.14rem;
-          border-radius: 999px;
-          font-weight: 950;
-          transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
-        }
-
-        .gs-button:hover {
-          transform: translateY(-2px);
-        }
-
-        .gs-button-primary {
-          color: var(--white);
-          background: linear-gradient(135deg, var(--ocean), var(--teal));
-          box-shadow: 0 16px 30px rgba(14, 102, 116, 0.22);
-        }
-
-        .gs-button-secondary {
-          color: var(--navy);
-          background: rgba(255, 255, 255, 0.68);
-          border: 1px solid rgba(18, 50, 74, 0.16);
-          box-shadow: 0 12px 24px rgba(18, 50, 74, 0.08);
-        }
-
-        .gs-hero-facts {
-          display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: 0.9rem;
-          margin: 2rem 0 0;
-        }
-
-        .gs-hero-facts div {
-          min-width: 0;
-          padding: 1rem;
-          border: 1px solid rgba(18, 50, 74, 0.12);
-          border-radius: 24px;
-          background: rgba(255, 255, 255, 0.54);
-          box-shadow: 0 14px 28px rgba(18, 50, 74, 0.07);
-        }
-
-        .gs-hero-facts dt {
-          color: var(--ocean);
-          font-size: 0.72rem;
-          font-weight: 950;
-          letter-spacing: 0.14em;
-          text-transform: uppercase;
-        }
-
-        .gs-hero-facts dd {
-          margin: 0.28rem 0 0;
-          color: var(--espresso);
-          font-weight: 900;
-        }
-
-        .gs-hero-art {
-          position: relative;
-          min-height: 540px;
-          border-radius: 48px;
-          overflow: hidden;
-          background:
-            linear-gradient(180deg, rgba(255, 248, 234, 0.2), rgba(255, 255, 255, 0.58)),
-            radial-gradient(circle at 50% 28%, rgba(255, 184, 77, 0.72), transparent 8rem),
-            linear-gradient(150deg, #dff8f0 0%, #f7e1bd 58%, #f8c39d 100%);
-          border: 1px solid rgba(18, 50, 74, 0.13);
-          box-shadow: var(--shadow);
-        }
-
-        .gs-sunburst {
-          position: absolute;
-          top: 58px;
-          left: 50%;
-          width: 210px;
-          height: 210px;
-          transform: translateX(-50%);
-          border-radius: 50%;
-          background:
-            radial-gradient(circle, #ffe3a1 0 42%, rgba(255, 184, 77, 0.72) 43% 62%, rgba(232, 95, 67, 0.08) 63% 100%);
-          box-shadow: 0 0 0 34px rgba(255, 184, 77, 0.16), 0 0 0 70px rgba(255, 255, 255, 0.18);
-        }
-
-        .gs-wave {
-          position: absolute;
-          left: -8%;
-          width: 116%;
-          height: 120px;
-          border-radius: 50%;
-          border: 3px solid rgba(14, 102, 116, 0.23);
-          border-left-color: transparent;
-          border-right-color: transparent;
-        }
-
-        .gs-wave-one { bottom: 150px; transform: rotate(-4deg); }
-        .gs-wave-two { bottom: 105px; transform: rotate(3deg); opacity: 0.8; }
-
-        .gs-art-card {
-          position: absolute;
-          display: grid;
-          gap: 0.36rem;
-          border: 1px solid rgba(18, 50, 74, 0.14);
-          background: rgba(255, 255, 255, 0.72);
-          box-shadow: var(--soft-shadow);
-          backdrop-filter: blur(12px);
-        }
-
-        .gs-art-card-main {
-          right: 34px;
-          bottom: 34px;
-          width: min(310px, calc(100% - 68px));
-          padding: 1.25rem;
-          border-radius: 28px;
-        }
-
-        .gs-art-kicker {
-          color: var(--ocean);
-          font-size: 0.72rem;
-          font-weight: 950;
-          letter-spacing: 0.12em;
-          text-transform: uppercase;
-        }
-
-        .gs-art-card-main strong {
-          color: var(--espresso);
-          font-family: Georgia, "Times New Roman", serif;
-          font-size: 2rem;
-          letter-spacing: -0.045em;
-          line-height: 1;
-        }
-
-        .gs-art-card-main > span:last-child {
-          color: #526a70;
-          font-weight: 800;
-        }
-
-        .gs-art-card-small {
-          top: 30px;
-          left: 28px;
-          display: flex;
-          align-items: center;
-          gap: 0.72rem;
-          padding: 0.85rem 1rem;
-          border-radius: 999px;
-          font-weight: 950;
-        }
-
-        .gs-route-badge {
-          display: grid;
-          place-items: center;
-          width: 44px;
-          height: 32px;
-          border-radius: 999px;
-          color: var(--white);
-          background: var(--coral);
-          font-size: 0.85rem;
-        }
-
-        .gs-cup {
-          position: relative;
-          width: 92px;
-          height: 78px;
-          margin: 0.5rem 0 0.25rem;
-        }
-
-        .gs-cup-body {
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          width: 74px;
-          height: 46px;
-          border-radius: 8px 8px 24px 24px;
-          background: linear-gradient(135deg, var(--ocean), var(--teal));
-          box-shadow: inset 0 -12px 0 rgba(18, 50, 74, 0.13);
-        }
-
-        .gs-cup-body::after {
-          content: "";
-          position: absolute;
-          right: -18px;
-          top: 9px;
-          width: 24px;
-          height: 22px;
-          border: 6px solid var(--teal);
-          border-left: 0;
-          border-radius: 0 20px 20px 0;
-        }
-
-        .gs-steam {
-          position: absolute;
-          bottom: 52px;
-          width: 11px;
-          height: 34px;
-          border-radius: 999px;
-          border-left: 3px solid rgba(67, 43, 33, 0.33);
-          transform: rotate(12deg);
-        }
-
-        .gs-steam-one { left: 12px; }
-        .gs-steam-two { left: 32px; height: 42px; opacity: 0.75; }
-        .gs-steam-three { left: 54px; opacity: 0.55; }
-
-        .gs-quick-strip {
-          position: relative;
-          padding: 0 0 clamp(3rem, 6vw, 5rem);
-        }
-
-        .gs-quick-grid {
-          display: grid;
-          grid-template-columns: repeat(4, minmax(0, 1fr));
-          gap: 0.85rem;
-          padding: 0.85rem;
-          border: 1px solid rgba(18, 50, 74, 0.12);
-          border-radius: 32px;
-          background: rgba(255, 255, 255, 0.64);
-          box-shadow: var(--soft-shadow);
-          backdrop-filter: blur(14px);
-        }
-
-        .gs-quick-grid article {
-          min-width: 0;
-          padding: 1rem;
-          border-radius: 24px;
-          background: rgba(255, 248, 234, 0.58);
-        }
-
-        .gs-quick-cta-card {
-          background: linear-gradient(135deg, rgba(222, 247, 239, 0.88), rgba(255, 255, 255, 0.56)) !important;
-        }
-
-        .gs-info-label,
-        .gs-card-category,
-        .gs-category-count {
-          display: block;
-          color: var(--ocean);
-          font-size: 0.72rem;
-          font-weight: 950;
-          letter-spacing: 0.14em;
-          text-transform: uppercase;
-        }
-
-        .gs-quick-grid strong {
-          display: block;
-          margin-top: 0.25rem;
-          color: var(--espresso);
-          font-size: 1rem;
-        }
-
-        .gs-quick-grid p {
-          margin: 0.22rem 0 0;
-          color: var(--ink-muted);
-          font-size: 0.92rem;
-        }
-
-        .gs-quick-grid a {
-          font-weight: 900;
-          text-decoration: underline;
-          text-decoration-thickness: 2px;
-          text-underline-offset: 3px;
-        }
-
-        .gs-section {
-          padding: clamp(3.3rem, 7vw, 6.4rem) 0;
-        }
-
-        .gs-featured {
-          background:
-            linear-gradient(180deg, rgba(255, 255, 255, 0.26), rgba(222, 247, 239, 0.28)),
-            linear-gradient(90deg, transparent, rgba(18, 143, 149, 0.08), transparent);
-          border-top: 1px solid rgba(18, 50, 74, 0.08);
-          border-bottom: 1px solid rgba(18, 50, 74, 0.08);
-        }
-
-        .gs-section-heading {
-          max-width: 780px;
-        }
-
-        .gs-section-heading h2,
-        .gs-about h2,
-        .gs-hours h2 {
-          font-size: clamp(2.25rem, 5.8vw, 4.8rem);
-        }
-
-        .gs-section-heading p:not(.gs-eyebrow),
-        .gs-about p,
-        .gs-hours-summary,
-        .gs-location-card p {
-          color: #4d666d;
-          font-size: 1.04rem;
-        }
-
-        .gs-feature-grid {
-          display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: 1rem;
-          margin-top: 2rem;
-        }
-
-        .gs-feature-card,
-        .gs-menu-item,
-        .gs-hours-card,
-        .gs-location-card,
-        .gs-about-cards article {
-          border: 1px solid rgba(18, 50, 74, 0.12);
-          background: rgba(255, 255, 255, 0.72);
-          box-shadow: 0 16px 34px rgba(18, 50, 74, 0.08);
-        }
-
-        .gs-feature-card {
-          position: relative;
-          min-height: 248px;
-          padding: 1.25rem;
-          border-radius: 30px;
-          overflow: hidden;
-        }
-
-        .gs-feature-card::after {
-          content: "";
-          position: absolute;
-          right: -46px;
-          bottom: -52px;
-          width: 130px;
-          height: 130px;
-          border-radius: 50%;
-          background: radial-gradient(circle, rgba(255, 184, 77, 0.45), rgba(18, 143, 149, 0.12) 64%, transparent 65%);
-          pointer-events: none;
-        }
-
-        .gs-card-title-row {
-          display: flex;
-          align-items: flex-start;
-          justify-content: space-between;
-          gap: 1rem;
-        }
-
-        .gs-feature-card h3,
-        .gs-menu-item h4,
-        .gs-category-heading h3,
-        .gs-location-card h3,
-        .gs-footer h2 {
-          margin: 0;
-          color: var(--espresso);
-          font-family: Georgia, "Times New Roman", serif;
-          font-weight: 950;
-          letter-spacing: -0.035em;
-          line-height: 1.04;
-        }
-
-        .gs-feature-card h3 {
-          margin-top: 0.8rem;
-          font-size: 1.72rem;
-        }
-
-        .gs-feature-card p,
-        .gs-menu-item p {
-          margin: 0.78rem 0 0;
-          color: #53666b;
-        }
-
-        .gs-price {
-          flex: 0 0 auto;
-          color: var(--ocean);
-          font-weight: 950;
-        }
-
-        .gs-badges {
-          position: relative;
-          z-index: 1;
-          display: flex;
-          flex-wrap: wrap;
-          gap: 0.42rem;
-          margin: 1rem 0 0;
-          padding: 0;
-          list-style: none;
-        }
-
-        .gs-badges li {
-          padding: 0.3rem 0.55rem;
-          border: 1px solid rgba(14, 102, 116, 0.15);
-          border-radius: 999px;
-          color: var(--ocean);
-          background: rgba(222, 247, 239, 0.76);
-          font-size: 0.74rem;
-          font-weight: 900;
-        }
-
-        .gs-menu-section {
-          background:
-            radial-gradient(circle at 0% 20%, rgba(255, 184, 77, 0.16), transparent 24rem),
-            radial-gradient(circle at 100% 46%, rgba(18, 143, 149, 0.14), transparent 22rem);
-        }
-
-        .gs-menu-intro {
-          display: grid;
-          grid-template-columns: 1fr auto;
-          align-items: end;
-          gap: 1.5rem;
-        }
-
-        .gs-menu-note {
-          display: grid;
-          gap: 0.18rem;
-          max-width: 250px;
-          padding: 1rem;
-          border: 1px solid rgba(18, 50, 74, 0.12);
-          border-radius: 24px;
-          background: rgba(255, 255, 255, 0.64);
-          box-shadow: var(--soft-shadow);
-        }
-
-        .gs-menu-note strong {
-          color: var(--espresso);
-        }
-
-        .gs-menu-note span {
-          color: #586b70;
-          font-size: 0.92rem;
-        }
-
-        .gs-category-nav {
-          position: sticky;
-          top: 88px;
-          z-index: 20;
-          display: flex;
-          gap: 0.55rem;
-          margin: 2rem 0;
-          padding: 0.65rem;
-          overflow-x: auto;
-          border: 1px solid rgba(18, 50, 74, 0.11);
-          border-radius: 999px;
-          background: rgba(255, 248, 234, 0.88);
-          box-shadow: 0 14px 28px rgba(18, 50, 74, 0.08);
-          scrollbar-width: thin;
-        }
-
-        .gs-category-nav a {
-          flex: 0 0 auto;
-          display: inline-flex;
-          align-items: center;
-          gap: 0.5rem;
-          min-height: 42px;
-          padding: 0.56rem 0.78rem;
-          border: 1px solid rgba(18, 50, 74, 0.12);
-          border-radius: 999px;
-          background: rgba(255, 255, 255, 0.72);
-          color: var(--navy);
-          font-weight: 900;
-          font-size: 0.88rem;
-        }
-
-        .gs-category-nav a:hover {
-          color: var(--white);
-          background: var(--ocean);
-        }
-
-        .gs-category-nav em {
-          display: grid;
-          place-items: center;
-          min-width: 25px;
-          height: 25px;
-          padding: 0 0.36rem;
-          border-radius: 999px;
-          color: var(--espresso);
-          background: var(--citrus);
-          font-style: normal;
-          font-size: 0.75rem;
-        }
-
-        .gs-menu-stack {
-          display: grid;
-          gap: 1.6rem;
-        }
-
-        .gs-menu-category {
-          scroll-margin-top: 172px;
-          padding: clamp(1rem, 2.2vw, 1.4rem);
-          border: 1px solid rgba(18, 50, 74, 0.1);
-          border-radius: 34px;
-          background: rgba(255, 255, 255, 0.44);
-        }
-
-        .gs-category-heading {
-          display: grid;
-          grid-template-columns: 0.8fr 1.2fr;
-          gap: 1.2rem;
-          align-items: end;
-          padding: 0.35rem 0.3rem 1rem;
-        }
-
-        .gs-category-heading h3 {
-          margin-top: 0.24rem;
-          font-size: clamp(1.9rem, 4vw, 3.1rem);
-        }
-
-        .gs-category-heading p:last-child {
-          margin: 0;
-          color: #53666b;
-        }
-
-        .gs-items-grid {
-          display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 0.85rem;
-        }
-
-        .gs-menu-item {
-          min-height: 172px;
-          padding: 1.05rem;
-          border-radius: 24px;
-        }
-
-        .gs-menu-item h4 {
-          font-size: 1.28rem;
-        }
-
-        .gs-about {
-          background: linear-gradient(180deg, rgba(255, 255, 255, 0.3), rgba(255, 248, 234, 0.74));
-          border-top: 1px solid rgba(18, 50, 74, 0.08);
-          border-bottom: 1px solid rgba(18, 50, 74, 0.08);
-        }
-
-        .gs-about-grid {
-          display: grid;
-          grid-template-columns: minmax(0, 0.95fr) minmax(320px, 0.75fr);
-          gap: clamp(1.5rem, 5vw, 4rem);
-          align-items: start;
-        }
-
-        .gs-large-copy {
-          margin-top: 1.2rem;
-          font-size: clamp(1.12rem, 2vw, 1.34rem) !important;
-        }
-
-        .gs-about-cards {
-          display: grid;
-          gap: 0.85rem;
-        }
-
-        .gs-about-cards article {
-          display: grid;
-          gap: 0.28rem;
-          padding: 1.08rem;
-          border-radius: 24px;
-          background: rgba(255, 255, 255, 0.68);
-        }
-
-        .gs-about-cards span {
-          width: max-content;
-          padding: 0.2rem 0.48rem;
-          border-radius: 999px;
-          color: var(--white);
-          background: var(--coral);
-          font-size: 0.72rem;
-          font-weight: 950;
-        }
-
-        .gs-about-cards strong {
-          color: var(--espresso);
-          font-size: 1.05rem;
-        }
-
-        .gs-about-cards p {
-          margin: 0;
-          font-size: 0.95rem;
-        }
-
-        .gs-hours-grid {
-          display: grid;
-          grid-template-columns: minmax(0, 0.82fr) minmax(320px, 1fr);
-          gap: 1rem;
-          align-items: stretch;
-        }
-
-        .gs-hours-card,
-        .gs-location-card {
-          border-radius: 34px;
-          padding: clamp(1.2rem, 3vw, 2rem);
-        }
-
-        .gs-hours-table {
-          display: grid;
-          gap: 0.5rem;
-          margin-top: 1.25rem;
-        }
-
-        .gs-hours-row {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 1rem;
-          padding: 0.78rem 0.9rem;
-          border-radius: 16px;
-          background: rgba(255, 248, 234, 0.72);
-          border: 1px solid rgba(18, 50, 74, 0.08);
-        }
-
-        .gs-hours-row span {
-          color: var(--navy);
-          font-weight: 850;
-        }
-
-        .gs-hours-row strong {
-          color: var(--espresso);
-        }
-
-        .gs-location-card {
-          position: relative;
-          overflow: hidden;
-          background:
-            linear-gradient(135deg, rgba(222, 247, 239, 0.74), rgba(255, 255, 255, 0.72)),
-            var(--white);
-        }
-
-        .gs-location-card > *:not(.gs-map-abstract) {
-          position: relative;
-          z-index: 1;
-        }
-
-        .gs-location-card h3 {
-          max-width: 600px;
-          font-size: clamp(1.9rem, 4vw, 3rem);
-        }
-
-        .gs-map-abstract {
-          position: absolute;
-          inset: 0;
-          opacity: 0.55;
-          pointer-events: none;
-        }
-
-        .gs-map-line {
-          position: absolute;
-          height: 3px;
-          border-radius: 999px;
-          background: rgba(14, 102, 116, 0.22);
-          transform-origin: left center;
-        }
-
-        .gs-map-line-one { width: 78%; left: 13%; top: 28%; transform: rotate(-11deg); }
-        .gs-map-line-two { width: 92%; left: 6%; top: 55%; transform: rotate(8deg); }
-        .gs-map-line-three { width: 60%; left: 38%; top: 76%; transform: rotate(-18deg); }
-
-        .gs-map-pin {
-          position: absolute;
-          right: 16%;
-          top: 30%;
-          width: 54px;
-          height: 54px;
-          border-radius: 50% 50% 50% 10px;
-          background: var(--coral);
-          transform: rotate(-45deg);
-          box-shadow: 0 14px 30px rgba(232, 95, 67, 0.22);
-        }
-
-        .gs-map-pin::after {
-          content: "";
-          position: absolute;
-          inset: 16px;
-          border-radius: 50%;
-          background: var(--cream);
-        }
-
-        .gs-footer {
-          padding: clamp(2.5rem, 6vw, 4.5rem) 0 1.5rem;
-          color: rgba(255, 255, 255, 0.86);
-          background:
-            radial-gradient(circle at 12% 0%, rgba(255, 184, 77, 0.18), transparent 24rem),
-            linear-gradient(135deg, #12324a, #0b4754 70%, #083943);
-        }
-
-        .gs-footer-grid {
-          display: grid;
-          grid-template-columns: 1.15fr 0.8fr 0.55fr;
-          gap: 2rem;
-        }
-
-        .gs-footer .gs-logo-primary,
-        .gs-footer h2 {
-          color: var(--white);
-        }
-
-        .gs-footer .gs-logo-secondary,
-        .gs-footer-copy,
-        .gs-footer address,
-        .gs-footer-actions a {
-          color: rgba(255, 255, 255, 0.82);
-        }
-
-        .gs-footer-copy {
-          max-width: 560px;
-          margin: 1rem 0 0;
-        }
-
-        .gs-footer h2 {
-          margin-bottom: 0.7rem;
-          font-size: 1.55rem;
-        }
-
-        .gs-footer address {
-          display: grid;
-          gap: 0.4rem;
-          font-style: normal;
-        }
-
-        .gs-footer address a,
-        .gs-socials a,
-        .gs-footer-actions a {
-          font-weight: 900;
-          text-decoration: underline;
-          text-decoration-thickness: 2px;
-          text-underline-offset: 4px;
-        }
-
-        .gs-socials {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 0.7rem;
-          margin-top: 1rem;
-        }
-
-        .gs-socials a {
-          display: inline-flex;
-          min-height: 40px;
-          align-items: center;
-          padding: 0.45rem 0.78rem;
-          border: 1px solid rgba(255, 255, 255, 0.18);
-          border-radius: 999px;
-          color: var(--white);
-          background: rgba(255, 255, 255, 0.08);
-          text-decoration: none;
-        }
-
-        .gs-footer-actions {
-          display: grid;
-          gap: 0.35rem;
-          margin: 0;
-          padding: 0;
-          list-style: none;
-        }
-
-        .gs-owner-note {
-          width: min(1160px, calc(100% - 32px));
-          margin: 2rem auto 0;
-          padding: 1rem;
-          border: 1px dashed rgba(255, 255, 255, 0.34);
-          border-radius: 22px;
-          color: rgba(255, 255, 255, 0.84);
-          background: rgba(255, 255, 255, 0.07);
-        }
-
-        .gs-owner-note strong {
-          display: block;
-          color: var(--white);
-          margin-bottom: 0.45rem;
-        }
-
-        .gs-owner-note ul {
-          margin: 0;
-          padding-left: 1.15rem;
-        }
-
-        .gs-owner-note li + li {
-          margin-top: 0.25rem;
-        }
-
-        .gs-mobile-bar {
-          position: fixed;
-          left: 10px;
-          right: 10px;
-          bottom: 10px;
-          z-index: 80;
-          display: none;
-          grid-template-columns: repeat(4, minmax(0, 1fr));
-          gap: 0.35rem;
-          padding: 0.45rem;
-          border: 1px solid rgba(18, 50, 74, 0.18);
-          border-radius: 24px;
-          background: rgba(255, 248, 234, 0.94);
-          box-shadow: 0 18px 50px rgba(18, 50, 74, 0.22);
-          backdrop-filter: blur(16px);
-        }
-
-        .gs-mobile-bar a {
-          display: grid;
-          place-items: center;
-          gap: 0.12rem;
-          min-height: 54px;
-          border-radius: 18px;
-          color: var(--navy);
-          font-size: 0.72rem;
-          font-weight: 950;
-        }
-
-        .gs-mobile-bar a:hover,
-        .gs-mobile-bar a:focus-visible {
-          color: var(--white);
-          background: var(--ocean);
-        }
-
-        .gs-mobile-bar span {
-          font-size: 1.02rem;
-          line-height: 1;
-        }
-
-        @media (max-width: 980px) {
-          .gs-nav {
-            display: none;
+        <style>{`
+          :root {
+            scroll-behavior: smooth;
           }
 
-          .gs-hero-grid,
-          .gs-about-grid,
-          .gs-hours-grid,
-          .gs-footer-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .gs-hero-art {
-            min-height: 430px;
-          }
-
-          .gs-quick-grid,
-          .gs-feature-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-          }
-
-          .gs-menu-intro,
-          .gs-category-heading {
-            grid-template-columns: 1fr;
-          }
-
-          .gs-menu-note {
-            max-width: none;
-          }
-        }
-
-        @media (max-width: 720px) {
           .gs-site {
-            padding-bottom: 82px;
+            --cream: #fff8e8;
+            --sand: #f7e6c8;
+            --sand-strong: #edce9d;
+            --turquoise: #0f9fa7;
+            --turquoise-dark: #08737f;
+            --blue: #09637a;
+            --navy: #102f3d;
+            --espresso: #3b241b;
+            --coral: #f26f55;
+            --citrus: #ffb84d;
+            --white: #ffffff;
+            --muted: #64757a;
+            --line: rgba(16, 47, 61, 0.14);
+            --shadow: 0 22px 70px rgba(16, 47, 61, 0.16);
+            --shadow-soft: 0 14px 38px rgba(16, 47, 61, 0.1);
+            color: var(--navy);
+            background:
+              radial-gradient(circle at 12% 8%, rgba(255, 184, 77, 0.28), transparent 28rem),
+              radial-gradient(circle at 92% 5%, rgba(15, 159, 167, 0.2), transparent 24rem),
+              linear-gradient(180deg, #fff9eb 0%, #fff5df 52%, #f7ead4 100%);
+            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            line-height: 1.5;
+            min-height: 100vh;
+            overflow-x: clip;
+            padding-bottom: 78px;
+          }
+
+          .gs-site * {
+            box-sizing: border-box;
+          }
+
+          .gs-site a {
+            color: inherit;
+          }
+
+          .gs-site a:focus-visible,
+          .gs-site button:focus-visible {
+            outline: 3px solid rgba(242, 111, 85, 0.85);
+            outline-offset: 4px;
+            border-radius: 14px;
           }
 
           .gs-shell {
-            width: min(100% - 24px, 1160px);
+            width: min(1120px, calc(100% - 32px));
+            margin: 0 auto;
+          }
+
+          .gs-skip {
+            position: fixed;
+            left: 16px;
+            top: 12px;
+            z-index: 1000;
+            transform: translateY(-140%);
+            background: var(--navy);
+            color: var(--white);
+            padding: 10px 14px;
+            border-radius: 999px;
+            text-decoration: none;
+            font-weight: 800;
+            transition: transform 160ms ease;
+          }
+
+          .gs-skip:focus {
+            transform: translateY(0);
+          }
+
+          .gs-header {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            border-bottom: 1px solid rgba(16, 47, 61, 0.1);
+            background: rgba(255, 248, 232, 0.88);
+            backdrop-filter: blur(18px);
           }
 
           .gs-header-inner {
-            width: min(100% - 20px, 1200px);
-            min-height: 66px;
+            min-height: 74px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
           }
 
-          .gs-logo-mark {
-            width: 42px;
-            height: 42px;
-            border-radius: 15px 15px 15px 6px;
+          .gs-brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 11px;
+            text-decoration: none;
+            min-width: max-content;
           }
 
-          .gs-logo-primary {
-            font-size: 1rem;
+          .gs-brand-mark {
+            position: relative;
+            width: 46px;
+            height: 46px;
+            border-radius: 18px;
+            background: linear-gradient(145deg, #ffce6b 0%, #f26f55 52%, #0f9fa7 100%);
+            box-shadow: 0 12px 28px rgba(242, 111, 85, 0.28);
+            overflow: hidden;
+            flex: 0 0 auto;
           }
 
-          .gs-logo-secondary {
-            font-size: 0.66rem;
-            letter-spacing: 0.1em;
+          .gs-brand-sun {
+            position: absolute;
+            width: 19px;
+            height: 19px;
+            border-radius: 50%;
+            background: #fff7d4;
+            top: 9px;
+            left: 9px;
+          }
+
+          .gs-brand-wave,
+          .gs-brand-wave::before,
+          .gs-brand-wave::after {
+            position: absolute;
+            content: '';
+            height: 12px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.82);
+          }
+
+          .gs-brand-wave {
+            width: 54px;
+            left: -4px;
+            bottom: 7px;
+          }
+
+          .gs-brand-wave::before {
+            width: 38px;
+            left: 10px;
+            bottom: 10px;
+            opacity: 0.58;
+          }
+
+          .gs-brand-wave::after {
+            width: 24px;
+            right: 4px;
+            bottom: 20px;
+            opacity: 0.38;
+          }
+
+          .gs-brand-name {
+            display: block;
+            font-size: 1.12rem;
+            font-weight: 950;
+            letter-spacing: -0.045em;
+            line-height: 1;
+          }
+
+          .gs-brand-sub {
+            display: block;
+            color: var(--turquoise-dark);
+            font-size: 0.76rem;
+            font-weight: 900;
+            letter-spacing: 0.12em;
+            line-height: 1.25;
+            text-transform: uppercase;
+          }
+
+          .gs-primary-nav {
+            display: none;
+            align-items: center;
+            gap: 6px;
+            padding: 6px;
+            border: 1px solid rgba(16, 47, 61, 0.1);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.5);
+          }
+
+          .gs-primary-nav a {
+            border-radius: 999px;
+            color: rgba(16, 47, 61, 0.82);
+            font-size: 0.92rem;
+            font-weight: 850;
+            padding: 9px 12px;
+            text-decoration: none;
+          }
+
+          .gs-primary-nav a:hover {
+            background: rgba(15, 159, 167, 0.1);
+            color: var(--turquoise-dark);
           }
 
           .gs-header-actions {
             display: none;
+            align-items: center;
+            gap: 10px;
+          }
+
+          .gs-link-button,
+          .gs-cta {
+            align-items: center;
+            border-radius: 999px;
+            display: inline-flex;
+            font-weight: 950;
+            justify-content: center;
+            min-height: 44px;
+            padding: 12px 18px;
+            text-decoration: none;
+            transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+          }
+
+          .gs-link-button:hover,
+          .gs-cta:hover {
+            transform: translateY(-1px);
+          }
+
+          .gs-link-button-soft,
+          .gs-cta-secondary {
+            background: rgba(255, 255, 255, 0.72);
+            border: 1px solid rgba(16, 47, 61, 0.14);
+            color: var(--navy);
+          }
+
+          .gs-link-button-coral,
+          .gs-cta-primary {
+            background: linear-gradient(135deg, var(--coral), #ff8c5d);
+            box-shadow: 0 16px 32px rgba(242, 111, 85, 0.28);
+            color: #ffffff;
+          }
+
+          .gs-section {
+            padding: 64px 0;
           }
 
           .gs-hero {
-            padding-top: 2.4rem;
+            position: relative;
+            padding-top: 54px;
+          }
+
+          .gs-hero::before {
+            position: absolute;
+            content: '';
+            inset: 0 0 auto;
+            height: 72%;
+            background:
+              linear-gradient(115deg, rgba(255, 248, 232, 0.88), rgba(255, 248, 232, 0.1)),
+              radial-gradient(circle at 75% 20%, rgba(15, 159, 167, 0.18), transparent 19rem);
+            pointer-events: none;
           }
 
           .gs-hero-grid {
-            gap: 1.6rem;
+            position: relative;
+            display: grid;
+            gap: 34px;
+          }
+
+          .gs-eyebrow {
+            color: var(--turquoise-dark);
+            font-size: 0.78rem;
+            font-weight: 950;
+            letter-spacing: 0.16em;
+            margin: 0 0 12px;
+            text-transform: uppercase;
+          }
+
+          .gs-hero h1,
+          .gs-section-heading h2,
+          .gs-about-copy h2 {
+            color: var(--navy);
+            font-weight: 950;
+            letter-spacing: -0.065em;
+            line-height: 0.96;
+            margin: 0;
+          }
+
+          .gs-hero h1 {
+            font-size: clamp(3.2rem, 14vw, 6.8rem);
+            max-width: 780px;
           }
 
           .gs-hero-lede {
-            font-size: 1.04rem;
+            color: rgba(16, 47, 61, 0.78);
+            font-size: clamp(1.05rem, 2.2vw, 1.35rem);
+            margin: 20px 0 0;
+            max-width: 680px;
           }
 
-          .gs-hero-actions,
-          .gs-location-actions {
-            display: grid;
-            grid-template-columns: 1fr;
+          .gs-hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 28px;
           }
 
-          .gs-button {
+          .gs-hero-actions .gs-cta {
             width: 100%;
           }
 
           .gs-hero-facts {
+            display: grid;
+            gap: 12px;
             grid-template-columns: 1fr;
+            margin: 28px 0 0;
           }
 
           .gs-hero-facts div {
-            padding: 0.9rem;
+            background: rgba(255, 255, 255, 0.62);
+            border: 1px solid rgba(16, 47, 61, 0.1);
+            border-radius: 22px;
+            padding: 14px 16px;
+            box-shadow: 0 10px 28px rgba(16, 47, 61, 0.06);
+          }
+
+          .gs-hero-facts dt {
+            color: var(--muted);
+            font-size: 0.76rem;
+            font-weight: 900;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+          }
+
+          .gs-hero-facts dd {
+            color: var(--espresso);
+            font-size: 1.02rem;
+            font-weight: 950;
+            margin: 2px 0 0;
           }
 
           .gs-hero-art {
-            min-height: 360px;
-            border-radius: 34px;
+            min-height: 430px;
+            position: relative;
           }
 
-          .gs-sunburst {
-            width: 164px;
-            height: 164px;
+          .gs-art-card {
+            border: 1px solid rgba(16, 47, 61, 0.12);
+            background: rgba(255, 255, 255, 0.72);
+            backdrop-filter: blur(16px);
+            box-shadow: var(--shadow);
           }
 
           .gs-art-card-main {
-            right: 18px;
-            bottom: 18px;
-            width: calc(100% - 36px);
+            position: relative;
+            min-height: 385px;
+            overflow: hidden;
+            border-radius: 42px;
+            background:
+              linear-gradient(180deg, rgba(255, 251, 237, 0.92) 0%, rgba(255, 233, 189, 0.84) 54%, rgba(169, 227, 224, 0.76) 100%);
           }
 
-          .gs-art-card-small {
-            left: 16px;
-            top: 18px;
+          .gs-sunrise {
+            position: absolute;
+            inset: 24px;
+            border-radius: 34px;
+            overflow: hidden;
+            background:
+              radial-gradient(circle at 50% 44%, rgba(255, 184, 77, 0.32), transparent 23%),
+              linear-gradient(180deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.06));
           }
 
-          .gs-quick-grid,
-          .gs-feature-grid,
-          .gs-items-grid {
-            grid-template-columns: 1fr;
+          .gs-sun-core {
+            position: absolute;
+            width: 148px;
+            height: 148px;
+            left: 50%;
+            top: 48px;
+            transform: translateX(-50%);
+            border-radius: 50%;
+            background: radial-gradient(circle, #fff9d8 0 34%, #ffce6b 35% 70%, rgba(242, 111, 85, 0.42) 71% 100%);
+            box-shadow: 0 0 80px rgba(255, 184, 77, 0.75);
+          }
+
+          .gs-wave {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.75);
+          }
+
+          .gs-wave-one {
+            width: 120%;
+            height: 80px;
+            bottom: 36px;
+          }
+
+          .gs-wave-two {
+            width: 86%;
+            height: 42px;
+            bottom: 116px;
+            opacity: 0.78;
+          }
+
+          .gs-wave-three {
+            width: 58%;
+            height: 22px;
+            bottom: 178px;
+            opacity: 0.55;
+          }
+
+          .gs-art-caption {
+            position: absolute;
+            inset: auto 22px 22px;
+            border-radius: 28px;
+            background: rgba(16, 47, 61, 0.88);
+            color: white;
+            display: grid;
+            gap: 2px;
+            padding: 18px;
+          }
+
+          .gs-art-caption strong {
+            font-size: 1.8rem;
+            letter-spacing: -0.05em;
+            line-height: 1;
+          }
+
+          .gs-art-kicker {
+            color: rgba(255, 255, 255, 0.72);
+            font-size: 0.72rem;
+            font-weight: 900;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+          }
+
+          .gs-art-card-mini {
+            align-items: center;
+            border-radius: 22px;
+            display: flex;
+            gap: 10px;
+            font-weight: 950;
+            padding: 13px 15px;
+            position: absolute;
+          }
+
+          .gs-mini-icon {
+            align-items: center;
+            background: rgba(15, 159, 167, 0.12);
+            border-radius: 14px;
+            display: inline-flex;
+            height: 34px;
+            justify-content: center;
+            width: 34px;
+          }
+
+          .gs-mini-one {
+            left: 0;
+            top: 26px;
+            transform: rotate(-4deg);
+          }
+
+          .gs-mini-two {
+            bottom: 42px;
+            right: 0;
+            transform: rotate(5deg);
+          }
+
+          .gs-section-heading {
+            max-width: 710px;
+          }
+
+          .gs-section-heading-center {
+            margin: 0 auto 24px;
+            text-align: center;
+          }
+
+          .gs-section-heading h2,
+          .gs-about-copy h2 {
+            font-size: clamp(2.15rem, 7vw, 4.2rem);
+          }
+
+          .gs-section-heading p:not(.gs-eyebrow),
+          .gs-about-copy p {
+            color: rgba(16, 47, 61, 0.75);
+            font-size: 1.05rem;
+            margin: 14px 0 0;
+          }
+
+          .gs-quick {
+            padding-top: 28px;
           }
 
           .gs-quick-grid {
-            border-radius: 26px;
+            display: grid;
+            gap: 14px;
           }
 
-          .gs-section {
-            padding: 3.4rem 0;
+          .gs-quick-card,
+          .gs-feature-card,
+          .gs-menu-section,
+          .gs-about-cards article,
+          .gs-hours-card,
+          .gs-location-card,
+          .gs-owner-notes {
+            background: rgba(255, 255, 255, 0.74);
+            border: 1px solid rgba(16, 47, 61, 0.12);
+            box-shadow: var(--shadow-soft);
+          }
+
+          .gs-quick-card {
+            border-radius: 28px;
+            padding: 22px;
+          }
+
+          .gs-quick-icon {
+            align-items: center;
+            background: linear-gradient(135deg, rgba(255, 184, 77, 0.32), rgba(15, 159, 167, 0.16));
+            border-radius: 18px;
+            display: inline-flex;
+            height: 44px;
+            justify-content: center;
+            width: 44px;
+          }
+
+          .gs-quick-card h3 {
+            font-size: 1.18rem;
+            letter-spacing: -0.03em;
+            margin: 14px 0 5px;
+          }
+
+          .gs-quick-card p {
+            color: rgba(16, 47, 61, 0.73);
+            margin: 0 0 14px;
+          }
+
+          .gs-quick-card a {
+            color: var(--turquoise-dark);
+            font-weight: 950;
+            text-decoration: none;
+          }
+
+          .gs-featured {
+            position: relative;
+          }
+
+          .gs-featured::before {
+            position: absolute;
+            content: '';
+            width: 260px;
+            height: 260px;
+            border-radius: 50%;
+            background: rgba(15, 159, 167, 0.1);
+            filter: blur(8px);
+            right: -120px;
+            top: 80px;
+          }
+
+          .gs-featured-grid {
+            display: grid;
+            gap: 14px;
+            margin-top: 26px;
+            position: relative;
           }
 
           .gs-feature-card {
-            min-height: auto;
+            border-radius: 30px;
+            display: grid;
+            gap: 16px;
+            grid-template-columns: auto 1fr;
+            padding: 22px;
+          }
+
+          .gs-feature-number {
+            align-items: center;
+            background: var(--navy);
+            border-radius: 18px;
+            color: white;
+            display: inline-flex;
+            font-size: 0.8rem;
+            font-weight: 950;
+            height: 42px;
+            justify-content: center;
+            width: 42px;
+          }
+
+          .gs-card-category {
+            color: var(--coral);
+            font-size: 0.74rem;
+            font-weight: 950;
+            letter-spacing: 0.12em;
+            margin: 0 0 5px;
+            text-transform: uppercase;
+          }
+
+          .gs-feature-card h3,
+          .gs-menu-item h4,
+          .gs-about-cards h3,
+          .gs-hours-card h3,
+          .gs-location-card h3 {
+            color: var(--navy);
+            letter-spacing: -0.035em;
+            line-height: 1.08;
+            margin: 0;
+          }
+
+          .gs-feature-card h3 {
+            font-size: 1.3rem;
+          }
+
+          .gs-feature-card p:not(.gs-card-category):not(.gs-price),
+          .gs-menu-item p,
+          .gs-about-cards p,
+          .gs-location-card p {
+            color: rgba(16, 47, 61, 0.72);
+            margin: 9px 0 0;
+          }
+
+          .gs-badge-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 7px;
+            list-style: none;
+            margin: 14px 0 0;
+            padding: 0;
+          }
+
+          .gs-badge-list li {
+            background: rgba(255, 184, 77, 0.22);
+            border: 1px solid rgba(242, 111, 85, 0.18);
+            border-radius: 999px;
+            color: #7b3c26;
+            font-size: 0.74rem;
+            font-weight: 900;
+            padding: 5px 9px;
+          }
+
+          .gs-price {
+            color: var(--espresso);
+            font-weight: 950;
+            margin-top: 10px;
+          }
+
+          .gs-menu {
+            background:
+              linear-gradient(180deg, rgba(255, 255, 255, 0.3), rgba(15, 159, 167, 0.06)),
+              repeating-linear-gradient(135deg, rgba(16, 47, 61, 0.035) 0 1px, transparent 1px 14px);
+            border-block: 1px solid rgba(16, 47, 61, 0.08);
+          }
+
+          .gs-menu-top {
+            display: grid;
+            gap: 18px;
+            margin-bottom: 22px;
+          }
+
+          .gs-menu-count {
+            align-items: center;
+            aspect-ratio: 1;
+            background: linear-gradient(145deg, var(--turquoise), var(--blue));
+            border-radius: 34px;
+            color: white;
+            display: inline-flex;
+            flex-direction: column;
+            justify-content: center;
+            justify-self: start;
+            min-width: 112px;
+            padding: 18px;
+            box-shadow: 0 18px 36px rgba(15, 159, 167, 0.22);
+          }
+
+          .gs-menu-count strong {
+            font-size: 2.15rem;
+            letter-spacing: -0.06em;
+            line-height: 1;
+          }
+
+          .gs-menu-count span {
+            font-size: 0.75rem;
+            font-weight: 950;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
           }
 
           .gs-category-nav {
-            top: 76px;
-            margin: 1.4rem -2px 1.4rem;
-            border-radius: 22px;
+            display: flex;
+            gap: 10px;
+            margin: 0 -16px 26px;
+            overflow-x: auto;
+            padding: 0 16px 12px;
+            scroll-padding: 16px;
+            scrollbar-width: thin;
           }
 
-          .gs-menu-category {
-            scroll-margin-top: 150px;
-            border-radius: 26px;
+          .gs-category-nav a {
+            align-items: center;
+            background: rgba(255, 255, 255, 0.82);
+            border: 1px solid rgba(16, 47, 61, 0.12);
+            border-radius: 999px;
+            box-shadow: 0 8px 20px rgba(16, 47, 61, 0.06);
+            display: inline-flex;
+            flex: 0 0 auto;
+            gap: 8px;
+            font-size: 0.88rem;
+            font-weight: 950;
+            padding: 10px 12px;
+            text-decoration: none;
+          }
+
+          .gs-category-nav a:hover {
+            border-color: rgba(15, 159, 167, 0.38);
+            color: var(--turquoise-dark);
+          }
+
+          .gs-category-nav span {
+            align-items: center;
+            background: rgba(15, 159, 167, 0.12);
+            border-radius: 999px;
+            color: var(--turquoise-dark);
+            display: inline-flex;
+            font-size: 0.72rem;
+            justify-content: center;
+            min-width: 24px;
+            padding: 2px 6px;
+          }
+
+          .gs-menu-sections {
+            display: grid;
+            gap: 18px;
+          }
+
+          .gs-menu-section {
+            border-radius: 34px;
+            overflow: hidden;
+            padding: 20px;
+            scroll-margin-top: 96px;
+          }
+
+          .gs-menu-section-heading {
+            border-bottom: 1px solid rgba(16, 47, 61, 0.1);
+            display: grid;
+            gap: 14px;
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+          }
+
+          .gs-menu-section-heading h3 {
+            font-size: clamp(1.65rem, 5vw, 2.5rem);
+            letter-spacing: -0.055em;
+            line-height: 1;
+            margin: 0;
+          }
+
+          .gs-menu-section-heading p {
+            color: rgba(16, 47, 61, 0.67);
+            margin: 8px 0 0;
+          }
+
+          .gs-menu-section-heading span {
+            align-self: start;
+            background: rgba(242, 111, 85, 0.11);
+            border: 1px solid rgba(242, 111, 85, 0.16);
+            border-radius: 999px;
+            color: #8a3f2c;
+            font-size: 0.78rem;
+            font-weight: 950;
+            justify-self: start;
+            padding: 7px 11px;
+          }
+
+          .gs-item-grid {
+            display: grid;
+            gap: 12px;
           }
 
           .gs-menu-item {
-            min-height: auto;
+            background: rgba(255, 248, 232, 0.74);
+            border: 1px solid rgba(16, 47, 61, 0.08);
+            border-radius: 24px;
+            display: grid;
+            gap: 12px;
+            padding: 17px;
           }
 
-          .gs-hours-row {
-            align-items: flex-start;
-            flex-direction: column;
-            gap: 0.15rem;
+          .gs-menu-item h4 {
+            font-size: 1.08rem;
+          }
+
+          .gs-about-grid {
+            display: grid;
+            gap: 24px;
+          }
+
+          .gs-about-cards {
+            display: grid;
+            gap: 14px;
+          }
+
+          .gs-about-cards article {
+            border-radius: 28px;
+            padding: 22px;
+          }
+
+          .gs-about-cards span {
+            align-items: center;
+            background: rgba(15, 159, 167, 0.12);
+            border-radius: 18px;
+            display: inline-flex;
+            height: 44px;
+            justify-content: center;
+            margin-bottom: 14px;
+            width: 44px;
+          }
+
+          .gs-about-cards h3 {
+            font-size: 1.18rem;
+          }
+
+          .gs-visit {
+            padding-top: 40px;
+          }
+
+          .gs-visit-grid {
+            display: grid;
+            gap: 18px;
+          }
+
+          .gs-hours-card,
+          .gs-location-card {
+            border-radius: 34px;
+            padding: 22px;
+          }
+
+          .gs-hours-card h3,
+          .gs-location-card h3 {
+            font-size: 1.42rem;
+            margin-bottom: 14px;
+          }
+
+          .gs-hours-card dl {
+            display: grid;
+            gap: 8px;
+            margin: 0;
+          }
+
+          .gs-hours-card div {
+            align-items: center;
+            background: rgba(255, 248, 232, 0.75);
+            border: 1px solid rgba(16, 47, 61, 0.08);
+            border-radius: 16px;
+            display: flex;
+            justify-content: space-between;
+            gap: 14px;
+            padding: 10px 12px;
+          }
+
+          .gs-hours-card dt {
+            font-weight: 900;
+          }
+
+          .gs-hours-card dd {
+            color: var(--turquoise-dark);
+            font-weight: 950;
+            margin: 0;
+            text-align: right;
+          }
+
+          .gs-location-card {
+            display: grid;
+            gap: 18px;
+          }
+
+          .gs-map-art {
+            background:
+              linear-gradient(135deg, rgba(15, 159, 167, 0.22), rgba(255, 184, 77, 0.24)),
+              radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.7), transparent 32%);
+            border: 1px solid rgba(16, 47, 61, 0.1);
+            border-radius: 28px;
+            min-height: 210px;
+            overflow: hidden;
+            position: relative;
+          }
+
+          .gs-map-pin {
+            position: absolute;
+            left: 50%;
+            top: 48%;
+            width: 38px;
+            height: 38px;
+            transform: translate(-50%, -50%) rotate(45deg);
+            border-radius: 50% 50% 50% 8px;
+            background: var(--coral);
+            box-shadow: 0 18px 34px rgba(242, 111, 85, 0.28);
+          }
+
+          .gs-map-pin::after {
+            position: absolute;
+            content: '';
+            width: 13px;
+            height: 13px;
+            background: white;
+            border-radius: 50%;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+          }
+
+          .gs-map-line {
+            position: absolute;
+            height: 15px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.78);
+            transform: rotate(-18deg);
+          }
+
+          .gs-map-line-one {
+            width: 120%;
+            left: -10%;
+            top: 25%;
+          }
+
+          .gs-map-line-two {
+            width: 110%;
+            left: -6%;
+            bottom: 28%;
+          }
+
+          .gs-map-dot {
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: rgba(16, 47, 61, 0.22);
+          }
+
+          .gs-map-dot-one {
+            left: 22%;
+            bottom: 22%;
+          }
+
+          .gs-map-dot-two {
+            right: 20%;
+            top: 20%;
+          }
+
+          .gs-location-card a:not(.gs-cta) {
+            color: var(--turquoise-dark);
+            font-weight: 950;
+            text-decoration: none;
+          }
+
+          .gs-location-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 18px;
+          }
+
+          .gs-location-actions .gs-cta {
+            flex: 1 1 150px;
+          }
+
+          .gs-owner-notes {
+            border-radius: 28px;
+            margin-bottom: 42px;
+            padding: 22px;
+          }
+
+          .gs-owner-notes h2 {
+            font-size: 1.25rem;
+            margin: 0 0 10px;
+          }
+
+          .gs-owner-notes ul {
+            margin: 0;
+            padding-left: 20px;
           }
 
           .gs-footer {
-            padding-bottom: 6.5rem;
+            background: var(--navy);
+            color: white;
+            padding: 46px 0 98px;
           }
 
-          .gs-mobile-bar {
+          .gs-footer-grid {
             display: grid;
-          }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-          .gs-button {
-            transition: none;
+            gap: 26px;
           }
 
-          .gs-button:hover {
-            transform: none;
+          .gs-footer h2 {
+            font-size: clamp(2rem, 7vw, 3.5rem);
+            letter-spacing: -0.06em;
+            line-height: 1;
+            margin: 0;
           }
-        }
-      `}</style>
+
+          .gs-footer p {
+            color: rgba(255, 255, 255, 0.72);
+            margin: 12px 0 0;
+            max-width: 600px;
+          }
+
+          .gs-socials {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 18px;
+          }
+
+          .gs-socials a {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-radius: 999px;
+            font-weight: 950;
+            padding: 10px 14px;
+            text-decoration: none;
+          }
+
+          .gs-socials a:hover {
+            background: rgba(255, 255, 255, 0.16);
+          }
+
+          .gs-footer address {
+            display: grid;
+            gap: 7px;
+            font-style: normal;
+          }
+
+          .gs-footer address strong {
+            color: var(--citrus);
+            font-size: 1.1rem;
+          }
+
+          .gs-footer address span,
+          .gs-footer address a {
+            color: rgba(255, 255, 255, 0.76);
+            text-decoration: none;
+          }
+
+          .gs-footer address a {
+            font-weight: 950;
+          }
+
+          .gs-mobile-actions {
+            position: fixed;
+            z-index: 80;
+            left: 10px;
+            right: 10px;
+            bottom: 10px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            padding: 8px;
+            border: 1px solid rgba(16, 47, 61, 0.14);
+            border-radius: 24px;
+            background: rgba(255, 248, 232, 0.94);
+            box-shadow: 0 18px 50px rgba(16, 47, 61, 0.22);
+            backdrop-filter: blur(18px);
+          }
+
+          .gs-mobile-actions a {
+            align-items: center;
+            border-radius: 18px;
+            color: var(--navy);
+            display: flex;
+            flex-direction: column;
+            font-size: 0.72rem;
+            font-weight: 950;
+            gap: 2px;
+            justify-content: center;
+            min-height: 54px;
+            text-decoration: none;
+          }
+
+          .gs-mobile-actions a:hover {
+            background: rgba(15, 159, 167, 0.1);
+          }
+
+          .gs-mobile-actions span {
+            color: var(--turquoise-dark);
+            font-size: 1rem;
+            line-height: 1;
+          }
+
+          @media (min-width: 560px) {
+            .gs-hero-actions .gs-cta {
+              width: auto;
+            }
+
+            .gs-hero-facts {
+              grid-template-columns: repeat(3, 1fr);
+            }
+
+            .gs-quick-grid,
+            .gs-featured-grid,
+            .gs-item-grid,
+            .gs-about-cards {
+              grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+          }
+
+          @media (min-width: 820px) {
+            .gs-site {
+              padding-bottom: 0;
+            }
+
+            .gs-primary-nav,
+            .gs-header-actions {
+              display: flex;
+            }
+
+            .gs-section {
+              padding: 86px 0;
+            }
+
+            .gs-hero {
+              padding-top: 72px;
+            }
+
+            .gs-hero-grid {
+              align-items: center;
+              grid-template-columns: minmax(0, 1.05fr) minmax(330px, 0.72fr);
+            }
+
+            .gs-quick-grid {
+              grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+
+            .gs-featured-grid {
+              grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+
+            .gs-menu-top {
+              align-items: end;
+              grid-template-columns: minmax(0, 1fr) auto;
+            }
+
+            .gs-menu-count {
+              justify-self: end;
+            }
+
+            .gs-menu-section {
+              padding: 26px;
+            }
+
+            .gs-menu-section-heading {
+              align-items: start;
+              grid-template-columns: 1fr auto;
+            }
+
+            .gs-menu-section-heading span {
+              justify-self: end;
+            }
+
+            .gs-item-grid {
+              grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .gs-menu-item {
+              align-items: start;
+              grid-template-columns: 1fr auto;
+              min-height: 154px;
+            }
+
+            .gs-about-grid {
+              align-items: start;
+              grid-template-columns: 0.8fr 1fr;
+            }
+
+            .gs-about-cards {
+              grid-template-columns: 1fr;
+            }
+
+            .gs-visit-grid {
+              align-items: start;
+              grid-template-columns: minmax(0, 0.9fr) minmax(280px, 0.58fr);
+            }
+
+            .gs-visit-grid > .gs-section-heading {
+              grid-column: 1 / -1;
+            }
+
+            .gs-location-card {
+              grid-template-columns: minmax(220px, 0.75fr) 1fr;
+            }
+
+            .gs-mobile-actions {
+              display: none;
+            }
+
+            .gs-footer {
+              padding-bottom: 48px;
+            }
+
+            .gs-footer-grid {
+              align-items: start;
+              grid-template-columns: 1fr auto;
+            }
+          }
+
+          @media (min-width: 1040px) {
+            .gs-about-cards {
+              grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+          }
+
+          @media (prefers-reduced-motion: reduce) {
+            :root {
+              scroll-behavior: auto;
+            }
+
+            .gs-link-button,
+            .gs-cta {
+              transition: none;
+            }
+
+            .gs-link-button:hover,
+            .gs-cta:hover {
+              transform: none;
+            }
+          }
+        `}</style>
+      </div>
     </>
   );
 }
