@@ -17,7 +17,7 @@ Keep Supabase rows aligned:
 
 ## Build Packet Interpretation
 
-Use the packet in this order:
+Use the AI Review/PM build brief in this order:
 
 1. Acceptance criteria
 2. Build tasks
@@ -28,6 +28,26 @@ Use the packet in this order:
 7. Content plan
 
 If packet data conflicts with live scraped data, preserve the safer fact and note the discrepancy in the final response.
+
+## Research And Prompt Strategy
+
+Research is a support function. The goal is not to maximize crawl volume; the goal is to produce a better build prompt and a better website.
+
+- Use owner/admin submitted details first.
+- Use GPT research/reasoning to create a high-quality build brief with design direction, local SEO, page plan, menu contract, and owner-confirmation list.
+- Use crawlers such as Firecrawl/Apify when they add concrete evidence: official website text, menus, images, contact info, hours, social proof, or source links.
+- Do not block builds because a restaurant has no standalone website or no source-backed menu. Mark those as assumptions/placeholders and build a polished editable experience.
+- Keep crawl results behind the scenes unless useful. Public copy should sound like a local restaurant website, not an audit report.
+
+## Menu Patterns
+
+Good restaurant menus are interactive, structured, and easy to scan.
+
+- Follow the Cinco de Maya pattern for rich native menus: category tabs/buttons, typed menu data, featured favorites, badges only when supported, mobile-friendly layout, and no cramped table UI.
+- For missing menus, create a complete editable skeleton or inferred starter menu only when allowed by the brief. Use placeholder item names/prices when the owner must supply final content.
+- Prices are only displayed when verified or owner-provided.
+- Menu data should preserve provenance fields where possible: source-backed vs inferred, missing prices, source URL, and owner-confirmation notes.
+- A menu preview should always link or scroll to the full menu section.
 
 ## Preview Chrome
 
