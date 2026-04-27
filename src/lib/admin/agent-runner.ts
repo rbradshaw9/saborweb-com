@@ -160,26 +160,6 @@ async function githubApi(path: string, params: {
   return asRecord(json);
 }
 
-async function githubFileSha(params: {
-  owner: string;
-  repo: string;
-  path: string;
-  branch: string;
-  token: string;
-}) {
-  const encodedPath = params.path.split('/').map(encodeURIComponent).join('/');
-  const result = await githubApi(
-    `/repos/${encodeURIComponent(params.owner)}/${encodeURIComponent(params.repo)}/contents/${encodedPath}?ref=${encodeURIComponent(params.branch)}`,
-    { token: params.token },
-  ).catch((error) => {
-    const message = error instanceof Error ? error.message : '';
-    if (message.includes('"status":"404"') || message.includes('Not Found')) return null;
-    throw error;
-  });
-  const sha = asString(result?.sha);
-  return sha;
-}
-
 async function commitGeneratedSiteToGitHub(manifest: GeneratedSiteManifest) {
   const repo = githubRepoParts();
   const credential = await getProviderCredential('github');
@@ -212,25 +192,65 @@ async function commitGeneratedSiteToGitHub(manifest: GeneratedSiteManifest) {
       }),
     },
   ];
-  let commitSha: string | null = null;
-  for (const file of files) {
-    const sha = await githubFileSha({ ...repo, path: file.path, branch, token });
-    const encodedPath = file.path.split('/').map(encodeURIComponent).join('/');
-    const result = await githubApi(
-      `/repos/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.repo)}/contents/${encodedPath}`,
-      {
-        method: 'PUT',
-        token,
-        body: {
-          message: `Generate ${manifest.slug} preview artifact`,
-          content: Buffer.from(file.content, 'utf8').toString('base64'),
-          branch,
-          ...(sha ? { sha } : {}),
-        },
+  const ref = await githubApi(
+    `/repos/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.repo)}/git/ref/heads/${encodeURIComponent(branch)}`,
+    { token },
+  );
+  const headSha = asString(asRecord(ref.object).sha);
+  if (!headSha) throw new Error(`Could not resolve ${branch} branch head before committing generated site files.`);
+
+  const headCommit = await githubApi(
+    `/repos/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.repo)}/git/commits/${encodeURIComponent(headSha)}`,
+    { token },
+  );
+  const baseTreeSha = asString(asRecord(headCommit.tree).sha);
+  if (!baseTreeSha) throw new Error(`Could not resolve ${branch} tree before committing generated site files.`);
+
+  const tree = await githubApi(
+    `/repos/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.repo)}/git/trees`,
+    {
+      method: 'POST',
+      token,
+      body: {
+        base_tree: baseTreeSha,
+        tree: files.map((file) => ({
+          path: file.path,
+          mode: '100644',
+          type: 'blob',
+          content: file.content,
+        })),
       },
-    );
-    commitSha = asString(asRecord(result.commit).sha) ?? commitSha;
-  }
+    },
+  );
+  const treeSha = asString(tree.sha);
+  if (!treeSha) throw new Error('GitHub did not return a tree SHA for generated site files.');
+
+  const commit = await githubApi(
+    `/repos/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.repo)}/git/commits`,
+    {
+      method: 'POST',
+      token,
+      body: {
+        message: `Generate ${manifest.slug} preview artifact`,
+        tree: treeSha,
+        parents: [headSha],
+      },
+    },
+  );
+  const commitSha = asString(commit.sha);
+  if (!commitSha) throw new Error('GitHub did not return a commit SHA for generated site files.');
+
+  await githubApi(
+    `/repos/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.repo)}/git/refs/heads/${encodeURIComponent(branch)}`,
+    {
+      method: 'PATCH',
+      token,
+      body: {
+        sha: commitSha,
+        force: false,
+      },
+    },
+  );
 
   return {
     committed: true,
