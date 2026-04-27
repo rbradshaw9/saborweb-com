@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { requireAdminUser } from '@/lib/admin/auth';
 import { generateAdminBuildPacket } from '@/lib/admin/build-packets';
-import { credentialValue, getProviderCredential } from '@/lib/admin/credentials';
+import { credentialAsJson, credentialValue, getProviderCredential } from '@/lib/admin/credentials';
 import { getAdminSiteDetail } from '@/lib/admin/dashboard';
 import { GENERATED_SITE_REGISTRY } from '@/generated-sites/registry';
 import {
@@ -261,6 +261,111 @@ async function removeVercelProjectDomain(domain: string) {
     return { domain, removed: false, alreadyMissing: true };
   }
   throw new Error(`Vercel domain delete failed for ${domain}: ${JSON.stringify(json)}`);
+}
+
+async function removeCloudinaryAssetsForSlug(slug: string) {
+  const credential = await getProviderCredential('cloudinary');
+  const parsed = credentialAsJson(credential.secret);
+  const cloudName = credentialValue(credential.secret, 'CLOUDINARY_CLOUD_NAME') || cleanString(parsed.cloudName);
+  const apiKey = credentialValue(credential.secret, 'CLOUDINARY_API_KEY') || cleanString(parsed.apiKey);
+  const apiSecret = credentialValue(credential.secret, 'CLOUDINARY_API_SECRET') || cleanString(parsed.apiSecret);
+  if (!cloudName || !apiKey || !apiSecret) {
+    return { removed: false, skipped: true, reason: 'missing_cloudinary_credentials', deletedCount: 0 };
+  }
+
+  const auth = `Basic ${Buffer.from(`${apiKey}:${apiSecret}`).toString('base64')}`;
+  const search = await fetch(`https://api.cloudinary.com/v1_1/${encodeURIComponent(cloudName)}/resources/search`, {
+    method: 'POST',
+    headers: {
+      Authorization: auth,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      expression: `public_id:saborweb/research-assets/${slug}*`,
+      max_results: 100,
+    }),
+    cache: 'no-store',
+  });
+  const searchJson = await search.json().catch(() => ({}));
+  if (!search.ok) {
+    throw new Error(`Cloudinary asset lookup failed: ${JSON.stringify(searchJson)}`);
+  }
+
+  const publicIds = Array.isArray(searchJson.resources)
+    ? searchJson.resources
+        .map((resource: unknown) => cleanString(asRecord(resource).public_id))
+        .filter((publicId: string | null): publicId is string => Boolean(publicId))
+    : [];
+  if (!publicIds.length) return { removed: true, deletedCount: 0, result: 'no_assets_found' };
+
+  const destroy = await fetch(`https://api.cloudinary.com/v1_1/${encodeURIComponent(cloudName)}/resources/image/upload`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: auth,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      public_ids: publicIds,
+      invalidate: true,
+    }),
+    cache: 'no-store',
+  });
+  const destroyJson = await destroy.json().catch(() => ({}));
+  if (!destroy.ok) {
+    throw new Error(`Cloudinary asset delete failed: ${JSON.stringify(destroyJson)}`);
+  }
+
+  return {
+    removed: true,
+    deletedCount: publicIds.length,
+    result: destroyJson,
+  };
+}
+
+async function cleanupNonCascadingProjectRows(params: {
+  siteId: string | null;
+  requestId: string | null;
+  slug: string;
+  restaurantName: string | null;
+}) {
+  const supabase = getSupabaseAdmin();
+  const deleted: Record<string, number> = {};
+
+  const packetFilters = [];
+  if (params.siteId) packetFilters.push(`site_id.eq.${params.siteId}`);
+  if (params.requestId) packetFilters.push(`request_id.eq.${params.requestId}`);
+  if (params.restaurantName) packetFilters.push(`packet_markdown.ilike.%${params.restaurantName}%`);
+  packetFilters.push(`packet_markdown.ilike.%${params.slug}%`);
+  const packets = await supabase
+    .from('admin_build_packets')
+    .select('id')
+    .or(packetFilters.join(','));
+  if (packets.error) {
+    console.error('[Admin Site] Delete project packet cleanup lookup failed:', packets.error);
+  } else if (packets.data?.length) {
+    const { error } = await supabase.from('admin_build_packets').delete().in('id', packets.data.map((row) => row.id));
+    if (error) console.error('[Admin Site] Delete project packet cleanup failed:', error);
+    else deleted.admin_build_packets = packets.data.length;
+  }
+
+  const eventFilters = [];
+  if (params.siteId) eventFilters.push(`site_id.eq.${params.siteId}`);
+  if (params.requestId) eventFilters.push(`request_id.eq.${params.requestId}`);
+  if (params.restaurantName) eventFilters.push(`message.ilike.%${params.restaurantName}%`);
+  eventFilters.push(`message.ilike.%${params.slug}%`);
+  const events = await supabase
+    .from('site_events')
+    .select('id')
+    .or(eventFilters.join(','));
+  if (events.error) {
+    console.error('[Admin Site] Delete project event cleanup lookup failed:', events.error);
+  } else if (events.data?.length) {
+    const { error } = await supabase.from('site_events').delete().in('id', events.data.map((row) => row.id));
+    if (error) console.error('[Admin Site] Delete project event cleanup failed:', error);
+    else deleted.site_events = events.data.length;
+  }
+
+  return deleted;
 }
 
 export async function updateSiteStatus(slug: string, formData: FormData) {
@@ -2149,20 +2254,12 @@ export async function deleteAdminProject(slug: string) {
     for (const domain of Array.from(new Set(domains))) {
       domainCleanup.push(await removeVercelProjectDomain(domain));
     }
-
-    await logSiteEvent({
-      eventType: 'admin_site_deleted',
+    const cloudinaryCleanup = await removeCloudinaryAssetsForSlug(slug);
+    await cleanupNonCascadingProjectRows({
       siteId: detail.site.id,
       requestId: detail.request?.id ?? detail.site.request_id,
-      actorType: 'admin',
-      actorId: user.id,
-      message: `Admin deleted project ${slug}`,
-      metadata: {
-        admin_email: user.email,
-        restaurant_name: detail.site.restaurant_name,
-        generated_cleanup: generatedCleanup,
-        domain_cleanup: domainCleanup,
-      },
+      slug,
+      restaurantName: detail.site.restaurant_name,
     });
 
     const { error: siteError } = await supabase.from('restaurant_sites').delete().eq('id', detail.site.id);
@@ -2170,6 +2267,14 @@ export async function deleteAdminProject(slug: string) {
       console.error('[Admin Site] Delete project site failed:', siteError);
       throw new Error('Could not delete project.');
     }
+
+    console.info('[Admin Site] Project fully deleted:', {
+      slug,
+      adminEmail: user.email,
+      generatedCleanup,
+      domainCleanup,
+      cloudinaryCleanup,
+    });
   }
 
   if (detail.request?.id) {
@@ -2179,6 +2284,13 @@ export async function deleteAdminProject(slug: string) {
       throw new Error('Project site was deleted, but the linked request could not be removed.');
     }
   }
+
+  await cleanupNonCascadingProjectRows({
+    siteId: detail.site?.id ?? null,
+    requestId: detail.request?.id ?? detail.site?.request_id ?? null,
+    slug,
+    restaurantName: detail.site?.restaurant_name ?? detail.request?.restaurant_name ?? null,
+  });
 
   revalidatePath('/admin');
   redirect('/admin');
