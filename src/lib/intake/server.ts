@@ -38,12 +38,29 @@ export function escapeHtml(value: string) {
     .replace(/'/g, '&#039;');
 }
 
-export async function sendPreviewRequestEmail(request: PreviewRequestRecord, intakeUrl: string) {
+export async function sendPreviewRequestEmail(request: PreviewRequestRecord, verifyUrl: string, intakeUrl: string) {
   const apiKey = process.env.RESEND_API_KEY;
   const notifyEmail = process.env.NOTIFY_EMAIL;
-  if (!apiKey || !notifyEmail) return;
+  if (!apiKey) return;
 
   const resend = new Resend(apiKey);
+  if (request.email) {
+    await resend.emails.send({
+      from: 'Sabor Web <noreply@saborweb.com>',
+      to: [request.email],
+      subject: `Verify your Sabor Web preview - ${request.restaurant_name}`,
+      html: `
+        <div style="font-family:Inter,Arial,sans-serif;max-width:640px;margin:0 auto;padding:32px;color:#17130f">
+          <h2 style="margin:0 0 8px;color:#ba4f32">Verify your preview request</h2>
+          <p style="margin:0 0 18px;color:#6d625b">Click below to verify your email and open the private intake for ${escapeHtml(request.restaurant_name)}.</p>
+          <p style="margin:24px 0"><a href="${escapeHtml(verifyUrl)}" style="display:inline-block;background:#ba4f32;color:#fffaf2;text-decoration:none;font-weight:800;padding:12px 16px;border-radius:6px">Verify and continue</a></p>
+          <p style="margin:0;color:#6d625b;font-size:13px">If the button does not work, copy this link: ${escapeHtml(verifyUrl)}</p>
+        </div>
+      `,
+    });
+  }
+
+  if (!notifyEmail) return;
   await resend.emails.send({
     from: 'Sabor Web <noreply@saborweb.com>',
     to: [notifyEmail],
@@ -60,7 +77,8 @@ export async function sendPreviewRequestEmail(request: PreviewRequestRecord, int
           <tr><td style="padding:8px 0;color:#756b63">City</td><td>${escapeHtml(request.city)}</td></tr>
           <tr><td style="padding:8px 0;color:#756b63">Client slug</td><td>${escapeHtml(request.client_slug)}</td></tr>
         </table>
-        <p style="margin:24px 0 0"><a href="${escapeHtml(intakeUrl)}" style="color:#ba4f32;font-weight:700">Open intake link</a></p>
+        <p style="margin:24px 0 0"><a href="${escapeHtml(verifyUrl)}" style="color:#ba4f32;font-weight:700">Owner verification link</a></p>
+        <p style="margin:8px 0 0"><a href="${escapeHtml(intakeUrl)}" style="color:#ba4f32;font-weight:700">Admin intake link</a></p>
       </div>
     `,
   });

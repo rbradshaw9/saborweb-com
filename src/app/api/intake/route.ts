@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createHash } from 'crypto';
 import { buildRestaurantBrief, normalizeUrl, toStringArray } from '@/lib/intake/shared';
 import type { IntakeRecord, PreviewRequestRecord } from '@/lib/intake/shared';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
@@ -50,7 +51,7 @@ async function getRequestByToken(token: string) {
   const { data, error } = await supabase
     .from('preview_requests')
     .select(
-      'id, owner_name, email, phone, restaurant_name, city, preferred_language, source, status, notes, instagram_url, google_url, website_url, client_slug'
+      'id, owner_name, email, phone, restaurant_name, city, preferred_language, source, status, notes, instagram_url, google_url, website_url, client_slug, email_verified_at'
     )
     .eq('intake_token_hash', hashIntakeToken(token))
     .single();
@@ -291,6 +292,195 @@ function valueAsString(value: unknown) {
   return typeof value === 'string' ? value : '';
 }
 
+function hashJson(value: unknown) {
+  return createHash('sha256').update(JSON.stringify(value)).digest('hex');
+}
+
+function sourceRowsFromIntake(requestRecord: PreviewRequestRecord, intakeRecord: IntakeRecord) {
+  const rows = [
+    { source_type: 'website', url: intakeRecord.current_website ?? requestRecord.website_url, title: 'Owner supplied website' },
+    { source_type: 'google_business', url: intakeRecord.google_business_url ?? requestRecord.google_url, title: 'Owner supplied Google Business profile' },
+    { source_type: 'instagram', url: intakeRecord.instagram_url ?? requestRecord.instagram_url, title: 'Owner supplied Instagram' },
+    { source_type: 'facebook', url: intakeRecord.facebook_url, title: 'Owner supplied Facebook' },
+    { source_type: 'menu', url: intakeRecord.menu_url, title: 'Owner supplied menu' },
+    { source_type: 'ordering', url: intakeRecord.ordering_url, title: 'Owner supplied ordering link' },
+    { source_type: 'reservations', url: intakeRecord.reservations_url, title: 'Owner supplied reservations link' },
+  ] as const;
+
+  const normalized: Array<{
+    source_type: typeof rows[number]['source_type'];
+    url: string;
+    title: string;
+  }> = [];
+
+  for (const row of rows) {
+    const url = normalizeUrl(row.url);
+    if (url) normalized.push({ source_type: row.source_type, url, title: row.title });
+  }
+
+  return normalized;
+}
+
+async function queueResearchForCompletedIntake(params: {
+  supabase: ReturnType<typeof getSupabaseAdmin>;
+  requestRecord: PreviewRequestRecord;
+  intakeRecord: IntakeRecord;
+  generatedBrief: string;
+  briefJson: Record<string, unknown>;
+  fileNames: string[];
+}) {
+  if (!params.requestRecord.email_verified_at) {
+    return { queued: false, reason: 'email_not_verified' };
+  }
+
+  const { data: site, error: siteError } = await params.supabase
+    .from('restaurant_sites')
+    .select('id, metadata')
+    .eq('request_id', params.requestRecord.id)
+    .maybeSingle();
+
+  if (siteError || !site?.id) {
+    console.error('[Intake POST] Could not find site for autopilot queue:', siteError);
+    return { queued: false, reason: 'missing_site' };
+  }
+
+  const existingRun = await params.supabase
+    .from('agent_runs')
+    .select('id')
+    .eq('site_id', site.id)
+    .in('task_type', ['research_collect', 'ai_review', 'build_brief', 'code_build', 'deploy', 'qa'])
+    .in('status', ['queued', 'running'])
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (existingRun.data?.id) return { queued: false, reason: 'active_run_exists', runId: existingRun.data.id };
+
+  const seedSources = sourceRowsFromIntake(params.requestRecord, params.intakeRecord);
+  const researchInput = {
+    restaurant_name: params.requestRecord.restaurant_name,
+    city: params.requestRecord.city,
+    owner: {
+      name: params.requestRecord.owner_name,
+      email: params.requestRecord.email,
+      phone: params.requestRecord.phone,
+    },
+    slug: params.requestRecord.client_slug,
+    seed_sources: seedSources,
+    intake_brief: params.generatedBrief,
+    brief_json: params.briefJson,
+    uploaded_files: params.fileNames,
+    goals: [
+      'Gather all public restaurant evidence before AI review begins.',
+      'Verify operational facts and keep assumptions marked.',
+      'Prepare an evidence bundle for the AI Review/PM agent.',
+    ],
+  };
+
+  const { data: run, error: runError } = await params.supabase.from('agent_runs').insert({
+    site_id: site.id,
+    request_id: params.requestRecord.id,
+    task_type: 'research_collect',
+    provider: 'apify',
+    status: 'queued',
+    input_hash: hashJson(researchInput),
+    artifacts: {
+      seed_sources: seedSources,
+      expected_outputs: ['research_sources', 'extracted_facts', 'missing_items', 'asset_candidates'],
+    },
+    metadata: {
+      queued_by: params.requestRecord.email,
+      queued_from: 'verified_public_intake',
+      slug: params.requestRecord.client_slug,
+      research_input: researchInput,
+      workflow_step: 'research_collect',
+      retry_count: 0,
+      progress: {
+        task_type: 'research_collect',
+        percent: 5,
+        label: 'Queued research',
+        detail: 'Verified intake is complete. Research collection will gather evidence first.',
+        status: 'queued',
+        phase: 'collecting_evidence',
+        updated_at: new Date().toISOString(),
+      },
+      progress_history: [
+        {
+          percent: 5,
+          label: 'Queued research',
+          detail: 'Verified intake is complete. Research collection will gather evidence first.',
+          status: 'queued',
+          phase: 'collecting_evidence',
+          updated_at: new Date().toISOString(),
+        },
+      ],
+    },
+  }).select('id').single();
+
+  if (runError || !run?.id) {
+    console.error('[Intake POST] Could not queue public autopilot research:', runError);
+    return { queued: false, reason: 'queue_failed' };
+  }
+
+  const metadata =
+    typeof site.metadata === 'object' && site.metadata !== null && !Array.isArray(site.metadata)
+      ? site.metadata
+      : {};
+  const queuedAt = new Date().toISOString();
+
+  await params.supabase.from('restaurant_sites').update({
+    project_stage: 'collecting_evidence',
+    metadata: {
+      ...metadata,
+      source: 'verified_public_intake',
+      research_seed_sources: seedSources,
+      owner_intake: {
+        submitted_at: queuedAt,
+        uploaded_files: params.fileNames,
+      },
+      research_pipeline: {
+        current_phase: 'collecting_evidence',
+        phase_history: [
+          {
+            phase: 'collecting_evidence',
+            label: 'Queued research',
+            detail: 'Verified intake is complete. Research collection will gather evidence first.',
+            status: 'queued',
+            updated_at: queuedAt,
+          },
+        ],
+      },
+      current_operation: {
+        task_type: 'research_collect',
+        percent: 5,
+        label: 'Queued research',
+        detail: 'Verified intake is complete. Research collection will gather evidence first.',
+        status: 'queued',
+        phase: 'collecting_evidence',
+        updated_at: queuedAt,
+      },
+    },
+  }).eq('id', site.id);
+
+  if (seedSources.length) {
+    await params.supabase.from('research_sources').insert(seedSources.map((source) => ({
+      site_id: site.id,
+      request_id: params.requestRecord.id,
+      agent_run_id: run.id,
+      source_type: source.source_type,
+      url: source.url,
+      title: source.title,
+      confidence: 0,
+      metadata: {
+        seeded_from: 'verified_public_intake',
+        owner_verified_email: params.requestRecord.email,
+      },
+    })));
+  }
+
+  return { queued: true, runId: run.id };
+}
+
 function toSafeIntakePayload(intake: Record<string, unknown> | null) {
   if (!intake) return null;
 
@@ -356,6 +546,9 @@ export async function GET(req: NextRequest) {
     if (!requestRecord) {
       return NextResponse.json({ error: 'Invalid or expired intake link.' }, { status: 404 });
     }
+    if (!requestRecord.email_verified_at) {
+      return NextResponse.json({ error: 'Verify your email before opening the intake.' }, { status: 403 });
+    }
 
     const { data: intake } = await supabase
       .from('restaurant_intake')
@@ -400,6 +593,9 @@ export async function PATCH(req: NextRequest) {
     const { supabase, requestRecord } = await getRequestByToken(token);
     if (!requestRecord) {
       return NextResponse.json({ error: 'Invalid or expired intake link.' }, { status: 404 });
+    }
+    if (!requestRecord.email_verified_at) {
+      return NextResponse.json({ error: 'Verify your email before saving the intake.' }, { status: 403 });
     }
 
     const { data: existingIntake, error: existingError } = await supabase
@@ -481,6 +677,9 @@ export async function POST(req: NextRequest) {
     if (!requestRecord) {
       return NextResponse.json({ error: 'Invalid or expired intake link.' }, { status: 404 });
     }
+    if (!requestRecord.email_verified_at) {
+      return NextResponse.json({ error: 'Verify your email before submitting the intake.' }, { status: 403 });
+    }
 
     const intakeRecord = buildCompleteIntakeRecord(body, requestRecord.id);
 
@@ -558,6 +757,15 @@ export async function POST(req: NextRequest) {
       })
       .eq('id', requestRecord.id);
 
+    const autopilot = await queueResearchForCompletedIntake({
+      supabase,
+      requestRecord,
+      intakeRecord,
+      generatedBrief,
+      briefJson,
+      fileNames,
+    });
+
     await logSiteEvent({
       eventType: 'intake_completed',
       requestId: requestRecord.id,
@@ -567,6 +775,7 @@ export async function POST(req: NextRequest) {
       metadata: {
         client_slug: requestRecord.client_slug,
         uploaded_file_count: fileNames.length,
+        autopilot,
       },
     });
 
@@ -581,6 +790,7 @@ export async function POST(req: NextRequest) {
       request: requestRecord,
       intake: toSafeIntakePayload(intake as unknown as Record<string, unknown>),
       generatedBrief,
+      autopilot,
     });
   } catch (error) {
     console.error('[Intake POST] Unexpected error:', error);

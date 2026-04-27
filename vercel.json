@@ -3,6 +3,10 @@
     {
       "path": "/api/intake/abandon",
       "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/admin/agent-runs/process",
+      "schedule": "*/5 * * * *"
     }
   ]
 }

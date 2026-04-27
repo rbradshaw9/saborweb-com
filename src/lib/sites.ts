@@ -10,6 +10,8 @@ export type RestaurantSite = {
   preview_url: string;
   external_preview_url: string | null;
   claim_url: string;
+  staging_url: string | null;
+  live_url: string | null;
   status: string;
   owner_name: string | null;
   owner_email: string | null;
@@ -30,6 +32,10 @@ export function siteHref(value: string) {
   return value.startsWith('/') ? value : `/${value}`;
 }
 
+export function sitePreviewHref(site: Pick<RestaurantSite, 'live_url' | 'staging_url' | 'external_preview_url' | 'preview_url'>) {
+  return siteHref(site.live_url ?? site.staging_url ?? site.external_preview_url ?? site.preview_url);
+}
+
 export async function getRestaurantSiteBySlug(slug: string) {
   const supabase = getSupabaseAdmin();
   const { data, error } = await supabase
@@ -45,6 +51,8 @@ export async function getRestaurantSiteBySlug(slug: string) {
         'preview_url',
         'external_preview_url',
         'claim_url',
+        'staging_url',
+        'live_url',
         'status',
         'owner_name',
         'owner_email',

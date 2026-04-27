@@ -1,0 +1,4 @@
+interface:
+  display_name: "Build Preview Site"
+  short_description: "Turn SaborWeb packets into preview routes"
+  default_prompt: "Use $build-preview-site to build a bilingual restaurant preview from this admin build packet."

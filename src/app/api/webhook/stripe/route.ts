@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { Resend } from 'resend';
+import { credentialValue, getProviderCredential } from '@/lib/admin/credentials';
+import {
+  addMonitoringBreadcrumb,
+  captureMonitoringException,
+} from '@/lib/monitoring/sentry';
+import { publishLatestApprovedSiteVersion } from '@/lib/site-publishing';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { getServicePackage } from '@/lib/packages';
 import { logSiteEvent } from '@/lib/site-events';
@@ -51,7 +57,8 @@ function getGa4ClientId(session: Stripe.Checkout.Session) {
 }
 
 async function vercelRequest(path: string, method: string, body?: object) {
-  const token = process.env.VERCEL_API_TOKEN;
+  const credential = await getProviderCredential('vercel');
+  const token = credentialValue(credential.secret, 'VERCEL_API_TOKEN');
   if (!token) throw new Error('Missing VERCEL_API_TOKEN');
 
   const teamId = process.env.VERCEL_TEAM_ID;
@@ -88,7 +95,8 @@ async function triggerRedeploy(deployHookUrl: string) {
 }
 
 async function sendPaymentEmail(session: Stripe.Checkout.Session, clientSlug: string, packageName: string, autoLive: boolean) {
-  const apiKey = process.env.RESEND_API_KEY;
+  const credential = await getProviderCredential('resend');
+  const apiKey = credentialValue(credential.secret, 'RESEND_API_KEY');
   const notifyEmail = process.env.NOTIFY_EMAIL;
   if (!apiKey || !notifyEmail) return;
 
@@ -176,7 +184,7 @@ async function sendGa4PurchaseEvent(session: Stripe.Checkout.Session) {
 async function markRestaurantSiteClaimed(session: Stripe.Checkout.Session) {
   const siteId = session.metadata?.site_id ?? '';
   const clientSlug = session.metadata?.client_slug ?? session.metadata?.client ?? '';
-  if (!siteId && !clientSlug) return;
+  if (!siteId && !clientSlug) return null;
 
   const stripeCustomerId = typeof session.customer === 'string' ? session.customer : session.customer?.id ?? null;
   const stripeSubscriptionId =
@@ -202,8 +210,20 @@ async function markRestaurantSiteClaimed(session: Stripe.Checkout.Session) {
 
   if (error) {
     console.error('[Webhook] Failed to mark restaurant site claimed:', error);
-    return;
+    return null;
   }
+
+  const { data: site } = await (siteId
+    ? supabase
+        .from('restaurant_sites')
+        .select('id, request_id, slug, preview_url')
+        .eq('id', siteId)
+        .maybeSingle()
+    : supabase
+        .from('restaurant_sites')
+        .select('id, request_id, slug, preview_url')
+        .eq('slug', clientSlug)
+        .maybeSingle());
 
   await logSiteEvent({
     eventType: 'payment_completed',
@@ -220,6 +240,8 @@ async function markRestaurantSiteClaimed(session: Stripe.Checkout.Session) {
       currency: session.currency,
     },
   });
+
+  return site ?? null;
 }
 
 export async function POST(req: NextRequest) {
@@ -255,7 +277,68 @@ export async function POST(req: NextRequest) {
 
     let autoLive = false;
 
-    await markRestaurantSiteClaimed(session);
+    const site = await markRestaurantSiteClaimed(session);
+    addMonitoringBreadcrumb({
+      category: 'checkout',
+      message: 'Stripe checkout completed',
+      data: {
+        clientSlug,
+        siteId: site?.id ?? session.metadata?.site_id ?? null,
+        packageName,
+        sessionId: session.id,
+      },
+    });
+
+    if (site?.id && site.slug) {
+      try {
+        await publishLatestApprovedSiteVersion({
+          siteId: site.id,
+          slug: site.slug,
+          requestId: site.request_id ?? null,
+          previewUrl: site.preview_url ?? null,
+          actor: {
+            actorType: 'stripe',
+            actorId: session.id,
+            actorEmail: session.customer_details?.email ?? null,
+          },
+        });
+        autoLive = true;
+        addMonitoringBreadcrumb({
+          category: 'checkout',
+          message: 'Approved preview promoted live after payment',
+          data: {
+            clientSlug,
+            siteId: site.id,
+            sessionId: session.id,
+          },
+        });
+      } catch (publishError) {
+        captureMonitoringException(publishError, {
+          tags: {
+            area: 'checkout',
+            action: 'publish_live',
+          },
+          extra: {
+            clientSlug,
+            siteId: site.id,
+            sessionId: session.id,
+          },
+        });
+        await logSiteEvent({
+          eventType: 'payment_completed_live_promotion_failed',
+          siteId: site.id,
+          requestId: site.request_id ?? null,
+          actorType: 'stripe',
+          actorId: session.id,
+          message: 'Payment succeeded but no approved preview version could be promoted live',
+          metadata: {
+            client_slug: clientSlug,
+            session_id: session.id,
+            error: getErrorMessage(publishError),
+          },
+        });
+      }
+    }
 
     try {
       await sendGa4PurchaseEvent(session);
@@ -266,7 +349,6 @@ export async function POST(req: NextRequest) {
     if (projectId) {
       try {
         await disablePreviewMode(projectId);
-        autoLive = true;
       } catch (error) {
         console.error(`[Webhook] Failed to update Vercel env for ${clientSlug}:`, error);
       }

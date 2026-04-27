@@ -31,13 +31,16 @@ export async function POST(req: NextRequest) {
     const { data: requestRecord, error: requestError } = await supabase
       .from('preview_requests')
       .select(
-        'id, owner_name, email, phone, restaurant_name, city, preferred_language, source, status, notes, instagram_url, google_url, website_url, client_slug'
+        'id, owner_name, email, phone, restaurant_name, city, preferred_language, source, status, notes, instagram_url, google_url, website_url, client_slug, email_verified_at'
       )
       .eq('intake_token_hash', hashIntakeToken(token))
       .single();
 
     if (requestError || !requestRecord) {
       return NextResponse.json({ error: 'Invalid or expired intake link.' }, { status: 404 });
+    }
+    if (!requestRecord.email_verified_at) {
+      return NextResponse.json({ error: 'Verify your email before uploading intake files.' }, { status: 403 });
     }
 
     const request = requestRecord as PreviewRequestRecord;

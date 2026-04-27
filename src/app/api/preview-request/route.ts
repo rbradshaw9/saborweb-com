@@ -27,12 +27,13 @@ export async function POST(req: NextRequest) {
     const ownerName = readString(body.ownerName);
     const restaurantName = readString(body.restaurantName);
     const phone = readString(body.phone);
+    const email = asNullableString(body.email);
     const city = readString(body.city);
     const preferredLanguage = isLang(body.preferredLanguage) ? body.preferredLanguage : 'es';
 
-    if (!ownerName || !restaurantName || !phone || !city) {
+    if (!ownerName || !restaurantName || !phone || !email || !city) {
       return NextResponse.json(
-        { error: 'Owner name, restaurant name, phone, and city are required.' },
+        { error: 'Owner name, restaurant name, phone, email, and city are required.' },
         { status: 400 }
       );
     }
@@ -45,7 +46,7 @@ export async function POST(req: NextRequest) {
     const supabase = getSupabaseAdmin();
     const insert = {
       owner_name: ownerName,
-      email: asNullableString(body.email),
+      email,
       phone,
       restaurant_name: restaurantName,
       city,
@@ -64,7 +65,7 @@ export async function POST(req: NextRequest) {
       .from('preview_requests')
       .insert(insert)
       .select(
-        'id, owner_name, email, phone, restaurant_name, city, preferred_language, source, status, notes, instagram_url, google_url, website_url, client_slug'
+        'id, owner_name, email, phone, restaurant_name, city, preferred_language, source, status, notes, instagram_url, google_url, website_url, client_slug, email_verified_at'
       )
       .single();
 
@@ -75,6 +76,7 @@ export async function POST(req: NextRequest) {
 
     const requestRecord = data as PreviewRequestRecord;
     const intakeUrl = `${origin}/intake?token=${encodeURIComponent(token)}`;
+    const verifyUrl = `${origin}/api/preview-request/verify?token=${encodeURIComponent(token)}`;
     const previewUrl = makePath(`/preview/${clientSlug}`);
     const claimUrl = makePath(`/claim/${clientSlug}`);
 
@@ -99,6 +101,10 @@ export async function POST(req: NextRequest) {
           metadata: {
             source: requestRecord.source,
             preferred_language: requestRecord.preferred_language,
+            email_verification: {
+              status: 'sent',
+              sent_at: new Date().toISOString(),
+            },
           },
         },
         { onConflict: 'request_id' }
@@ -125,7 +131,11 @@ export async function POST(req: NextRequest) {
     });
 
     try {
-      await sendPreviewRequestEmail(requestRecord, intakeUrl);
+      await sendPreviewRequestEmail(requestRecord, verifyUrl, intakeUrl);
+      await supabase
+        .from('preview_requests')
+        .update({ email_verification_sent_at: new Date().toISOString() })
+        .eq('id', requestRecord.id);
     } catch (emailError) {
       console.error('[Preview Request] Notification failed:', emailError);
     }
@@ -136,7 +146,7 @@ export async function POST(req: NextRequest) {
       clientSlug: requestRecord.client_slug,
       previewUrl,
       claimUrl,
-      intakeUrl,
+      intakeUrl: verifyUrl,
     });
   } catch (error) {
     console.error('[Preview Request] Unexpected error:', error);

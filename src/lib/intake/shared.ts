@@ -15,6 +15,7 @@ export type PreviewRequestRecord = {
   google_url: string | null;
   website_url: string | null;
   client_slug: string;
+  email_verified_at?: string | null;
 };
 
 export type IntakeRecord = {
@@ -102,6 +103,7 @@ export function slugify(value: string) {
 export function normalizeUrl(value: string | null | undefined) {
   const trimmed = value?.trim();
   if (!trimmed) return null;
+  if (/^(none|none yet|non yet|not yet|n\/a|na|null|unknown|not provided|undefined)$/i.test(trimmed)) return null;
   if (/^https?:\/\//i.test(trimmed)) return trimmed;
   return `https://${trimmed}`;
 }

@@ -1,4 +1,5 @@
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
+import { captureMonitoringException } from '@/lib/monitoring/sentry';
 
 type ActorType = 'system' | 'visitor' | 'owner' | 'admin' | 'stripe' | 'cron';
 
@@ -38,8 +39,20 @@ export async function logSiteEvent({
 
     if (error) {
       console.error('[Site Events] Insert failed:', error);
+      captureMonitoringException(error, {
+        tags: {
+          area: 'site-events',
+          event_type: eventType,
+        },
+      });
     }
   } catch (error) {
     console.error('[Site Events] Unexpected failure:', error);
+    captureMonitoringException(error, {
+      tags: {
+        area: 'site-events',
+        event_type: eventType,
+      },
+    });
   }
 }

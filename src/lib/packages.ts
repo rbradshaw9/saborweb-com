@@ -24,18 +24,18 @@ export const SERVICE_PACKAGES: ServicePackage[] = [
     },
     features: {
       en: [
-        '4-5 page restaurant website',
-        'Mobile-first design',
-        'Menu, hours, location, and WhatsApp',
-        'Basic local SEO and metadata',
-        'Vercel hosting, SSL, and care',
+        'Unique bilingual restaurant website',
+        'Mobile-first design and hosting care',
+        'Menu, hours, location, calls, and WhatsApp',
+        'Launch-ready technical and local SEO foundation',
+        'Customer portal with managed change requests',
       ],
       es: [
-        'Pagina web de restaurante de 4-5 secciones',
-        'Diseno mobile-first',
-        'Menu, horario, ubicacion y WhatsApp',
-        'SEO local basico y metadata',
-        'Hosting Vercel, SSL y mantenimiento',
+        'Pagina bilingue unica para restaurante',
+        'Diseno mobile-first, hosting y mantenimiento',
+        'Menu, horario, ubicacion, llamadas y WhatsApp',
+        'Base tecnica de SEO local lista para lanzar',
+        'Portal de cliente con solicitudes de cambios',
       ],
     },
   },
@@ -52,17 +52,19 @@ export const SERVICE_PACKAGES: ServicePackage[] = [
     features: {
       en: [
         'Everything in Presencia',
-        'Editable menu/content workflow',
+        'Self-service menu and hours editor',
         'Google Business Profile optimization',
         'Local directory citation setup',
-        'Monthly content refresh and report',
+        'Custom domain support included',
+        'Monthly visibility report',
       ],
       es: [
         'Todo en Presencia',
-        'Flujo editable para menu y contenido',
+        'Editor self-service para menu y horarios',
         'Optimizacion de Google Business Profile',
         'Configuracion de citas en directorios locales',
-        'Actualizacion mensual y reporte',
+        'Dominio personalizado incluido',
+        'Reporte mensual de visibilidad',
       ],
     },
   },
@@ -131,5 +133,31 @@ export function getDomainSetupAddonPrice() {
     throw new Error('Missing Stripe price env var: STRIPE_PRICE_DOMAIN_SETUP_ADDON');
   }
 
+  return price;
+}
+
+export type StripeAddOnPriceKey =
+  | 'STRIPE_PRICE_BLOG_CMS_SETUP'
+  | 'STRIPE_PRICE_BLOG_CMS_MONTHLY'
+  | 'STRIPE_PRICE_LEAD_CONCIERGE_SETUP'
+  | 'STRIPE_PRICE_LEAD_CONCIERGE_MONTHLY'
+  | 'STRIPE_PRICE_ORDERING_INTEGRATION_SETUP'
+  | 'STRIPE_PRICE_ORDERING_INTEGRATION_MONTHLY'
+  | 'STRIPE_PRICE_RESERVATION_INTEGRATION_SETUP'
+  | 'STRIPE_PRICE_RESERVATION_INTEGRATION_MONTHLY'
+  | 'STRIPE_PRICE_GBP_POSTS_SETUP'
+  | 'STRIPE_PRICE_GBP_POSTS_MONTHLY'
+  | 'STRIPE_PRICE_CITATION_SETUP'
+  | 'STRIPE_PRICE_REVIEW_SUPPORT_SETUP'
+  | 'STRIPE_PRICE_REVIEW_SUPPORT_MONTHLY'
+  | 'STRIPE_PRICE_GROWTH_PACK_SETUP'
+  | 'STRIPE_PRICE_GROWTH_PACK_MONTHLY'
+  | 'STRIPE_PRICE_CONVERSION_PACK_SETUP'
+  | 'STRIPE_PRICE_CONVERSION_PACK_MONTHLY'
+  | 'STRIPE_PRICE_EXPORT_BUYOUT';
+
+export function getStripeConfiguredPrice(envKey: StripeAddOnPriceKey) {
+  const price = process.env[envKey]?.trim();
+  if (!price) throw new Error(`Missing Stripe price env var: ${envKey}`);
   return price;
 }

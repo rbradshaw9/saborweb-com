@@ -329,6 +329,7 @@ export default function BriefBuilderPage() {
   const [createdRequest, setCreatedRequest] = useState<CreatedRequest | null>(null);
   const [files, setFiles] = useState<FileList | null>(null);
   const [status, setStatus] = useState<'idle' | 'saving' | 'complete' | 'error'>('idle');
+  const [completionKind, setCompletionKind] = useState<'verify' | 'submitted'>('submitted');
   const [message, setMessage] = useState('');
 
   const TOTAL_STEPS = MAX_WIZARD_STEP + 1;
@@ -353,10 +354,12 @@ export default function BriefBuilderPage() {
           submit: 'Submit',
           saving: 'Saving…',
           error: 'Something went wrong. Please try again.',
-          requiredError: 'Please fill out your name, restaurant, phone, and city before continuing.',
+          requiredError: 'Please fill out your name, restaurant, phone, email, and city before continuing.',
           draftWarning: 'We could not save this step, but you can keep going.',
           complete: 'You\'re all set.',
           completeSub: 'We\'ll use this to build your preview. Expect to hear from us within 1–2 business days.',
+          verify: 'Check your email.',
+          verifySub: 'We sent a private verification link. Open it to finish the intake and start the preview build.',
 
           step0: {
             heading: 'Let\'s get started.',
@@ -465,10 +468,12 @@ export default function BriefBuilderPage() {
           submit: 'Enviar',
           saving: 'Guardando…',
           error: 'Algo salió mal. Intenta de nuevo.',
-          requiredError: 'Completa tu nombre, restaurante, teléfono y pueblo antes de continuar.',
+          requiredError: 'Completa tu nombre, restaurante, teléfono, correo y pueblo antes de continuar.',
           draftWarning: 'No pudimos guardar este paso, pero puedes continuar.',
           complete: 'Listo.',
           completeSub: 'Usaremos esto para construir tu preview. Te contactamos en 1–2 días hábiles.',
+          verify: 'Revisa tu correo.',
+          verifySub: 'Enviamos un enlace privado de verificación. Ábrelo para terminar el intake y empezar el preview.',
 
           step0: {
             heading: 'Empecemos.',
@@ -631,7 +636,7 @@ export default function BriefBuilderPage() {
   };
 
   const createPreviewRequest = async () => {
-    if (!form.ownerName.trim() || !form.restaurantName.trim() || !form.phone.trim() || !form.city.trim()) {
+    if (!form.ownerName.trim() || !form.restaurantName.trim() || !form.phone.trim() || !form.email.trim() || !form.city.trim()) {
       setStatus('idle');
       setMessage(copy.requiredError);
       return;
@@ -666,26 +671,20 @@ export default function BriefBuilderPage() {
       if (!res.ok || typeof data !== 'object' || data === null) {
         throw new Error(errorMessageFromResponse(data, copy.error));
       }
-      const intakeUrl = 'intakeUrl' in data && typeof data.intakeUrl === 'string' ? data.intakeUrl : '';
       const clientSlug = 'clientSlug' in data && typeof data.clientSlug === 'string' ? data.clientSlug : '';
-      const token = new URL(intakeUrl, window.location.origin).searchParams.get('token') ?? '';
-      if (!token) throw new Error('Missing token');
-      setCreatedRequest({ token, clientSlug });
-      await saveDraft(token, 0);
-      syncWizardUrl(token, 1);
+      setCreatedRequest({ token: '', clientSlug });
       track(ANALYTICS_EVENTS.BRIEF_BUILDER_STARTED, {
         step: 0,
         language: lang,
-        has_token: true,
+        has_token: false,
       });
       track(ANALYTICS_EVENTS.BRIEF_BUILDER_STEP_COMPLETED, {
         step: 0,
         language: lang,
-        has_token: true,
+        has_token: false,
       });
-      setStatus('idle');
-      setStepDirection(1);
-      setStep(1);
+      setCompletionKind('verify');
+      setStatus('complete');
     } catch (error) {
       setStatus('error');
       setMessage(error instanceof Error ? error.message : copy.error);
@@ -723,6 +722,7 @@ export default function BriefBuilderPage() {
         language: lang,
         has_token: true,
       });
+      setCompletionKind('submitted');
       setStatus('complete');
     } catch {
       setStatus('error');
@@ -758,8 +758,8 @@ export default function BriefBuilderPage() {
         <main className="wz-complete-wrap">
           <div className="wz-complete">
             <CheckCircle size={40} className="wz-complete__icon" />
-            <h1>{copy.complete}</h1>
-            <p>{copy.completeSub}</p>
+            <h1>{completionKind === 'verify' ? copy.verify : copy.complete}</h1>
+            <p>{completionKind === 'verify' ? copy.verifySub : copy.completeSub}</p>
             {createdRequest && (
               <p className="wz-complete__slug">{createdRequest.clientSlug}</p>
             )}
@@ -883,11 +883,12 @@ export default function BriefBuilderPage() {
                     </div>
                     <div className="wz-field">
                       <label className="wz-label" htmlFor="email">
-                        {lang === 'es' ? 'Correo electrónico' : 'Email'}
+                        {lang === 'es' ? 'Correo electrónico' : 'Email'} *
                       </label>
                       <input
                         id="email"
                         className="wz-input"
+                        required
                         type="email"
                         value={form.email}
                         onChange={(e) => update('email', e.target.value)}

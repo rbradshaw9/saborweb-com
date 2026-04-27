@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowRight, ExternalLink } from 'lucide-react';
-import { getRestaurantSiteBySlug, siteHref } from '@/lib/sites';
+import { getRestaurantSiteBySlug, sitePreviewHref } from '@/lib/sites';
 import ClaimPackageGrid from '@/components/ClaimPackageGrid';
 
 export const dynamic = 'force-dynamic';
@@ -12,7 +12,7 @@ export default async function ClaimPage({ params }: { params: Promise<{ slug: st
 
   if (!site) notFound();
 
-  const previewHref = siteHref(site.external_preview_url ?? site.preview_url);
+  const previewHref = sitePreviewHref(site);
   const statusLabel = site.payment_status === 'paid' ? 'Claimed' : 'Ready to claim';
 
   return (
