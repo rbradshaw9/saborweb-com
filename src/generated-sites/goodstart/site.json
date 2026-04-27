@@ -1,8 +1,8 @@
 {
   "version": 1,
   "slug": "goodstart",
-  "generatedAt": "2026-04-27T17:57:18.188Z",
-  "sourceHash": "8e8cb0a46c45d851bc7936a6b083c2b37717b332c4c173a7bcba2d21b0306731",
+  "generatedAt": "2026-04-27T18:42:43.236Z",
+  "sourceHash": "bf413a4c1ecac52ab84116b8258ed584aa08db23d174e4074c2379a70b590517",
   "restaurant": {
     "name": "Good Start Coastal Cafe",
     "city": "Isabela",
@@ -21,25 +21,23 @@
     "mapsUrl": "https://maps.google.com/?cid=2958274291943456299"
   },
   "brand": {
-    "headline": "Start the day by the coast.",
-    "subheadline": "Breakfast, coffee, açaí, smoothies, fresh juices, and light daytime cocktails served daily in Isabela, Puerto Rico.",
-    "eyebrow": "Isabela coastal cafe",
+    "headline": "Breakfast, coffee & coastal cafe favorites in Isabela",
+    "subheadline": "Start the day with cafe-style breakfast, açaí bowls, smoothies, fresh juices, coffee, and brunch cocktails at Good Start Coastal Cafe.",
+    "eyebrow": "Isabela, Puerto Rico • Open daily 8 AM–2 PM",
     "mood": [
-      "sunny",
-      "fresh",
+      "bright",
       "coastal",
-      "relaxed",
-      "morning",
-      "clean",
-      "tropical",
-      "welcoming"
+      "fresh",
+      "sunny",
+      "friendly",
+      "morning-focused",
+      "tropical"
     ],
     "colors": [
-      "Warm sand and soft white backgrounds for an airy cafe feel.",
-      "Ocean teal/sea blue as the main brand accent.",
-      "Citrus yellow or orange highlights for morning energy.",
-      "Fresh green accents for açaí, smoothies, and juice cues.",
-      "Charcoal text for readability and premium contrast."
+      "Warm cream or sand background for a fresh cafe base.",
+      "Espresso brown or deep charcoal for readable body text.",
+      "Ocean teal/aqua for primary accents and links.",
+      "Papaya/coral and soft sunrise yellow as highlight colors for badges, dividers, and small decorative shapes."
     ],
     "logoUrl": null
   },
@@ -225,77 +223,60 @@
     ]
   },
   "content": {
-    "summary": "A launch-ready first-party website for Good Start Coastal Cafe, a sunny coastal cafe in Isabela, Puerto Rico serving breakfast, coffee, açaí, smoothies, fresh juices, and light daytime cocktails. The experience should prioritize menu viewing, hours, directions, and tap-to-call on mobile.",
+    "summary": "Good Start Coastal Cafe is a breakfast-focused coastal cafe in Isabela, Puerto Rico, offering coffee, açaí, smoothies, juices, cocktails, and morning favorites. The site should be a confident owned restaurant website with editable menu and hours, strong mobile CTAs, and a tropical-modern visual system.",
     "assumptions": [],
     "sections": [
       {
-        "id": "hero",
-        "title": "Start the day by the coast",
-        "body": [
-          "Use the approved real restaurant photo with a bright, coastal overlay and strong text panel.",
-          "Place View Menu, Get Directions, and Call actions prominently for mobile visitors.",
-          "Mention the verified concept categories without making unsupported claims."
-        ]
-      },
-      {
         "id": "quick-actions",
-        "title": "Plan your visit fast",
+        "title": "Plan your visit",
         "body": [
-          "Show daily hours, tap-to-call, directions, and social links in a compact mobile-first action area.",
-          "Use the canonical phone number, address, and maps URL."
+          "Make the key actions immediate on mobile: view the menu, check today’s hours, get directions, and call the cafe.",
+          "Use the Google Maps URL for directions and tel:+17878309500 for calls."
         ]
       },
       {
         "id": "menu",
-        "title": "Good Start Coastal Cafe Menu",
+        "title": "Menu",
         "body": [
-          "Render the complete menu from editable structured menu data.",
-          "Use category navigation for breakfast favorites, açaí and bowls, coffee, smoothies, fresh juices, and cocktails.",
-          "Hide prices when priceText is null and never add placeholder prices."
+          "Render the full Good Start Coastal Cafe menu from editable structured data with categories for Breakfast Favorites, Açaí & Bowls, Coffee, Smoothies, Fresh Juices, and Cocktails.",
+          "Hide all prices because prices are not supplied. Keep menu provenance internal; public copy should feel complete and polished."
         ]
       },
       {
-        "id": "cafe-highlights",
-        "title": "Fresh, bright, and easygoing",
+        "id": "hours-location",
+        "title": "Hours & location",
         "body": [
-          "Create three to four highlight cards around breakfast, coffee, fruit-forward bowls and smoothies, juices, and relaxed daytime drinks.",
-          "Keep copy concise and concept-based; avoid invented sourcing, awards, or owner story."
+          "Open Monday through Sunday from 8:00 AM to 2:00 PM.",
+          "Address: PR 4466 km5, Isabela, Puerto Rico 00662.",
+          "Phone: (787) 830-9500."
         ]
       },
       {
-        "id": "visit",
-        "title": "Visit Good Start Coastal Cafe",
+        "id": "about",
+        "title": "A bright start on the coast",
         "body": [
-          "Display address, daily 8:00 AM–2:00 PM hours, call link, and directions link.",
-          "Include a compact map/directions module if supported by the preview system."
+          "Position the cafe as a fresh, casual daytime stop for breakfast, coffee, açaí, smoothies, juices, and cocktails in Isabela.",
+          "Avoid unsupported claims about ownership, awards, sourcing, ocean views, or exact specialties beyond the structured menu and verified concept."
         ]
       },
       {
-        "id": "connect",
+        "id": "social",
         "title": "Follow along",
         "body": [
-          "Add Instagram and Facebook as secondary supporting links.",
-          "Do not make social profiles the main product experience."
-        ]
-      },
-      {
-        "id": "footer",
-        "title": "Good Start Coastal Cafe",
-        "body": [
-          "Repeat NAP, hours summary, directions, call, and social links.",
-          "Include local SEO schema in the page implementation."
+          "Include Instagram and Facebook as secondary social links in the contact/footer area.",
+          "Do not frame the website as a social page or rely on social links as the main experience."
         ]
       }
     ],
     "acceptanceCriteria": [
-      "The preview looks like a confident, launch-ready first-party website for Good Start Coastal Cafe on mobile and desktop.",
-      "The primary visitor actions are visible above the fold or in sticky mobile actions: View Menu, Get Directions, Call, and Hours.",
-      "The full menu renders from editable structured data, not hard-coded page prose.",
-      "No menu prices appear because no verified prices are provided.",
-      "The site does not fabricate reviews, awards, owner quotes, exact operational claims, prices, ordering links, reservation links, or restaurant-specific photography.",
-      "Only the approved real photo is used for restaurant imagery; visual richness comes from design system elements and non-photographic accents.",
-      "Hours show daily 8:00 AM–2:00 PM and are wired to customer-managed hours data.",
-      "Phone uses (787) 830-9500 and supports tap-to-call with +17878309500."
+      "The preview feels like a launch-ready first-party website for Good Start Coastal Cafe, not an unclaimed listing, social profile wrapper, or placeholder brochure.",
+      "Mobile-first layout has obvious actions for View Menu, Hours, Directions, and Call above the fold or in sticky navigation.",
+      "Menu renders all provided categories and items from editable structured data, with no fabricated prices and no menu items embedded only in prose.",
+      "Hours are editable and displayed as daily 8:00 AM–2:00 PM.",
+      "Address, phone, Google Maps link, Instagram, and Facebook are present and correctly prioritized.",
+      "Only one real approved photo is used; no AI/fake food or venue photography appears.",
+      "SEO title, meta description, Open Graph content, and Restaurant/Cafe schema are implemented without fabricated reviews, awards, price range, or review count.",
+      "Accessibility meets practical WCAG expectations: semantic headings, readable contrast, descriptive image alt text, keyboard-accessible CTAs, and visible focus states."
     ]
   }
 }
