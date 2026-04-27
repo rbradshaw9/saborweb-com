@@ -112,6 +112,17 @@ const WORKER_ACTOR = {
   email: 'agent-worker@saborweb.com',
 };
 
+type ResearchMode = 'prompt_first' | 'full_crawl';
+
+function researchMode(): ResearchMode {
+  const configured = (process.env.SABORWEB_RESEARCH_MODE || process.env.RESEARCH_MODE || 'prompt_first').trim().toLowerCase();
+  return configured === 'full_crawl' || configured === 'crawl' ? 'full_crawl' : 'prompt_first';
+}
+
+function shouldRunCrawlerResearch() {
+  return researchMode() === 'full_crawl';
+}
+
 function asRecord(value: unknown) {
   return typeof value === 'object' && value !== null && !Array.isArray(value) ? value as Record<string, unknown> : {};
 }
@@ -1628,19 +1639,24 @@ async function processResearchCollect(run: AgentRun) {
       : []),
   ]);
 
+  const crawlerResearchEnabled = shouldRunCrawlerResearch();
   await setRunProgress(run, site, {
     percent: 38,
-    label: 'Crawling likely pages',
-    detail: 'Using Apify to gather website, menu, directory, and social clues.',
+    label: crawlerResearchEnabled ? 'Crawling likely pages' : 'Preparing prompt-first evidence',
+    detail: crawlerResearchEnabled
+      ? 'Using Apify to gather website, menu, directory, and social clues.'
+      : 'Skipping Apify/Firecrawl for this test mode. Submitted details and lightweight verification will feed the AI review prompt.',
   });
-  const apifySources = await apifyWebsiteSources(enrichedSeeds).catch((error) => {
-    console.error('[Agent Runner] Apify crawl failed:', error);
-    captureMonitoringException(error, {
-      tags: { area: 'research_collect', provider: 'apify' },
-      extra: { siteId: site.id, siteSlug: site.slug, agentRunId: run.id },
-    });
-    return [];
-  });
+  const apifySources = crawlerResearchEnabled
+    ? await apifyWebsiteSources(enrichedSeeds).catch((error) => {
+        console.error('[Agent Runner] Apify crawl failed:', error);
+        captureMonitoringException(error, {
+          tags: { area: 'research_collect', provider: 'apify' },
+          extra: { siteId: site.id, siteSlug: site.slug, agentRunId: run.id },
+        });
+        return [];
+      })
+    : [];
 
   const firstPassInputs = dedupeSources([
     ...enrichedSeeds,
@@ -1649,17 +1665,21 @@ async function processResearchCollect(run: AgentRun) {
   ]);
   await setRunProgress(run, site, {
     percent: 58,
-    label: 'Extracting source details',
-    detail: 'Using Firecrawl for markdown, links, screenshots, menus, and asset clues.',
+    label: crawlerResearchEnabled ? 'Extracting source details' : 'Building prompt-first dossier',
+    detail: crawlerResearchEnabled
+      ? 'Using Firecrawl for markdown, links, screenshots, menus, and asset clues.'
+      : 'Saving a compact dossier for GPT-5.5 to turn into the build-agent prompt.',
   });
-  const firecrawlExtracted = await firecrawlSources(firstPassInputs).catch((error) => {
-    console.error('[Agent Runner] Firecrawl failed:', error);
-    captureMonitoringException(error, {
-      tags: { area: 'research_collect', provider: 'firecrawl' },
-      extra: { siteId: site.id, siteSlug: site.slug, agentRunId: run.id },
-    });
-    return [];
-  });
+  const firecrawlExtracted = crawlerResearchEnabled
+    ? await firecrawlSources(firstPassInputs).catch((error) => {
+        console.error('[Agent Runner] Firecrawl failed:', error);
+        captureMonitoringException(error, {
+          tags: { area: 'research_collect', provider: 'firecrawl' },
+          extra: { siteId: site.id, siteSlug: site.slug, agentRunId: run.id },
+        });
+        return [];
+      })
+    : [];
   const sources = dedupeSources([
     ...firstPassInputs,
     ...firecrawlExtracted,
@@ -1694,14 +1714,18 @@ async function processResearchCollect(run: AgentRun) {
       research_pipeline: appendResearchPhaseHistory(site.metadata, {
         phase: 'ai_audit',
         label: 'AI review queued',
-        detail: 'Raw research is saved. The AI project manager will verify, supplement, and write the build brief.',
+        detail: crawlerResearchEnabled
+          ? 'Raw research is saved. The AI project manager will verify, supplement, and write the build brief.'
+          : 'Prompt-first evidence is saved. The AI project manager will use GPT-5.5 reasoning to write the build-agent prompt.',
         status: 'queued',
       }),
       current_operation: {
         task_type: 'ai_review',
         percent: 5,
         label: 'AI review queued',
-        detail: 'Raw research is saved. The AI project manager will verify and fill gaps next.',
+        detail: crawlerResearchEnabled
+          ? 'Raw research is saved. The AI project manager will verify and fill gaps next.'
+          : 'Submitted details and lightweight verification are ready for prompt-first review.',
         status: 'queued',
         updated_at: new Date().toISOString(),
       },
@@ -1720,6 +1744,8 @@ async function processResearchCollect(run: AgentRun) {
     asset_candidate_count: assetCount,
     queued_next: queuedReviewRunId ? 'ai_review' : null,
     queued_ai_review_run_id: queuedReviewRunId,
+    research_mode: researchMode(),
+    crawler_research_enabled: crawlerResearchEnabled,
   };
 }
 
@@ -1780,50 +1806,59 @@ async function processResearch(run: AgentRun) {
       : []),
   ]);
 
+  const crawlerResearchEnabled = shouldRunCrawlerResearch();
   await setRunProgress(run, site, {
     percent: 32,
-    label: 'Crawling likely source pages',
-    detail: 'Running Apify on the best website and directory candidates.',
+    label: crawlerResearchEnabled ? 'Crawling likely source pages' : 'Preparing prompt-first evidence',
+    detail: crawlerResearchEnabled
+      ? 'Running Apify on the best website and directory candidates.'
+      : 'Skipping Apify/Firecrawl for this test mode. GPT-5.5 will use submitted details and lightweight verification to write the build-agent prompt.',
   });
-  const apifySources = await apifyWebsiteSources(enrichedSeeds).catch((error) => {
-    console.error('[Agent Runner] Apify crawl failed:', error);
-    captureMonitoringException(error, {
-      tags: {
-        area: 'research',
-        provider: 'apify',
-        task_type: run.task_type,
-      },
-      extra: {
-        siteId: site.id,
-        siteSlug: site.slug,
-        agentRunId: run.id,
-      },
-    });
-    return [];
-  });
+  const apifySources = crawlerResearchEnabled
+    ? await apifyWebsiteSources(enrichedSeeds).catch((error) => {
+        console.error('[Agent Runner] Apify crawl failed:', error);
+        captureMonitoringException(error, {
+          tags: {
+            area: 'research',
+            provider: 'apify',
+            task_type: run.task_type,
+          },
+          extra: {
+            siteId: site.id,
+            siteSlug: site.slug,
+            agentRunId: run.id,
+          },
+        });
+        return [];
+      })
+    : [];
   const discoveredFromApify = discoverSourcesFromCandidates(apifySources, site);
   const firstPassInputs = dedupeSources([...enrichedSeeds, ...apifySources, ...discoveredFromApify]);
   await setRunProgress(run, site, {
     percent: 48,
-    label: 'Extracting menus and socials',
-    detail: 'Using Firecrawl to pull markdown, links, and social/menu targets from discovered pages.',
+    label: crawlerResearchEnabled ? 'Extracting menus and socials' : 'Building prompt-first dossier',
+    detail: crawlerResearchEnabled
+      ? 'Using Firecrawl to pull markdown, links, and social/menu targets from discovered pages.'
+      : 'Saving a compact dossier for GPT-5.5 to turn into the build-agent prompt.',
   });
-  const firecrawlExtracted = await firecrawlSources(firstPassInputs).catch((error) => {
-    console.error('[Agent Runner] Firecrawl failed:', error);
-    captureMonitoringException(error, {
-      tags: {
-        area: 'research',
-        provider: 'firecrawl',
-        task_type: run.task_type,
-      },
-      extra: {
-        siteId: site.id,
-        siteSlug: site.slug,
-        agentRunId: run.id,
-      },
-    });
-    return [];
-  });
+  const firecrawlExtracted = crawlerResearchEnabled
+    ? await firecrawlSources(firstPassInputs).catch((error) => {
+        console.error('[Agent Runner] Firecrawl failed:', error);
+        captureMonitoringException(error, {
+          tags: {
+            area: 'research',
+            provider: 'firecrawl',
+            task_type: run.task_type,
+          },
+          extra: {
+            siteId: site.id,
+            siteSlug: site.slug,
+            agentRunId: run.id,
+          },
+        });
+        return [];
+      })
+    : [];
   const discoveredFromFirecrawl = discoverSourcesFromCandidates(firecrawlExtracted, site);
   let sources = dedupeSources([
     ...enrichedSeeds,
@@ -1836,7 +1871,7 @@ async function processResearch(run: AgentRun) {
   let researchQa = assessResearchProfile(profile, sources);
 
   let secondPassFirecrawl: SourceCandidate[] = [];
-  if (!researchQa.readyForPacket) {
+  if (crawlerResearchEnabled && !researchQa.readyForPacket) {
     await setRunProgress(run, site, {
       percent: 62,
       label: 'Running deeper research pass',
@@ -2190,6 +2225,7 @@ async function processResearch(run: AgentRun) {
         firecrawl: firecrawlExtracted.length > 0 || secondPassFirecrawl.length > 0,
         openai_auditor: Boolean(audit),
       },
+      research_mode: researchMode(),
       research_qa: researchQa,
       research_audit: audit,
       profile,
@@ -2208,6 +2244,7 @@ async function processResearch(run: AgentRun) {
       firecrawl: firecrawlExtracted.length > 0 || secondPassFirecrawl.length > 0,
       openai_auditor: Boolean(audit),
     },
+    research_mode: researchMode(),
     research_qa: researchQa,
     research_audit: audit,
     profile,
