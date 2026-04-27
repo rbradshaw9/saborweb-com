@@ -5,8 +5,9 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { requireAdminUser } from '@/lib/admin/auth';
 import { generateAdminBuildPacket } from '@/lib/admin/build-packets';
-import { getProviderCredential } from '@/lib/admin/credentials';
+import { credentialValue, getProviderCredential } from '@/lib/admin/credentials';
 import { getAdminSiteDetail } from '@/lib/admin/dashboard';
+import { GENERATED_SITE_REGISTRY } from '@/generated-sites/registry';
 import {
   addMonitoringBreadcrumb,
   captureMonitoringException,
@@ -23,6 +24,7 @@ import {
 import { persistResolvedMenu, type ResolvedMenuFallbackMode, type ResolvedMenuStatus } from '@/lib/admin/menu-research';
 import { type ResolvedSiteBrief } from '@/lib/admin/site-brief';
 import { slugifyProjectValue } from '@/lib/admin/slugs';
+import { generatedSiteRegistrySource } from '@/lib/generated-sites';
 import { publishLatestApprovedSiteVersion } from '@/lib/site-publishing';
 import { logSiteEvent } from '@/lib/site-events';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
@@ -72,6 +74,193 @@ const LEGACY_PROJECT_STAGE_FALLBACK: Record<string, string> = {
 function readAllowed(formData: FormData, key: string, allowed: Set<string>) {
   const value = String(formData.get(key) ?? '');
   return allowed.has(value) ? value : null;
+}
+
+function asRecord(value: unknown) {
+  return typeof value === 'object' && value !== null && !Array.isArray(value) ? value as Record<string, unknown> : {};
+}
+
+function cleanString(value: unknown) {
+  return typeof value === 'string' && value.trim() ? value.trim() : null;
+}
+
+function productionDeployBranch() {
+  return process.env.SABORWEB_PRODUCTION_BRANCH || process.env.GITHUB_PRODUCTION_BRANCH || 'main';
+}
+
+function githubRepoParts() {
+  const fullName = process.env.GITHUB_REPO_FULL_NAME;
+  if (fullName?.includes('/')) {
+    const [owner, repo] = fullName.split('/');
+    return { owner, repo };
+  }
+  const owner = process.env.GITHUB_REPO_OWNER;
+  const repo = process.env.GITHUB_REPO_NAME;
+  return owner && repo ? { owner, repo } : null;
+}
+
+async function githubApi(path: string, params: {
+  method?: string;
+  body?: Record<string, unknown>;
+  token: string;
+}) {
+  const response = await fetch(`https://api.github.com${path}`, {
+    method: params.method ?? 'GET',
+    headers: {
+      Accept: 'application/vnd.github+json',
+      Authorization: `Bearer ${params.token}`,
+      'Content-Type': 'application/json',
+      'X-GitHub-Api-Version': '2022-11-28',
+    },
+    body: params.body ? JSON.stringify(params.body) : undefined,
+    cache: 'no-store',
+  });
+  const json = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(`GitHub API ${params.method ?? 'GET'} ${path} failed: ${JSON.stringify(json)}`);
+  return asRecord(json);
+}
+
+async function removeGeneratedSiteFromGitHub(slug: string) {
+  const repo = githubRepoParts();
+  const credential = await getProviderCredential('github');
+  const token =
+    credentialValue(credential.secret, 'GITHUB_REPO_TOKEN') ||
+    credentialValue(credential.secret, 'GITHUB_TOKEN') ||
+    process.env.GITHUB_REPO_TOKEN ||
+    process.env.GITHUB_TOKEN ||
+    null;
+  const branch = productionDeployBranch();
+  if (!repo || !token) {
+    return {
+      committed: false,
+      blocked: true,
+      branch,
+      reason: repo ? 'missing_github_repo_token' : 'missing_github_repo',
+    };
+  }
+
+  const nextRegistry = { ...GENERATED_SITE_REGISTRY };
+  delete nextRegistry[slug];
+  const files = [
+    {
+      path: `src/generated-sites/${slug}/site.json`,
+      mode: '100644',
+      type: 'blob',
+      sha: null,
+    },
+    {
+      path: 'src/generated-sites/registry.ts',
+      mode: '100644',
+      type: 'blob',
+      content: generatedSiteRegistrySource(nextRegistry),
+    },
+  ];
+
+  const ref = await githubApi(
+    `/repos/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.repo)}/git/ref/heads/${encodeURIComponent(branch)}`,
+    { token },
+  );
+  const headSha = cleanString(asRecord(ref.object).sha);
+  if (!headSha) throw new Error(`Could not resolve ${branch} branch head before removing generated site files.`);
+
+  const headCommit = await githubApi(
+    `/repos/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.repo)}/git/commits/${encodeURIComponent(headSha)}`,
+    { token },
+  );
+  const baseTreeSha = cleanString(asRecord(headCommit.tree).sha);
+  if (!baseTreeSha) throw new Error(`Could not resolve ${branch} tree before removing generated site files.`);
+
+  const tree = await githubApi(
+    `/repos/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.repo)}/git/trees`,
+    {
+      method: 'POST',
+      token,
+      body: {
+        base_tree: baseTreeSha,
+        tree: files,
+      },
+    },
+  );
+  const treeSha = cleanString(tree.sha);
+  if (!treeSha) throw new Error('GitHub did not return a tree SHA for generated site cleanup.');
+
+  const commit = await githubApi(
+    `/repos/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.repo)}/git/commits`,
+    {
+      method: 'POST',
+      token,
+      body: {
+        message: `Remove ${slug} generated preview artifact`,
+        tree: treeSha,
+        parents: [headSha],
+      },
+    },
+  );
+  const commitSha = cleanString(commit.sha);
+  if (!commitSha) throw new Error('GitHub did not return a commit SHA for generated site cleanup.');
+
+  await githubApi(
+    `/repos/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.repo)}/git/refs/heads/${encodeURIComponent(branch)}`,
+    {
+      method: 'PATCH',
+      token,
+      body: {
+        sha: commitSha,
+        force: false,
+      },
+    },
+  );
+
+  return {
+    committed: true,
+    blocked: false,
+    branch,
+    commitSha,
+    repo: `${repo.owner}/${repo.repo}`,
+    files: files.map((file) => file.path),
+  };
+}
+
+function siteRootHost() {
+  const raw = process.env.NEXT_PUBLIC_SITE_URL?.trim() || 'https://saborweb.com';
+  try {
+    const url = new URL(raw.startsWith('http') ? raw : `https://${raw}`);
+    return url.hostname.replace(/^www\./, '');
+  } catch {
+    return 'saborweb.com';
+  }
+}
+
+function vercelProjectKey() {
+  return process.env.VERCEL_PROJECT_ID || process.env.VERCEL_PROJECT_NAME || null;
+}
+
+async function removeVercelProjectDomain(domain: string) {
+  const credential = await getProviderCredential('vercel');
+  const token = credentialValue(credential.secret, 'VERCEL_API_TOKEN') || process.env.VERCEL_API_TOKEN || null;
+  const project = vercelProjectKey();
+  if (!token || !project) {
+    return { domain, removed: false, skipped: true, reason: token ? 'missing_vercel_project_id' : 'missing_vercel_token' };
+  }
+
+  const url = new URL(`https://api.vercel.com/v9/projects/${encodeURIComponent(project)}/domains/${encodeURIComponent(domain)}`);
+  const teamId = process.env.VERCEL_TEAM_ID;
+  if (teamId) url.searchParams.set('teamId', teamId);
+  const response = await fetch(url, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    cache: 'no-store',
+  });
+  const json = await response.json().catch(() => ({}));
+  if (response.ok) return { domain, removed: true, result: json };
+  const message = JSON.stringify(json).toLowerCase();
+  if (response.status === 404 || message.includes('not found')) {
+    return { domain, removed: false, alreadyMissing: true };
+  }
+  throw new Error(`Vercel domain delete failed for ${domain}: ${JSON.stringify(json)}`);
 }
 
 export async function updateSiteStatus(slug: string, formData: FormData) {
@@ -1935,8 +2124,32 @@ export async function deleteAdminProject(slug: string) {
   if (!detail) throw new Error('Could not find this admin item.');
 
   const supabase = getSupabaseAdmin();
+  const customDomains = detail.site?.id
+    ? await supabase
+        .from('custom_domains')
+        .select('domain')
+        .eq('site_id', detail.site.id)
+    : { data: [], error: null };
+
+  if (customDomains.error) {
+    console.error('[Admin Site] Delete project custom domain lookup failed:', customDomains.error);
+    throw new Error('Could not load project domains before deletion.');
+  }
 
   if (detail.site) {
+    const generatedCleanup = await removeGeneratedSiteFromGitHub(slug);
+    if (generatedCleanup.blocked || !generatedCleanup.committed) {
+      throw new Error(`Could not remove generated site artifact before deleting project: ${generatedCleanup.reason ?? 'GitHub cleanup failed'}.`);
+    }
+    const domains = [
+      `${slug}.${siteRootHost()}`,
+      ...(customDomains.data ?? []).map((row) => cleanString(row.domain)).filter((domain): domain is string => Boolean(domain)),
+    ];
+    const domainCleanup = [];
+    for (const domain of Array.from(new Set(domains))) {
+      domainCleanup.push(await removeVercelProjectDomain(domain));
+    }
+
     await logSiteEvent({
       eventType: 'admin_site_deleted',
       siteId: detail.site.id,
@@ -1947,6 +2160,8 @@ export async function deleteAdminProject(slug: string) {
       metadata: {
         admin_email: user.email,
         restaurant_name: detail.site.restaurant_name,
+        generated_cleanup: generatedCleanup,
+        domain_cleanup: domainCleanup,
       },
     });
 
