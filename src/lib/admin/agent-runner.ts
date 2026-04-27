@@ -2616,6 +2616,12 @@ async function processCodeBuild(run: AgentRun) {
       github_commit: githubCommit,
     },
   });
+  await setRunProgress(run, site, {
+    percent: 100,
+    label: 'Generated site staged',
+    detail: 'Generated site files were committed and deploy was queued.',
+    status: 'succeeded',
+  });
 
   return {
     site_version_id: version.id,
@@ -2902,6 +2908,12 @@ async function processDeploy(run: AgentRun) {
     provider: 'playwright',
     metadata: { queued_after_agent_run_id: run.id, workflow_step: 'qa', deployment_url: deploymentUrl },
   });
+  await setRunProgress(run, site, {
+    percent: 100,
+    label: 'Preview deployed, QA queued',
+    detail: `${deploymentUrl} is ready for QA checks.`,
+    status: 'succeeded',
+  });
 
   return {
     deployment_url: deploymentUrl,
@@ -3015,13 +3027,28 @@ async function processQa(run: AgentRun) {
       },
     });
   }
+  await setRunProgress(run, site, {
+    percent: 100,
+    label: passed ? 'QA passed, preview released' : 'QA failed',
+    detail: passed ? 'Preview passed smoke checks and owner follow-up was queued.' : 'Preview failed QA checks. Review the latest QA result.',
+    status: passed ? 'succeeded' : 'failed',
+  });
 
   return qaResult;
 }
 
 async function processSalesFollowup(run: AgentRun) {
   const site = await loadSite(run);
-  if (!site?.owner_email) return { sent: false, reason: 'missing_owner_email' };
+  if (!site) throw new Error('Sales follow-up run is missing a site.');
+  if (!site.owner_email) {
+    await setRunProgress(run, site, {
+      percent: 100,
+      label: 'Owner follow-up skipped',
+      detail: 'No owner email is attached to this project.',
+      status: 'succeeded',
+    });
+    return { sent: false, reason: 'missing_owner_email' };
+  }
   await setRunProgress(run, site, {
     percent: 45,
     label: 'Sending owner follow-up',
@@ -3030,7 +3057,15 @@ async function processSalesFollowup(run: AgentRun) {
 
   const resendCredential = await getProviderCredential('resend');
   const apiKey = credentialValue(resendCredential.secret, 'RESEND_API_KEY');
-  if (!apiKey) return { sent: false, reason: 'missing_resend_api_key' };
+  if (!apiKey) {
+    await setRunProgress(run, site, {
+      percent: 100,
+      label: 'Owner follow-up skipped',
+      detail: 'Resend is not connected, so no preview email was sent.',
+      status: 'succeeded',
+    });
+    return { sent: false, reason: 'missing_resend_api_key' };
+  }
 
   const resend = new Resend(apiKey);
   const previewUrl = site.staging_url ?? restaurantSubdomainUrl(site.slug) ?? absoluteSiteUrl(site.preview_url);
@@ -3057,6 +3092,12 @@ async function processSalesFollowup(run: AgentRun) {
       status: 'succeeded',
       updated_at: new Date().toISOString(),
     },
+  });
+  await setRunProgress(run, site, {
+    percent: 100,
+    label: 'Owner follow-up sent',
+    detail: `Preview email sent to ${site.owner_email}.`,
+    status: 'succeeded',
   });
   return { sent: true, to: site.owner_email };
 }
