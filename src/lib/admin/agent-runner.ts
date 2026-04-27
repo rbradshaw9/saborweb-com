@@ -123,6 +123,11 @@ function shouldRunCrawlerResearch() {
   return researchMode() === 'full_crawl';
 }
 
+function shouldBuildThroughContentGaps() {
+  const configured = process.env.SABORWEB_ALWAYS_BUILD ?? 'true';
+  return !['0', 'false', 'no', 'off'].includes(configured.trim().toLowerCase());
+}
+
 function asRecord(value: unknown) {
   return typeof value === 'object' && value !== null && !Array.isArray(value) ? value as Record<string, unknown> : {};
 }
@@ -809,6 +814,7 @@ function isLaunchNonBlockingGap(message: string) {
 }
 
 function launchBlockingGaps(blockers: string[]) {
+  if (shouldBuildThroughContentGaps()) return [];
   return blockers.filter((blocker) => !isLaunchNonBlockingGap(blocker));
 }
 
@@ -2105,7 +2111,8 @@ async function processResearch(run: AgentRun) {
 
   const effectiveBlockers = audit?.blockers?.length ? audit.blockers : researchQa.blockers;
   const hardBlockers = launchBlockingGaps(effectiveBlockers);
-  const effectiveBuildable = hardBlockers.length === 0 && (audit ? true : researchQa.readyForPacket);
+  const buildThroughContentGaps = shouldBuildThroughContentGaps();
+  const effectiveBuildable = hardBlockers.length === 0 && (audit ? true : buildThroughContentGaps || researchQa.readyForPacket);
   const reviewStateForSummary = effectiveBuildable && effectiveReviewState.status === 'needs_more_research'
     ? { ...effectiveReviewState, status: 'in_review' as const }
     : effectiveReviewState;
@@ -2175,6 +2182,7 @@ async function processResearch(run: AgentRun) {
         ...effectiveReviewState,
         status: effectiveStatus,
         overrideStatus: effectiveReviewSummary.overrideStatus,
+        launchMode: buildThroughContentGaps ? 'always_build' : 'gated',
         reviewedAt: effectiveReviewState.reviewedAt,
         suggestions: {
           officialSiteCandidates: effectiveReviewSummary.officialSiteCandidates.slice(0, 4),
@@ -2245,6 +2253,7 @@ async function processResearch(run: AgentRun) {
       openai_auditor: Boolean(audit),
     },
     research_mode: researchMode(),
+    launch_mode: buildThroughContentGaps ? 'always_build' : 'gated',
     research_qa: researchQa,
     research_audit: audit,
     profile,
@@ -2287,7 +2296,7 @@ async function processBuildPacket(run: AgentRun) {
     );
   }
   packetBlockers.unshift(...auditBlockers);
-  const missingCoreResearch = !detail.researchAudit && !detail.resolvedProfile;
+  const missingCoreResearch = !detail.resolvedProfile;
 
   if (missingCoreResearch || packetBlockers.length) {
     const supabase = getSupabaseAdmin();
@@ -2319,6 +2328,7 @@ async function processBuildPacket(run: AgentRun) {
         review_blockers: packetBlockers,
         audit_ready: Boolean(detail.researchAudit),
         resolved_profile_ready: Boolean(detail.resolvedProfile),
+        launch_mode: shouldBuildThroughContentGaps() ? 'always_build' : 'gated',
       },
     });
     return asBlockedResult(blockedDetail, {
@@ -2326,6 +2336,7 @@ async function processBuildPacket(run: AgentRun) {
       review_blockers: packetBlockers,
       audit_ready: Boolean(detail.researchAudit),
       resolved_profile_ready: Boolean(detail.resolvedProfile),
+      launch_mode: shouldBuildThroughContentGaps() ? 'always_build' : 'gated',
     });
   }
   await setRunProgress(run, site, {
@@ -2389,11 +2400,12 @@ async function processCodeBuild(run: AgentRun) {
   const site = await loadSite(run);
   if (!site) throw new Error('Code build run is missing a site.');
   const detail = await getAdminSiteDetail(site.slug);
-  if (!detail?.site || !detail.resolvedProfile || detail.researchReview.blockers.length) {
-    return asBlockedResult('Build blocked until the resolved profile is ready and any hard blockers are cleared.', {
+  if (!detail?.site || !detail.resolvedProfile) {
+    return asBlockedResult('Build blocked because the site or resolved profile could not be loaded.', {
       review_ready: detail?.researchReview.readyForPacket ?? false,
       blockers: detail?.researchReview.blockers ?? [],
       resolved_profile_ready: Boolean(detail?.resolvedProfile),
+      launch_mode: shouldBuildThroughContentGaps() ? 'always_build' : 'gated',
     });
   }
   await setRunProgress(run, site, {
