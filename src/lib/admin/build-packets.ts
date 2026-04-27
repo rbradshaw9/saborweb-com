@@ -91,7 +91,7 @@ function siteBriefSchema() {
       hero: {
         type: 'object',
         additionalProperties: false,
-        required: ['headline', 'subheadline', 'primaryCtaLabel', 'secondaryCtaLabel'],
+        required: ['eyebrow', 'headline', 'subheadline', 'primaryCtaLabel', 'secondaryCtaLabel'],
         properties: {
           eyebrow: { type: ['string', 'null'] },
           headline: { type: 'string' },
