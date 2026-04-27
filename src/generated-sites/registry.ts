@@ -1,3 +1,287 @@
 import type { GeneratedSiteManifest } from '@/lib/generated-sites';
 
-export const GENERATED_SITE_REGISTRY: Record<string, GeneratedSiteManifest> = {};
+export const GENERATED_SITE_REGISTRY: Record<string, GeneratedSiteManifest> = {
+  "goodstart": {
+    "version": 1,
+    "slug": "goodstart",
+    "generatedAt": "2026-04-27T16:26:04.541Z",
+    "sourceHash": "3cd3f96f665964c668d6a2646f39abd688d603c47a7b61e17dc827225c122f91",
+    "restaurant": {
+      "name": "Good Start Coastal Cafe",
+      "city": "Isabela",
+      "cuisine": "cafe",
+      "address": "PR 4466 km5, Isabela, Puerto Rico 00662",
+      "phone": "(787) 830-9500",
+      "hours": [
+        "Monday: 8:00 AM – 2:00 PM",
+        "Tuesday: 8:00 AM – 2:00 PM",
+        "Wednesday: 8:00 AM – 2:00 PM",
+        "Thursday: 8:00 AM – 2:00 PM",
+        "Friday: 8:00 AM – 2:00 PM",
+        "Saturday: 8:00 AM – 2:00 PM",
+        "Sunday: 8:00 AM – 2:00 PM"
+      ],
+      "mapsUrl": "https://maps.google.com/?cid=2958274291943456299"
+    },
+    "brand": {
+      "headline": "A fresh start by the coast.",
+      "subheadline": "Breakfast, coffee, açaí, smoothies, juices, and daytime cocktails served daily in Isabela from 8 AM to 2 PM.",
+      "eyebrow": "Isabela coastal cafe",
+      "mood": [
+        "fresh",
+        "sunny",
+        "coastal",
+        "welcoming",
+        "morning-forward",
+        "bright",
+        "relaxed"
+      ],
+      "colors": [
+        "Warm cream and soft sand backgrounds.",
+        "Deep espresso or charcoal body text for readability.",
+        "Sea-glass teal and fresh green accents for coastal cafe freshness.",
+        "Sunlit yellow and soft coral as restrained CTA or decorative accents.",
+        "Avoid dark nightlife styling; this is a daytime cafe experience."
+      ],
+      "logoUrl": null
+    },
+    "assets": {
+      "heroImageUrl": "https://res.cloudinary.com/ignitiongo/image/upload/v1776975549/saborweb/research-assets/goodstart-cover_photo-e9e506f7a6ff03adeb82.jpg",
+      "galleryImageUrls": [
+        "https://res.cloudinary.com/ignitiongo/image/upload/v1776975549/saborweb/research-assets/goodstart-cover_photo-e9e506f7a6ff03adeb82.jpg"
+      ]
+    },
+    "menu": {
+      "status": "structured_menu",
+      "sourceUrl": "https://www.instagram.com/goodstart466",
+      "note": "Menu copy combines verified items with polished assumptions.",
+      "categories": [
+        {
+          "name": "Breakfast Favorites",
+          "description": "Morning plates and handhelds based on the cafe’s breakfast-focused concept and the one directly evidenced item.",
+          "items": [
+            {
+              "name": "Breakfast Burrito",
+              "description": "A hearty breakfast burrito with eggs, cheese, and breakfast fillings; served cafe-style.",
+              "priceText": null
+            },
+            {
+              "name": "Avocado Toast",
+              "description": "Toasted bread topped with smashed avocado, citrus, sea salt, and seasonal garnish.",
+              "priceText": null
+            },
+            {
+              "name": "Egg Sandwich",
+              "description": "Eggs and melty cheese on toasted bread with optional breakfast protein.",
+              "priceText": null
+            },
+            {
+              "name": "Breakfast Plate",
+              "description": "Eggs, toast, and breakfast sides in a classic morning plate format.",
+              "priceText": null
+            },
+            {
+              "name": "Pancakes",
+              "description": "Fluffy pancakes served with butter and syrup.",
+              "priceText": null
+            }
+          ]
+        },
+        {
+          "name": "Açaí & Bowls",
+          "description": "Fruit-forward bowls aligned with the cafe’s stated açaí offering.",
+          "items": [
+            {
+              "name": "Classic Açaí Bowl",
+              "description": "Açaí blended and topped with granola, banana, and seasonal fruit.",
+              "priceText": null
+            },
+            {
+              "name": "Tropical Açaí Bowl",
+              "description": "Açaí topped with pineapple, mango, coconut, and granola.",
+              "priceText": null
+            },
+            {
+              "name": "Fruit Yogurt Bowl",
+              "description": "Creamy yogurt with fresh fruit, granola, and honey.",
+              "priceText": null
+            }
+          ]
+        },
+        {
+          "name": "Coffee",
+          "description": "Espresso and brewed coffee drinks reflecting the cafe’s coffee program.",
+          "items": [
+            {
+              "name": "Espresso",
+              "description": "A single shot of bold espresso.",
+              "priceText": null
+            },
+            {
+              "name": "Americano",
+              "description": "Espresso with hot water for a smooth, full cup.",
+              "priceText": null
+            },
+            {
+              "name": "Cappuccino",
+              "description": "Espresso with steamed milk and foam.",
+              "priceText": null
+            },
+            {
+              "name": "Latte",
+              "description": "Espresso with steamed milk and light foam.",
+              "priceText": null
+            },
+            {
+              "name": "Iced Latte",
+              "description": "Chilled espresso and milk served over ice.",
+              "priceText": null
+            },
+            {
+              "name": "Cold Brew",
+              "description": "Slow-steeped cold coffee served over ice.",
+              "priceText": null
+            }
+          ]
+        },
+        {
+          "name": "Smoothies",
+          "description": "Blended fruit smoothies supported by the stated concept.",
+          "items": [
+            {
+              "name": "Tropical Smoothie",
+              "description": "A bright blend of pineapple, mango, and banana.",
+              "priceText": null
+            },
+            {
+              "name": "Berry Smoothie",
+              "description": "Strawberry, blueberry, and banana blended smooth.",
+              "priceText": null
+            },
+            {
+              "name": "Green Smoothie",
+              "description": "Spinach, pineapple, banana, and juice blended refreshing and light.",
+              "priceText": null
+            }
+          ]
+        },
+        {
+          "name": "Fresh Juices",
+          "description": "Juice offerings aligned with the cafe’s stated concept.",
+          "items": [
+            {
+              "name": "Orange Juice",
+              "description": "Fresh, bright orange juice.",
+              "priceText": null
+            },
+            {
+              "name": "Green Juice",
+              "description": "A refreshing blend of greens, citrus, and apple.",
+              "priceText": null
+            },
+            {
+              "name": "Carrot Ginger Juice",
+              "description": "Carrot juice balanced with ginger and citrus.",
+              "priceText": null
+            }
+          ]
+        },
+        {
+          "name": "Cocktails",
+          "description": "Light daytime cocktails consistent with the stated brunch/daytime offering.",
+          "items": [
+            {
+              "name": "Mimosa",
+              "description": "Sparkling wine with orange juice.",
+              "priceText": null
+            },
+            {
+              "name": "Bloody Mary",
+              "description": "A savory brunch cocktail with tomato, citrus, and spice.",
+              "priceText": null
+            },
+            {
+              "name": "Passion Fruit Mojito",
+              "description": "A tropical mojito with mint, lime, and passion fruit.",
+              "priceText": null
+            }
+          ]
+        }
+      ]
+    },
+    "actions": {
+      "claimHref": "https://saborweb.com/claim/goodstart",
+      "primaryLabel": "View Menu",
+      "primaryHref": "https://www.instagram.com/goodstart466",
+      "secondaryLabel": "Directions",
+      "secondaryHref": "https://maps.google.com/?cid=2958274291943456299",
+      "socialLinks": [
+        {
+          "label": "Instagram",
+          "href": "https://www.instagram.com/goodstart466"
+        },
+        {
+          "label": "Facebook",
+          "href": "https://www.facebook.com/goodstart466"
+        }
+      ]
+    },
+    "content": {
+      "summary": "Launch a confident first-party website for Good Start Coastal Cafe, a breakfast-focused coastal cafe in Isabela, Puerto Rico serving coffee, açaí, smoothies, juices, cocktails, and morning favorites daily from 8 AM to 2 PM.",
+      "assumptions": [],
+      "sections": [
+        {
+          "id": "intro",
+          "title": "Breakfast, coffee, and coastal mornings",
+          "body": [
+            "Good Start Coastal Cafe brings bright daytime energy to Isabela with a cafe menu built around breakfast favorites, coffee, açaí, smoothies, fresh juices, and cocktails.",
+            "Use this section for concise brand positioning and visitor orientation, not for hard-coded menu item lists."
+          ]
+        },
+        {
+          "id": "menu",
+          "title": "Menu",
+          "body": [
+            "Render the full editable menu from the structured menu module.",
+            "Prices are not available, so the menu should display item names, descriptions, badges, and categories without price placeholders."
+          ]
+        },
+        {
+          "id": "featured",
+          "title": "Fresh picks for the day",
+          "body": [
+            "Use category-level highlights such as breakfast favorites, açaí bowls, coffee, smoothies, juices, and cocktails.",
+            "Do not duplicate the full menu in page prose."
+          ]
+        },
+        {
+          "id": "hours-location",
+          "title": "Visit Good Start Coastal Cafe",
+          "body": [
+            "Open daily from 8:00 AM to 2:00 PM.",
+            "Located at PR 4466 km5, Isabela, Puerto Rico 00662.",
+            "Include call and directions CTAs using the canonical phone and maps URL."
+          ]
+        },
+        {
+          "id": "social",
+          "title": "Follow along",
+          "body": [
+            "Instagram and Facebook may be shown as secondary social links.",
+            "The website remains the primary owned experience."
+          ]
+        }
+      ],
+      "acceptanceCriteria": [
+        "The website feels like an official first-party restaurant site, not a social landing page or draft preview.",
+        "Primary CTAs let visitors view the menu, call, check hours, and open directions quickly on desktop and mobile.",
+        "The full resolvedMenu renders through the menu module with all categories; no menu prices appear because prices are missing.",
+        "Only menu and hours are customer-managed after publish through the portal.",
+        "The approved photo is used tastefully and no fabricated restaurant-specific photography appears.",
+        "Social links are present only as supporting outbound CTAs.",
+        "Canonical phone, address, maps URL, hours, and restaurant name are consistent across the site.",
+        "The page uses a polished coastal cafe visual system with sufficient richness despite having one real photo."
+      ]
+    }
+  }
+};
