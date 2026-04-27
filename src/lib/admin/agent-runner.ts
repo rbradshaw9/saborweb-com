@@ -2526,6 +2526,9 @@ function validateCodeBuildOutput(value: unknown, slug: string): CodeBuildOutput 
 }
 
 function codeBuildInput(detail: NonNullable<Awaited<ReturnType<typeof getAdminSiteDetail>>>) {
+  const siteMetadata = asRecord(detail.site?.metadata);
+  const profile = detail.resolvedProfile;
+  const menu = detail.resolvedMenu;
   return {
     slug: detail.slug,
     site: detail.site ? {
@@ -2533,17 +2536,69 @@ function codeBuildInput(detail: NonNullable<Awaited<ReturnType<typeof getAdminSi
       city: detail.site.city,
       preview_url: detail.site.preview_url,
       claim_url: detail.site.claim_url,
-      metadata: detail.site.metadata,
+      submitted: {
+        notes: asString(siteMetadata.notes),
+        address: asString(siteMetadata.address),
+        menu_url: asString(siteMetadata.menu_url),
+        google_url: asString(siteMetadata.google_url),
+        website_url: asString(siteMetadata.website_url),
+        facebook_url: asString(siteMetadata.facebook_url),
+        instagram_url: asString(siteMetadata.instagram_url),
+      },
     } : null,
-    resolvedProfile: detail.resolvedProfile,
-    resolvedMenu: detail.resolvedMenu,
+    canonicalProfile: profile ? {
+      restaurantName: profile.restaurantName,
+      cuisine: profile.cuisine,
+      city: profile.city,
+      address: profile.address,
+      phone: profile.phone,
+      hours: profile.hours,
+      mapsUrl: profile.mapsUrl,
+      officialSiteUrl: profile.officialSiteUrl,
+      primaryWebPresenceUrl: profile.primaryWebPresenceUrl,
+      confirmedSocialUrls: profile.confirmedSocialUrls,
+      orderingUrls: profile.orderingUrls,
+      reservationUrls: profile.reservationUrls,
+      missingItems: profile.missingItems,
+      uncertainItems: profile.uncertainItems,
+    } : null,
+    resolvedMenu: menu ? {
+      status: menu.status,
+      menuName: menu.menuName,
+      provenanceMode: menu.provenanceMode,
+      confidence: menu.confidence,
+      summaryLines: menu.summaryLines,
+      missingFields: menu.missingFields,
+      pricesComplete: menu.pricesComplete,
+      featuredItems: menu.featuredItems,
+      categories: menu.categories.map((category) => ({
+        name: category.name,
+        description: category.description,
+        items: category.items.map((item) => ({
+          name: item.name,
+          description: item.description,
+          priceText: item.priceText,
+          badges: item.badges,
+          sourceBacked: item.sourceBacked,
+          inferred: item.inferred,
+        })),
+      })),
+    } : null,
     buildPacket: detail.buildPacket ? {
       id: detail.buildPacket.id,
       packet_markdown: detail.buildPacket.packet_markdown,
-      analysis_json: detail.buildPacket.analysis_json,
     } : null,
-    siteBrief: detail.siteBrief,
-    researchReview: detail.researchReview,
+    siteBrief: detail.siteBrief ? {
+      summary: detail.siteBrief.summary,
+      siteIntent: detail.siteBrief.siteIntent,
+      positioning: detail.siteBrief.positioning,
+      hero: detail.siteBrief.hero,
+      visualDirection: detail.siteBrief.visualDirection,
+      copyDirection: detail.siteBrief.copyDirection,
+      editableOwnership: detail.siteBrief.editableOwnership,
+      operatorNotes: detail.siteBrief.operatorNotes,
+      sections: detail.siteBrief.sections,
+    } : null,
     implementationContract: {
       componentPath: `src/generated-sites/${detail.slug}/Site.tsx`,
       registryPath: 'src/generated-sites/components.tsx',
@@ -2590,7 +2645,7 @@ async function requestOpenAiCodeBuild(detail: NonNullable<Awaited<ReturnType<typ
         },
       },
     }),
-    signal: AbortSignal.timeout(Number(process.env.OPENAI_CODE_BUILD_TIMEOUT_MS ?? 180_000)),
+    signal: AbortSignal.timeout(Number(process.env.OPENAI_CODE_BUILD_TIMEOUT_MS ?? 260_000)),
   });
 
   const json = await response.json() as Record<string, unknown>;
