@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import GeneratedRestaurantSite from '@/components/GeneratedRestaurantSite';
 import RestaurantSiteRenderer from '@/components/RestaurantSiteRenderer';
+import { GENERATED_SITE_COMPONENTS } from '@/generated-sites/components';
 import { generatedSiteLanguage, loadGeneratedSiteManifest } from '@/lib/generated-sites';
 import { loadSiteRenderContext, routeLanguage } from '@/lib/site-rendering';
 
@@ -12,6 +13,11 @@ export default async function PublicRestaurantSitePage({
   params: Promise<{ slug: string; segments?: string[] }>;
 }) {
   const { slug, segments } = await params;
+  const GeneratedSite = GENERATED_SITE_COMPONENTS[slug];
+  if (GeneratedSite) {
+    return <GeneratedSite mode="live" lang={generatedSiteLanguage(segments)} />;
+  }
+
   const generated = await loadGeneratedSiteManifest(slug);
   if (generated) {
     return <GeneratedRestaurantSite manifest={generated} mode="live" lang={generatedSiteLanguage(segments)} />;

@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import GeneratedRestaurantSite from '@/components/GeneratedRestaurantSite';
 import RestaurantSiteRenderer from '@/components/RestaurantSiteRenderer';
+import { GENERATED_SITE_COMPONENTS } from '@/generated-sites/components';
 import { generatedSiteLanguage, loadGeneratedSiteManifest } from '@/lib/generated-sites';
 import { loadSiteRenderContext, routeLanguage } from '@/lib/site-rendering';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
@@ -39,6 +40,11 @@ export default async function CustomDomainRestaurantSitePage({
   const { host, segments } = await params;
   const slug = await slugForCustomHost(host);
   if (!slug) notFound();
+
+  const GeneratedSite = GENERATED_SITE_COMPONENTS[slug];
+  if (GeneratedSite) {
+    return <GeneratedSite mode="live" lang={generatedSiteLanguage(segments)} />;
+  }
 
   const generated = await loadGeneratedSiteManifest(slug);
   if (generated) {
