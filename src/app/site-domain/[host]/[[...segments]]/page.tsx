@@ -1,9 +1,6 @@
 import { notFound } from 'next/navigation';
-import GeneratedRestaurantSite from '@/components/GeneratedRestaurantSite';
-import RestaurantSiteRenderer from '@/components/RestaurantSiteRenderer';
 import { GENERATED_SITE_COMPONENTS } from '@/generated-sites/components';
-import { generatedSiteLanguage, loadGeneratedSiteManifest } from '@/lib/generated-sites';
-import { loadSiteRenderContext, routeLanguage } from '@/lib/site-rendering';
+import { generatedSiteLanguage } from '@/lib/generated-sites';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 
 export const dynamic = 'force-dynamic';
@@ -46,14 +43,5 @@ export default async function CustomDomainRestaurantSitePage({
     return <GeneratedSite mode="live" lang={generatedSiteLanguage(segments)} />;
   }
 
-  const generated = await loadGeneratedSiteManifest(slug);
-  if (generated) {
-    return <GeneratedRestaurantSite manifest={generated} mode="live" lang={generatedSiteLanguage(segments)} />;
-  }
-
-  const context = await loadSiteRenderContext(slug, 'public');
-  if (!context?.renderPayload) notFound();
-
-  const lang = routeLanguage(segments);
-  return <RestaurantSiteRenderer payload={context.renderPayload} mode={context.mode} lang={lang} />;
+  notFound();
 }

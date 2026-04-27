@@ -38,6 +38,7 @@ Research is a support function. The goal is not to maximize crawl volume; the go
 - Use crawlers such as Firecrawl/Apify when they add concrete evidence: official website text, menus, images, contact info, hours, social proof, or source links.
 - Do not block builds because a restaurant has no standalone website or no source-backed menu. Mark those as assumptions/placeholders and build a polished editable experience.
 - Keep crawl results behind the scenes unless useful. Public copy should sound like a local restaurant website, not an audit report.
+- The build output must be real restaurant-specific React code registered in `src/generated-sites/components.tsx`. Do not deliver new sites through the generic generated-site renderer or render payload fallback.
 
 ## Menu Patterns
 

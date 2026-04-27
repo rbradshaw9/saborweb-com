@@ -13,7 +13,7 @@ Study these examples before building:
 
 - `src/app/preview/cinco-de-maya/page.tsx` for a handcrafted native site with a rich menu, preview banner, claim CTA, gallery, specials, sticky navigation, and restaurant-specific visual system.
 - `src/app/preview/rebar/page.tsx` for the external/custom preview pattern. The local route only redirects; use this when a custom site is intentionally hosted on its own preview subdomain.
-- `src/components/GeneratedRestaurantSite.tsx` and `src/components/RestaurantSiteRenderer.tsx` only as fallback/reference. They are not the quality bar for a custom build.
+- Do not use `src/components/GeneratedRestaurantSite.tsx` or `src/components/RestaurantSiteRenderer.tsx` for new restaurant builds. They are legacy references only, not an acceptable delivery target.
 
 ## Core Workflow
 
@@ -60,7 +60,7 @@ The finished preview should feel like a thoughtful custom website:
 ## Implementation Rules
 
 - Prefer a single self-contained route component for each handcrafted preview unless shared code already exists for the exact pattern.
-- For generated-site autopilot work, generate real restaurant-specific code/data in the repo path the pipeline expects. The generic renderer is an emergency fallback, not the main design strategy.
+- For generated-site autopilot work, generate real restaurant-specific code/data in the repo path the pipeline expects. The generic renderer is not part of the delivery path for new builds.
 - Keep secrets and private tokens out of client code. Never expose Supabase service role, Stripe, Vercel, OpenAI, Asana, Apify, Resend, or intake resume tokens.
 - Use `next/image` for local/static images when practical, and place project-specific assets under `public/sites/[slug]/`.
 - For external previews, implement the native route as a redirect only when the site is intentionally hosted elsewhere.

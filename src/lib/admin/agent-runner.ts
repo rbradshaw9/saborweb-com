@@ -2,18 +2,11 @@ import 'server-only';
 
 import { createHash } from 'crypto';
 import { Resend } from 'resend';
-import { GENERATED_SITE_REGISTRY } from '@/generated-sites/registry';
 import { generateAdminBuildPacket } from '@/lib/admin/build-packets';
 import { uploadImageToCloudinary } from '@/lib/admin/cloudinary';
 import { credentialValue, getProviderCredential, readStoredBrowserSession } from '@/lib/admin/credentials';
 import { getAdminSiteDetail } from '@/lib/admin/dashboard';
-import {
-  buildGeneratedSiteManifest,
-  generatedSiteRegistrySource,
-  generatedSiteSubdomain,
-  writeGeneratedSiteManifest,
-  type GeneratedSiteManifest,
-} from '@/lib/generated-sites';
+import { generatedSiteSubdomain } from '@/lib/generated-sites';
 import {
   applyAuditSuggestionsToReviewState,
   generateResearchAudit,
@@ -35,12 +28,7 @@ import {
   initSentry,
 } from '@/lib/monitoring/sentry';
 import { updatePromptStudioRevision } from '@/lib/admin/prompt-studio';
-import {
-  absoluteSiteUrl as renderAbsoluteSiteUrl,
-  buildSiteRenderPayload,
-  renderPayloadHash,
-  restaurantSubdomainUrl,
-} from '@/lib/site-rendering';
+import { restaurantSubdomainUrl } from '@/lib/site-rendering';
 import { logSiteEvent } from '@/lib/site-events';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 
@@ -142,140 +130,6 @@ function hashJson(value: unknown) {
 
 function productionDeployBranch() {
   return process.env.SABORWEB_PRODUCTION_BRANCH || process.env.GITHUB_PRODUCTION_BRANCH || process.env.VERCEL_GIT_COMMIT_REF || 'main';
-}
-
-function githubRepoParts() {
-  const fullName = process.env.GITHUB_REPO_FULL_NAME;
-  if (fullName?.includes('/')) {
-    const [owner, repo] = fullName.split('/');
-    return { owner, repo };
-  }
-  const owner = process.env.GITHUB_REPO_OWNER;
-  const repo = process.env.GITHUB_REPO_NAME;
-  return owner && repo ? { owner, repo } : null;
-}
-
-async function githubApi(path: string, params: {
-  method?: string;
-  body?: Record<string, unknown>;
-  token: string;
-}) {
-  const response = await fetch(`https://api.github.com${path}`, {
-    method: params.method ?? 'GET',
-    headers: {
-      Accept: 'application/vnd.github+json',
-      Authorization: `Bearer ${params.token}`,
-      'Content-Type': 'application/json',
-      'X-GitHub-Api-Version': '2022-11-28',
-    },
-    body: params.body ? JSON.stringify(params.body) : undefined,
-    cache: 'no-store',
-  });
-  const json = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(`GitHub API ${params.method ?? 'GET'} ${path} failed: ${JSON.stringify(json)}`);
-  return asRecord(json);
-}
-
-async function commitGeneratedSiteToGitHub(manifest: GeneratedSiteManifest) {
-  const repo = githubRepoParts();
-  const credential = await getProviderCredential('github');
-  const token =
-    credentialValue(credential.secret, 'GITHUB_REPO_TOKEN') ||
-    credentialValue(credential.secret, 'GITHUB_TOKEN') ||
-    process.env.GITHUB_REPO_TOKEN ||
-    process.env.GITHUB_TOKEN ||
-    null;
-  const branch = productionDeployBranch();
-  if (!repo || !token) {
-    return {
-      committed: false,
-      blocked: true,
-      branch,
-      reason: repo ? 'missing_github_repo_token' : 'missing_github_repo',
-    };
-  }
-
-  const files = [
-    {
-      path: `src/generated-sites/${manifest.slug}/site.json`,
-      content: `${JSON.stringify(manifest, null, 2)}\n`,
-    },
-    {
-      path: 'src/generated-sites/registry.ts',
-      content: generatedSiteRegistrySource({
-        ...GENERATED_SITE_REGISTRY,
-        [manifest.slug]: manifest,
-      }),
-    },
-  ];
-  const ref = await githubApi(
-    `/repos/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.repo)}/git/ref/heads/${encodeURIComponent(branch)}`,
-    { token },
-  );
-  const headSha = asString(asRecord(ref.object).sha);
-  if (!headSha) throw new Error(`Could not resolve ${branch} branch head before committing generated site files.`);
-
-  const headCommit = await githubApi(
-    `/repos/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.repo)}/git/commits/${encodeURIComponent(headSha)}`,
-    { token },
-  );
-  const baseTreeSha = asString(asRecord(headCommit.tree).sha);
-  if (!baseTreeSha) throw new Error(`Could not resolve ${branch} tree before committing generated site files.`);
-
-  const tree = await githubApi(
-    `/repos/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.repo)}/git/trees`,
-    {
-      method: 'POST',
-      token,
-      body: {
-        base_tree: baseTreeSha,
-        tree: files.map((file) => ({
-          path: file.path,
-          mode: '100644',
-          type: 'blob',
-          content: file.content,
-        })),
-      },
-    },
-  );
-  const treeSha = asString(tree.sha);
-  if (!treeSha) throw new Error('GitHub did not return a tree SHA for generated site files.');
-
-  const commit = await githubApi(
-    `/repos/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.repo)}/git/commits`,
-    {
-      method: 'POST',
-      token,
-      body: {
-        message: `Generate ${manifest.slug} preview artifact`,
-        tree: treeSha,
-        parents: [headSha],
-      },
-    },
-  );
-  const commitSha = asString(commit.sha);
-  if (!commitSha) throw new Error('GitHub did not return a commit SHA for generated site files.');
-
-  await githubApi(
-    `/repos/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.repo)}/git/refs/heads/${encodeURIComponent(branch)}`,
-    {
-      method: 'PATCH',
-      token,
-      body: {
-        sha: commitSha,
-        force: false,
-      },
-    },
-  );
-
-  return {
-    committed: true,
-    blocked: false,
-    branch,
-    commitSha,
-    repo: `${repo.owner}/${repo.repo}`,
-    files: files.map((file) => file.path),
-  };
 }
 
 async function queueWorkerRun(params: {
@@ -384,11 +238,6 @@ function appendResearchPhaseHistory(
 function isProjectStageConstraintError(error: { message?: string; details?: string; hint?: string } | null | undefined) {
   const text = `${error?.message ?? ''} ${error?.details ?? ''} ${error?.hint ?? ''}`.toLowerCase();
   return text.includes('project_stage') && (text.includes('check constraint') || text.includes('violates check constraint'));
-}
-
-function isMissingRenderJsonColumnError(error: { message?: string; details?: string; hint?: string } | null | undefined) {
-  const text = `${error?.message ?? ''} ${error?.details ?? ''} ${error?.hint ?? ''}`.toLowerCase();
-  return text.includes('render_json') && (text.includes('column') || text.includes('schema cache'));
 }
 
 async function updateResearchProjectStage(params: {
@@ -2410,228 +2259,41 @@ async function processCodeBuild(run: AgentRun) {
   }
   await setRunProgress(run, site, {
     percent: 20,
-    label: 'Preparing render payload',
-    detail: 'Generating the structured site payload from the approved packet and resolved profile.',
+    label: 'Waiting for custom code build',
+    detail: 'Renderer builds are disabled. This project needs a restaurant-specific React component registered in src/generated-sites/components.tsx.',
+    status: 'blocked',
   });
 
-  const supabase = getSupabaseAdmin();
-  const renderPayload = buildSiteRenderPayload(detail);
-  const generatedManifest = buildGeneratedSiteManifest(detail);
-  const generatedFile = await writeGeneratedSiteManifest(generatedManifest).catch((error) => {
-    console.error('[Agent Runner] Generated site artifact write failed:', error);
-    return null;
-  });
-  const generatedFiles = [
-    ...(generatedFile ? [generatedFile.path, generatedFile.registryPath] : []),
-  ].filter(Boolean);
-  await setRunProgress(run, site, {
-    percent: 34,
-    label: 'Committing generated code',
-    detail: `Writing ${site.slug} generated site files to the production deploy branch.`,
-  });
-  const githubCommit = await commitGeneratedSiteToGitHub(generatedManifest).catch((error) => ({
-    committed: false,
-    blocked: true,
-    branch: productionDeployBranch(),
-    reason: error instanceof Error ? error.message : 'github_commit_failed',
-  }));
-  if (githubCommit.blocked || !githubCommit.committed) {
-    const blockedAt = new Date().toISOString();
-    const supabase = getSupabaseAdmin();
-    await supabase.from('restaurant_sites').update({
-      deployment_status: 'failed',
-      generated_site_manifest: generatedManifest,
-      generated_file_manifest: generatedFiles.map((path) => ({ path, kind: path.endsWith('registry.ts') ? 'registry' : 'manifest' })),
-    }).eq('id', site.id);
-    await updateSiteMetadata(site.id, {
-      current_operation: {
-        task_type: run.task_type,
-        percent: 34,
-        label: 'Generated code commit blocked',
-        detail: `Connect GitHub repo credentials before deployment can continue: ${githubCommit.reason ?? 'missing GitHub configuration'}.`,
-        status: 'blocked',
-        updated_at: blockedAt,
-      },
-      generated_site: generatedManifest,
-      generated_site_files: generatedFiles,
-      generated_site_commit: githubCommit,
-    });
-    return asBlockedResult('Generated site code could not be committed to the production deploy branch.', {
-      github_commit: githubCommit,
-      generated_files: generatedFiles,
-    });
-  }
-  const renderHash = renderPayloadHash(renderPayload);
-  const sourceHash = detail.packetSourceHash;
-  const deploymentUrl = generatedSiteSubdomain(site.slug) ?? restaurantSubdomainUrl(site.slug) ?? renderAbsoluteSiteUrl(site.preview_url);
-  const branch = githubCommit.branch ?? productionDeployBranch();
-
-  addMonitoringBreadcrumb({
-    category: 'agent.build',
-    message: 'Render payload build started',
-    data: {
-      siteId: site.id,
-      siteSlug: site.slug,
-      agentRunId: run.id,
-      sourceHash,
-      renderHash,
-    },
-  });
-
-  await setRunProgress(run, site, {
-    percent: 48,
-    label: 'Saving render payload',
-    detail: 'Persisting the runtime render spec for preview and live routing.',
-  });
-
-  const specInsert = {
-    site_id: site.id,
-    version_label: `preview-${new Date().toISOString()}`,
-    status: 'staged',
-    source_hash: sourceHash,
-    spec_json: {
-      packet_id: detail.buildPacket?.id ?? null,
-      render_hash: renderHash,
-      render_version: renderPayload.version,
-      packet_state: detail.packetState,
-      siteBrief: detail.siteBrief,
-      renderPayload,
-      generatedSite: generatedManifest,
-      generatedFiles,
-    },
-    seo_json: {
-      title: `${renderPayload.restaurant.name} | ${renderPayload.restaurant.city ?? 'SaborWeb'}`,
-      description: renderPayload.brand.summary,
-    },
-    render_json: renderPayload,
-    generated_by_agent_run_id: run.id,
-  };
-
-  let spec: { id: string } | null = null;
-  let specError: { message?: string } | null = null;
-  const primarySpecInsert = await supabase
-    .from('site_specs')
-    .insert(specInsert)
-    .select('id')
-    .single();
-  if (primarySpecInsert.error && isMissingRenderJsonColumnError(primarySpecInsert.error)) {
-    const { render_json, ...legacySpecInsert } = specInsert;
-    void render_json;
-    const fallbackSpecInsert = await supabase
-      .from('site_specs')
-      .insert(legacySpecInsert)
-      .select('id')
-      .single();
-    spec = fallbackSpecInsert.data;
-    specError = fallbackSpecInsert.error;
-  } else {
-    spec = primarySpecInsert.data;
-    specError = primarySpecInsert.error;
-  }
-
-  if (specError || !spec) {
-    throw new Error(specError?.message ?? 'Could not store the staged site spec.');
-  }
-
-  await setRunProgress(run, site, {
-    percent: 72,
-    label: 'Creating staged preview version',
-    detail: 'Recording the preview artifact that QA and claim flow will use.',
-  });
-
-  const { data: version, error } = await supabase.from('site_versions').insert({
-    site_id: site.id,
-    site_spec_id: spec.id,
-    status: 'staged',
-    release_channel: 'preview',
-    source_branch: branch,
-    deployment_url: deploymentUrl,
-    metadata: {
-      created_by_agent_run_id: run.id,
-      github_status: 'generated_site_committed',
-      github_commit: githubCommit,
-      vercel_status: restaurantSubdomainUrl(site.slug) ? 'subdomain_route_ready' : 'preview_route_ready',
-      build_packet_id: run.metadata.build_packet_id ?? null,
-      prompt_revision_id: typeof run.metadata.prompt_revision_id === 'string' ? run.metadata.prompt_revision_id : null,
-      render_hash: renderHash,
-      source_hash: sourceHash,
-      build_strategy: 'generated_site',
-      generated_files: generatedFiles,
-    },
-  }).select('id, deployment_url').single();
-
-  if (error || !version) throw new Error(error?.message ?? 'Could not create staged site version.');
-
-  if (typeof run.metadata.prompt_revision_id === 'string') {
-    await updatePromptStudioRevision({
-      revisionId: run.metadata.prompt_revision_id,
-      resultingSiteSpecId: spec.id,
-      resultingSiteVersionId: version.id,
-      status: 'draft_preview',
-      metadata: {
-        source_hash: sourceHash,
-        render_hash: renderHash,
-      },
-    });
-  }
-
-  await supabase.from('restaurant_sites').update({
+  await getSupabaseAdmin().from('restaurant_sites').update({
     project_stage: 'building',
-    build_strategy: 'generated_site',
-    generated_site_manifest: generatedManifest,
-    generated_file_manifest: generatedFiles.map((path) => ({ path, kind: path.endsWith('registry.ts') ? 'registry' : 'manifest' })),
-    deployment_status: 'queued',
-    staging_url: deploymentUrl,
+    build_strategy: 'custom_component',
+    deployment_status: 'blocked',
+    generated_file_manifest: [],
     metadata: {
       ...asRecord(site.metadata),
-      render_payload: {
-        source_hash: sourceHash,
-        render_hash: renderHash,
-        site_spec_id: spec.id,
-        site_version_id: version.id,
-      },
-      generated_site: generatedManifest,
-      generated_site_files: generatedFiles,
-      generated_site_commit: githubCommit,
-      build_strategy: 'generated_site',
+      build_strategy: 'custom_component',
+      custom_component_required: true,
+      build_brief_id: detail.buildPacket?.id ?? null,
       current_operation: {
         task_type: run.task_type,
-        percent: 72,
-        label: 'Generated site staged',
-        detail: 'Generated site files and manifest were recorded. Next the deploy worker will publish the preview route.',
-        status: 'running',
+        percent: 20,
+        label: 'Custom code build required',
+        detail: 'Generic renderer output is disabled. Build a unique site component under src/generated-sites/[slug]/ and register it in src/generated-sites/components.tsx before deploy/QA can continue.',
+        status: 'blocked',
         updated_at: new Date().toISOString(),
       },
     },
   }).eq('id', site.id);
-  await queueRun({
-    siteId: site.id,
-    requestId: site.request_id,
-    taskType: 'deploy',
-    provider: 'vercel',
-    metadata: {
-      queued_after_agent_run_id: run.id,
-      site_version_id: version.id,
-      workflow_step: 'deploy',
-      github_commit: githubCommit,
-    },
-  });
-  await setRunProgress(run, site, {
-    percent: 100,
-    label: 'Generated site staged',
-    detail: 'Generated site files were committed and deploy was queued.',
-    status: 'succeeded',
-  });
 
-  return {
-    site_version_id: version.id,
-    deployment_url: deploymentUrl,
-    source_branch: branch,
-    generated_site_file: generatedFile?.path ?? null,
-    generated_site_files: generatedFiles,
-    github_commit: githubCommit,
-    queued_next: 'deploy',
-  };
+  return asBlockedResult('Generic renderer builds are disabled. A real repo-editing build agent must create and register a custom generated-site component before deploy can continue.', {
+    slug: site.slug,
+    required_files: [
+      `src/generated-sites/${site.slug}/Site.tsx`,
+      'src/generated-sites/components.tsx',
+    ],
+    build_packet_id: detail.buildPacket?.id ?? null,
+    next_step: 'Run an IDE-quality build agent against the build brief, then commit the generated component and re-run deploy/QA.',
+  });
 }
 
 function projectEnvKey() {

@@ -1,9 +1,6 @@
 import { notFound } from 'next/navigation';
-import GeneratedRestaurantSite from '@/components/GeneratedRestaurantSite';
-import RestaurantSiteRenderer from '@/components/RestaurantSiteRenderer';
 import { GENERATED_SITE_COMPONENTS } from '@/generated-sites/components';
-import { generatedSiteLanguage, loadGeneratedSiteManifest } from '@/lib/generated-sites';
-import { loadSiteRenderContext, routeLanguage } from '@/lib/site-rendering';
+import { generatedSiteLanguage } from '@/lib/generated-sites';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,15 +15,5 @@ export default async function PreviewSitePage({
     return <GeneratedSite mode="preview" lang={generatedSiteLanguage(segments)} />;
   }
 
-  const generated = await loadGeneratedSiteManifest(slug);
-  if (generated) {
-    return <GeneratedRestaurantSite manifest={generated} mode="preview" lang={generatedSiteLanguage(segments)} />;
-  }
-
-  const context = await loadSiteRenderContext(slug, 'preview');
-
-  if (!context?.renderPayload) notFound();
-
-  const lang = routeLanguage(segments);
-  return <RestaurantSiteRenderer payload={context.renderPayload} mode="preview" lang={lang} />;
+  notFound();
 }
