@@ -9,7 +9,7 @@ export default async function MarketingLayout({ children }: { children: React.Re
   const cookieStore = await cookies();
   const headerStore = await headers();
   const initialLang = chooseInitialLanguage({
-    saved: cookieStore.get('sw-lang')?.value,
+    saved: headerStore.get('x-saborweb-lang') ?? cookieStore.get('sw-lang')?.value,
     acceptLanguage: headerStore.get('accept-language'),
     country: headerStore.get('x-vercel-ip-country'),
   });

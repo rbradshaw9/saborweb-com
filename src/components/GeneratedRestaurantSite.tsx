@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
+import { PreviewGate } from '@/components/PreviewGate';
 import type { GeneratedSiteManifest } from '@/lib/generated-sites';
 import type { RenderLanguage, RenderViewMode } from '@/lib/site-rendering';
 
@@ -15,11 +15,6 @@ type Props = {
 
 const COPY = {
   en: {
-    preview: 'Preview',
-    banner: 'Preview site by SaborWeb',
-    gateHeading: 'Your preview is ready',
-    gateBody: 'Review the site, then claim it when you are ready to launch.',
-    enter: 'Enter preview',
     claim: 'Claim this site',
     menu: 'Menu',
     visit: 'Visit',
@@ -30,11 +25,6 @@ const COPY = {
     social: 'Social',
   },
   es: {
-    preview: 'Preview',
-    banner: 'Preview por SaborWeb',
-    gateHeading: 'Tu preview esta listo',
-    gateBody: 'Revisa la pagina y reclamala cuando estes listo para lanzarla.',
-    enter: 'Entrar al preview',
     claim: 'Reclamar este sitio',
     menu: 'Menu',
     visit: 'Visita',
@@ -86,7 +76,6 @@ function sectionId(value: string) {
 }
 
 export default function GeneratedRestaurantSite({ manifest, mode, lang }: Props) {
-  const [enteredPreview, setEnteredPreview] = useState(false);
   const copy = COPY[lang];
   const theme = palette(manifest);
   const gallery = [manifest.assets.heroImageUrl, ...manifest.assets.galleryImageUrls]
@@ -95,103 +84,8 @@ export default function GeneratedRestaurantSite({ manifest, mode, lang }: Props)
   const primaryHref = manifest.actions.primaryHref ?? '#menu';
 
   return (
+    <PreviewGate claimHref={manifest.actions.claimHref} lang={lang} mode={mode}>
     <main style={{ minHeight: '100vh', background: theme.bg, color: theme.text }}>
-      {mode === 'preview' ? (
-        <>
-          {!enteredPreview ? (
-            <>
-              <div
-                style={{
-                  position: 'sticky',
-                  top: 0,
-                  zIndex: 50,
-                  background: theme.accent,
-                  color: theme.accentText,
-                  minHeight: 44,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: '8px 18px',
-                  fontWeight: 800,
-                  letterSpacing: '0.02em',
-                }}
-              >
-                {copy.banner}
-              </div>
-              <div
-            style={{
-              position: 'fixed',
-              inset: 0,
-              zIndex: 45,
-              pointerEvents: 'none',
-              display: 'grid',
-              placeItems: 'center',
-              padding: 20,
-              background: 'rgba(20, 16, 12, 0.28)',
-              backdropFilter: 'blur(3px)',
-            }}
-          >
-            <section
-              style={{
-                width: 'min(460px, 100%)',
-                border: `1px solid ${theme.line}`,
-                borderRadius: 8,
-                background: theme.surface,
-                boxShadow: '0 24px 80px rgba(0,0,0,0.28)',
-                padding: 24,
-                pointerEvents: 'auto',
-              }}
-            >
-              <p style={{ margin: 0, color: theme.accent, fontWeight: 900, textTransform: 'uppercase', fontSize: 12 }}>
-                {copy.preview}
-              </p>
-              <h2 style={{ margin: '8px 0 0', fontSize: 32, lineHeight: 1 }}>{copy.gateHeading}</h2>
-              <p style={{ margin: '12px 0 0', color: theme.muted, lineHeight: 1.55 }}>{copy.gateBody}</p>
-              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 18 }}>
-                <button
-                  type="button"
-                  onClick={() => setEnteredPreview(true)}
-                  style={{
-                    minHeight: 44,
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderRadius: 6,
-                    background: theme.accent,
-                    color: theme.accentText,
-                    padding: '0 16px',
-                    fontWeight: 800,
-                    border: 0,
-                    cursor: 'pointer',
-                  }}
-                >
-                  {copy.enter}
-                </button>
-                <Link
-                  href={manifest.actions.claimHref}
-                  style={{
-                    minHeight: 44,
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderRadius: 6,
-                    border: `1px solid ${theme.line}`,
-                    color: theme.text,
-                    padding: '0 16px',
-                    fontWeight: 800,
-                    textDecoration: 'none',
-                  }}
-                >
-                  {copy.claim}
-                </Link>
-              </div>
-            </section>
-              </div>
-            </>
-          ) : null}
-        </>
-      ) : null}
-
       <div id="site">
         <section style={{ padding: '64px 20px 36px' }}>
           <div
@@ -361,5 +255,6 @@ export default function GeneratedRestaurantSite({ manifest, mode, lang }: Props)
         </footer>
       </div>
     </main>
+    </PreviewGate>
   );
 }

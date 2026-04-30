@@ -1,430 +1,7 @@
 import type { GeneratedSiteComponentProps } from '@/generated-sites/components';
-
-type MenuItem = {
-  name: string;
-  description: string;
-  priceText: string | null;
-  badges: string[];
-  sourceBacked: boolean;
-  inferred: boolean;
-  visible?: boolean;
-};
-
-type MenuCategory = {
-  name: string;
-  description: string;
-  items: MenuItem[];
-};
-
-type HoursRow = {
-  day: string;
-  shortDay: string;
-  opens: string;
-  closes: string;
-  display: string;
-};
-
-const restaurant = {
-  name: 'Good Start Coastal Cafe',
-  alternateName: 'Good Start 466',
-  cuisine: 'Cafe',
-  address: 'GW67+XCR, Isabela, 00690, Puerto Rico',
-  streetAddress: 'GW67+XCR',
-  locality: 'Isabela',
-  postalCode: '00690',
-  region: 'Puerto Rico',
-  country: 'PR',
-  phone: '(787) 830-9500',
-  phoneHref: 'tel:+17878309500',
-  mapsUrl: 'https://maps.google.com/?cid=2958274291943456299',
-  facebookUrl: 'https://www.facebook.com/goodstart466',
-  instagramUrl: 'https://www.instagram.com/goodstart466',
-};
-
-const hours: HoursRow[] = [
-  { day: 'Monday', shortDay: 'Mon', opens: '08:00', closes: '14:00', display: '8:00 AM–2:00 PM' },
-  { day: 'Tuesday', shortDay: 'Tue', opens: '08:00', closes: '14:00', display: '8:00 AM–2:00 PM' },
-  { day: 'Wednesday', shortDay: 'Wed', opens: '08:00', closes: '14:00', display: '8:00 AM–2:00 PM' },
-  { day: 'Thursday', shortDay: 'Thu', opens: '08:00', closes: '14:00', display: '8:00 AM–2:00 PM' },
-  { day: 'Friday', shortDay: 'Fri', opens: '08:00', closes: '14:00', display: '8:00 AM–2:00 PM' },
-  { day: 'Saturday', shortDay: 'Sat', opens: '08:00', closes: '14:00', display: '8:00 AM–2:00 PM' },
-  { day: 'Sunday', shortDay: 'Sun', opens: '08:00', closes: '14:00', display: '8:00 AM–2:00 PM' },
-];
-
-// Menu provenance note for operators: this starter menu is fully generated from the structured brief.
-// There are currently no source-backed menu item names/descriptions and no prices; keep all fields editable.
-const menuCategories: MenuCategory[] = [
-  {
-    name: 'Breakfast Plates',
-    description: 'Generated breakfast offerings for a coastal Puerto Rico café concept.',
-    items: [
-      {
-        name: 'Good Start Breakfast',
-        description: 'Two eggs any style with toast, breakfast potatoes, and your choice of bacon, ham, or sausage.',
-        priceText: null,
-        badges: ['Breakfast'],
-        sourceBacked: false,
-        inferred: true,
-      },
-      {
-        name: 'Puerto Rican Breakfast Plate',
-        description: 'Eggs with sautéed onions and peppers, local cheese, toast, and a side of sweet plantains.',
-        priceText: null,
-        badges: ['Local Style'],
-        sourceBacked: false,
-        inferred: true,
-      },
-      {
-        name: 'Pancake Stack',
-        description: 'Fluffy pancakes served with butter and syrup; add fruit if available.',
-        priceText: null,
-        badges: ['Sweet Breakfast'],
-        sourceBacked: false,
-        inferred: true,
-      },
-      {
-        name: 'French Toast',
-        description: 'Golden griddled toast dusted with cinnamon sugar and served with syrup.',
-        priceText: null,
-        badges: ['Sweet Breakfast'],
-        sourceBacked: false,
-        inferred: true,
-      },
-      {
-        name: 'Omelet Your Way',
-        description: 'Three-egg omelet with your choice of cheese, vegetables, ham, bacon, or sausage, served with toast.',
-        priceText: null,
-        badges: ['Breakfast'],
-        sourceBacked: false,
-        inferred: true,
-      },
-      {
-        name: 'Breakfast Burrito',
-        description: 'Scrambled eggs, cheese, potatoes, peppers, and your choice of bacon, ham, or sausage wrapped in a warm tortilla.',
-        priceText: null,
-        badges: ['Breakfast'],
-        sourceBacked: false,
-        inferred: true,
-      },
-    ],
-  },
-  {
-    name: 'Eggs, Toasts & Lighter Starts',
-    description: 'Generated lighter morning options suitable for a café menu.',
-    items: [
-      {
-        name: 'Avocado Toast',
-        description: 'Toasted bread topped with avocado, tomato, olive oil, and a light seasoning.',
-        priceText: null,
-        badges: ['Vegetarian'],
-        sourceBacked: false,
-        inferred: true,
-      },
-      {
-        name: 'Egg & Cheese Sandwich',
-        description: 'Scrambled or fried egg with melted cheese on toast, croissant, or bread of choice if available.',
-        priceText: null,
-        badges: ['Breakfast'],
-        sourceBacked: false,
-        inferred: true,
-      },
-      {
-        name: 'Bacon, Egg & Cheese Sandwich',
-        description: 'Crispy bacon, egg, and cheese served on toasted bread.',
-        priceText: null,
-        badges: ['Breakfast'],
-        sourceBacked: false,
-        inferred: true,
-      },
-      {
-        name: 'Yogurt Parfait',
-        description: 'Yogurt layered with fruit and granola.',
-        priceText: null,
-        badges: ['Light'],
-        sourceBacked: false,
-        inferred: true,
-      },
-      {
-        name: 'Fruit Bowl',
-        description: 'Seasonal fresh fruit served chilled.',
-        priceText: null,
-        badges: ['Light', 'Vegetarian'],
-        sourceBacked: false,
-        inferred: true,
-      },
-    ],
-  },
-  {
-    name: 'Sandwiches & Wraps',
-    description: 'Generated lunch-friendly café sandwiches and wraps.',
-    items: [
-      {
-        name: 'Turkey Club Sandwich',
-        description: 'Turkey, bacon, lettuce, tomato, cheese, and mayo on toasted bread.',
-        priceText: null,
-        badges: ['Lunch'],
-        sourceBacked: false,
-        inferred: true,
-      },
-      {
-        name: 'Ham & Cheese Sandwich',
-        description: 'Classic ham and cheese served hot or cold with lettuce, tomato, and mayo.',
-        priceText: null,
-        badges: ['Lunch'],
-        sourceBacked: false,
-        inferred: true,
-      },
-      {
-        name: 'Chicken Wrap',
-        description: 'Grilled chicken, lettuce, tomato, cheese, and house sauce wrapped in a flour tortilla.',
-        priceText: null,
-        badges: ['Lunch'],
-        sourceBacked: false,
-        inferred: true,
-      },
-      {
-        name: 'Veggie Wrap',
-        description: 'Avocado, lettuce, tomato, peppers, onions, cheese, and a light dressing in a tortilla.',
-        priceText: null,
-        badges: ['Vegetarian'],
-        sourceBacked: false,
-        inferred: true,
-      },
-      {
-        name: 'Tuna Melt',
-        description: 'Tuna salad with melted cheese on toasted bread.',
-        priceText: null,
-        badges: ['Lunch'],
-        sourceBacked: false,
-        inferred: true,
-      },
-      {
-        name: 'Tripleta-Style Sandwich',
-        description: 'Puerto Rican-style pressed sandwich with mixed meats, cheese, potato sticks, and house sauce.',
-        priceText: null,
-        badges: ['Local Style'],
-        sourceBacked: false,
-        inferred: true,
-      },
-    ],
-  },
-  {
-    name: 'Bowls & Salads',
-    description: 'Generated fresh options for lunch or brunch.',
-    items: [
-      {
-        name: 'Grilled Chicken Salad',
-        description: 'Mixed greens with grilled chicken, tomato, cucumber, cheese, and dressing on the side.',
-        priceText: null,
-        badges: ['Lunch'],
-        sourceBacked: false,
-        inferred: true,
-      },
-      {
-        name: 'Tropical Salad',
-        description: 'Mixed greens with seasonal fruit, avocado, tomato, and a citrus-style dressing.',
-        priceText: null,
-        badges: ['Vegetarian', 'Tropical'],
-        sourceBacked: false,
-        inferred: true,
-      },
-      {
-        name: 'Breakfast Bowl',
-        description: 'Breakfast potatoes topped with eggs, cheese, peppers, onions, and your choice of protein.',
-        priceText: null,
-        badges: ['Breakfast'],
-        sourceBacked: false,
-        inferred: true,
-      },
-      {
-        name: 'Açaí Bowl',
-        description: 'Açaí blend topped with granola, banana, berries, and honey.',
-        priceText: null,
-        badges: ['Cold', 'Fruit'],
-        sourceBacked: false,
-        inferred: true,
-      },
-    ],
-  },
-  {
-    name: 'Sides',
-    description: 'Generated add-ons and sides.',
-    items: [
-      {
-        name: 'Breakfast Potatoes',
-        description: 'Seasoned potatoes cooked until golden.',
-        priceText: null,
-        badges: [],
-        sourceBacked: false,
-        inferred: true,
-      },
-      {
-        name: 'Bacon',
-        description: 'Side of crispy bacon.',
-        priceText: null,
-        badges: [],
-        sourceBacked: false,
-        inferred: true,
-      },
-      {
-        name: 'Sausage',
-        description: 'Side of breakfast sausage.',
-        priceText: null,
-        badges: [],
-        sourceBacked: false,
-        inferred: true,
-      },
-      {
-        name: 'Sweet Plantains',
-        description: 'Fried ripe plantains.',
-        priceText: null,
-        badges: ['Local Style'],
-        sourceBacked: false,
-        inferred: true,
-      },
-      {
-        name: 'Toast',
-        description: 'Toasted bread with butter or jam if available.',
-        priceText: null,
-        badges: [],
-        sourceBacked: false,
-        inferred: true,
-      },
-      {
-        name: 'Side Salad',
-        description: 'Small mixed green salad with dressing.',
-        priceText: null,
-        badges: ['Vegetarian'],
-        sourceBacked: false,
-        inferred: true,
-      },
-    ],
-  },
-  {
-    name: 'Coffee & Espresso',
-    description: 'Generated café beverage menu.',
-    items: [
-      {
-        name: 'Coffee',
-        description: 'Fresh brewed hot coffee.',
-        priceText: null,
-        badges: ['Hot'],
-        sourceBacked: false,
-        inferred: true,
-      },
-      {
-        name: 'Café con Leche',
-        description: 'Puerto Rican-style coffee with steamed milk.',
-        priceText: null,
-        badges: ['Hot', 'Local Style'],
-        sourceBacked: false,
-        inferred: true,
-      },
-      {
-        name: 'Espresso',
-        description: 'Single or double espresso, depending on availability.',
-        priceText: null,
-        badges: ['Hot'],
-        sourceBacked: false,
-        inferred: true,
-      },
-      {
-        name: 'Cappuccino',
-        description: 'Espresso with steamed milk and foam.',
-        priceText: null,
-        badges: ['Hot'],
-        sourceBacked: false,
-        inferred: true,
-      },
-      {
-        name: 'Latte',
-        description: 'Espresso with steamed milk; available hot or iced if offered.',
-        priceText: null,
-        badges: ['Hot', 'Iced Option'],
-        sourceBacked: false,
-        inferred: true,
-      },
-      {
-        name: 'Iced Coffee',
-        description: 'Chilled coffee served over ice.',
-        priceText: null,
-        badges: ['Iced'],
-        sourceBacked: false,
-        inferred: true,
-      },
-    ],
-  },
-  {
-    name: 'Smoothies & Cold Drinks',
-    description: 'Generated refreshing drinks for a coastal café.',
-    items: [
-      {
-        name: 'Mango Smoothie',
-        description: 'Blended mango smoothie served cold.',
-        priceText: null,
-        badges: ['Cold', 'Fruit'],
-        sourceBacked: false,
-        inferred: true,
-      },
-      {
-        name: 'Strawberry Banana Smoothie',
-        description: 'Strawberry and banana blended into a creamy smoothie.',
-        priceText: null,
-        badges: ['Cold', 'Fruit'],
-        sourceBacked: false,
-        inferred: true,
-      },
-      {
-        name: 'Piña Colada Smoothie',
-        description: 'Pineapple and coconut blended into a tropical non-alcoholic smoothie.',
-        priceText: null,
-        badges: ['Cold', 'Tropical'],
-        sourceBacked: false,
-        inferred: true,
-      },
-      {
-        name: 'Fresh Juice',
-        description: 'Seasonal juice selection, depending on availability.',
-        priceText: null,
-        badges: ['Cold'],
-        sourceBacked: false,
-        inferred: true,
-      },
-      {
-        name: 'Lemonade',
-        description: 'House-style lemonade served over ice.',
-        priceText: null,
-        badges: ['Cold'],
-        sourceBacked: false,
-        inferred: true,
-      },
-      {
-        name: 'Bottled Water & Sodas',
-        description: 'Assorted bottled drinks and soft drinks.',
-        priceText: null,
-        badges: ['Cold'],
-        sourceBacked: false,
-        inferred: true,
-      },
-    ],
-  },
-];
-
-const featuredItemNames = [
-  'Good Start Breakfast',
-  'Café con Leche',
-  'Avocado Toast',
-  'Tripleta-Style Sandwich',
-  'Açaí Bowl',
-  'Piña Colada Smoothie',
-];
-
-const ownerConfirmationNotes = [
-  'Confirm final public name spelling and whether Good Start 466 should be used as the primary or alternate brand.',
-  'Confirm the best public phone number before launch.',
-  'Review menu item names, descriptions, badges, availability, and prices.',
-  'Confirm logo/brand assets and whether a standalone official website should be linked.',
-];
+import { GOODSTART_DEFAULT_CONTENT } from './default-content';
+import { PreviewGate } from '@/components/PreviewGate';
+import { normalizeGoodstartContent, type GoodstartContent, type GoodstartMenuItem } from './content';
 
 const copy = {
   en: {
@@ -514,7 +91,7 @@ function slugify(value: string) {
     .replace(/(^-|-$)/g, '');
 }
 
-function findFeaturedItems() {
+function findFeaturedItems(menuCategories: GoodstartContent['menuCategories'], featuredItemNames: string[]) {
   const allItems = menuCategories.flatMap((category) =>
     category.items
       .filter((item) => item.visible !== false)
@@ -523,10 +100,24 @@ function findFeaturedItems() {
 
   return featuredItemNames
     .map((name) => allItems.find((item) => item.name === name))
-    .filter((item): item is MenuItem & { category: string } => Boolean(item));
+    .filter((item): item is GoodstartMenuItem & { category: string } => Boolean(item));
 }
 
-function createJsonLd() {
+function openHoursRows(hours: GoodstartContent['hours']) {
+  return hours.filter((row) => !row.isClosed);
+}
+
+function hoursSummary(hours: GoodstartContent['hours']) {
+  const openRows = openHoursRows(hours);
+  if (!openRows.length) return 'Closed today';
+  const [first] = openRows;
+  const sameDaily = openRows.length === 7 && openRows.every((row) => row.display === first.display);
+  return sameDaily ? first.display : openRows.map((row) => `${row.shortDay} ${row.display}`).join(' · ');
+}
+
+function createJsonLd(content: GoodstartContent) {
+  const { restaurant, hours, menuCategories } = content;
+
   return {
     '@context': 'https://schema.org',
     '@type': 'CafeOrCoffeeShop',
@@ -545,7 +136,7 @@ function createJsonLd() {
       addressCountry: restaurant.country,
     },
     hasMap: restaurant.mapsUrl,
-    openingHoursSpecification: hours.map((row) => ({
+    openingHoursSpecification: openHoursRows(hours).map((row) => ({
       '@type': 'OpeningHoursSpecification',
       dayOfWeek: `https://schema.org/${row.day}`,
       opens: row.opens,
@@ -571,17 +162,20 @@ function createJsonLd() {
   };
 }
 
-export default function GoodstartSite({ mode, lang }: GeneratedSiteComponentProps) {
+export default function GoodstartSite({ mode, lang, content }: GeneratedSiteComponentProps) {
+  const goodstartContent = normalizeGoodstartContent(content, GOODSTART_DEFAULT_CONTENT);
+  const { restaurant, hours, menuCategories, featuredItemNames, ownerConfirmationNotes } = goodstartContent;
   const langKey = String(lang || '').toLowerCase().startsWith('es') ? 'es' : 'en';
   const t = copy[langKey];
   const modeKey = String(mode || '').toLowerCase();
   const showOwnerNotes = ['owner', 'draft', 'edit', 'internal'].includes(modeKey);
-  const featuredItems = findFeaturedItems();
+  const featuredItems = findFeaturedItems(menuCategories, featuredItemNames);
   const visibleItemsCount = menuCategories.reduce(
     (count, category) => count + category.items.filter((item) => item.visible !== false).length,
     0,
   );
-  const jsonLd = createJsonLd();
+  const jsonLd = createJsonLd(goodstartContent);
+  const hoursSummaryText = hoursSummary(hours);
   const seoTitle = `${restaurant.name} | Cafe, Breakfast & Coffee in Isabela Puerto Rico`;
   const seoDescription =
     'Visit Good Start Coastal Cafe, a cafe in Isabela, Puerto Rico for breakfast, coffee, easy lunch options, and cold drinks. Open daily 8 AM–2 PM.';
@@ -600,6 +194,7 @@ export default function GoodstartSite({ mode, lang }: GeneratedSiteComponentProp
       <meta name="twitter:card" content="summary" />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
+      <PreviewGate claimHref="/claim/goodstart" lang={langKey} mode={mode}>
       <div className="gs-site" id="top">
         <a className="gs-skip" href="#main">
           {t.skip}
@@ -654,7 +249,7 @@ export default function GoodstartSite({ mode, lang }: GeneratedSiteComponentProp
                 <dl className="gs-hero-facts" aria-label="Cafe quick facts">
                   <div>
                     <dt>{t.openDaily}</dt>
-                    <dd>8 AM–2 PM</dd>
+                    <dd>{hoursSummaryText}</dd>
                   </div>
                   <div>
                     <dt>{restaurant.cuisine}</dt>
@@ -677,8 +272,8 @@ export default function GoodstartSite({ mode, lang }: GeneratedSiteComponentProp
                   </div>
                   <div className="gs-art-caption">
                     <span className="gs-art-kicker">Morning cafe rhythm</span>
-                    <strong>Open daily</strong>
-                    <span>8:00 AM–2:00 PM</span>
+	                    <strong>Open daily</strong>
+	                    <span>{hoursSummaryText}</span>
                   </div>
                 </div>
                 <div className="gs-art-card gs-art-card-mini gs-mini-one">
@@ -703,7 +298,7 @@ export default function GoodstartSite({ mode, lang }: GeneratedSiteComponentProp
                 <article className="gs-quick-card">
                   <span className="gs-quick-icon" aria-hidden="true">🌤</span>
                   <h3>{t.today}</h3>
-                  <p>{t.openDaily} · 8:00 AM–2:00 PM</p>
+	                  <p>{t.openDaily} · {hoursSummaryText}</p>
                   <a href="#hours">{t.hours}</a>
                 </article>
                 <article className="gs-quick-card">
@@ -924,7 +519,7 @@ export default function GoodstartSite({ mode, lang }: GeneratedSiteComponentProp
               <strong>{restaurant.name}</strong>
               <span>{restaurant.address}</span>
               <a href={restaurant.phoneHref}>{restaurant.phone}</a>
-              <span>{t.openDaily}: 8:00 AM–2:00 PM</span>
+	              <span>{t.openDaily}: {hoursSummaryText}</span>
             </address>
           </div>
         </footer>
@@ -2157,6 +1752,7 @@ export default function GoodstartSite({ mode, lang }: GeneratedSiteComponentProp
           }
         `}</style>
       </div>
+      </PreviewGate>
     </>
   );
 }

@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { ANALYTICS_EVENTS, track } from '@/lib/analytics';
+import { PreviewGate } from '@/components/PreviewGate';
 
 // ─── RESTAURANT DATA ─────────────────────────────────────────────────────────
 
@@ -159,7 +160,6 @@ const GALLERY = [
 export default function CincoDeMayaPage() {
   const [activeCategory, setActiveCategory] = useState('tacos');
   const [navScrolled, setNavScrolled]       = useState(false);
-  const [bannerVisible, setBannerVisible]   = useState(true);
   const [menuOpen, setMenuOpen]             = useState(false);
 
   const TODAY = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][new Date().getDay()];
@@ -184,7 +184,7 @@ export default function CincoDeMayaPage() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <>
+    <PreviewGate claimHref="/claim/cinco-de-maya" lang="es" mode="preview">
       <style>{`
         /* ══ CINCO DE MAYA ══════════════════════════════════════════ */
         .cdm {
@@ -212,34 +212,6 @@ export default function CincoDeMayaPage() {
         .cdm a { color: inherit; text-decoration: none; }
         .cdm img { display: block; max-width: 100%; }
         .cdm button { cursor: pointer; border: none; background: none; font-family: var(--nunito); }
-
-        /* ── PREVIEW BANNER ─────────────────────────── */
-        .cdm-banner {
-          position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
-          background: var(--teal);
-          padding: 10px 24px;
-          display: flex; align-items: center; justify-content: space-between; gap: 12px;
-          font-family: var(--nunito); font-size: 13px; font-weight: 600;
-          color: #0A2020; letter-spacing: 0.02em;
-        }
-        .cdm-banner-badge {
-          background: #0A2020; color: var(--teal);
-          padding: 3px 10px; border-radius: 30px;
-          font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
-        }
-        .cdm-banner-cta {
-          background: #0A2020; color: var(--teal);
-          padding: 6px 16px; border-radius: 4px;
-          font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
-          white-space: nowrap; display: inline-flex; align-items: center; gap: 6px;
-          transition: background 0.2s;
-        }
-        .cdm-banner-cta:hover { background: #0F3030; }
-        .cdm-banner-close {
-          width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center;
-          border-radius: 50%; color: #0A2020; font-size: 16px; opacity: 0.7; transition: opacity 0.2s;
-        }
-        .cdm-banner-close:hover { opacity: 1; }
 
         /* ── NAV ────────────────────────────────────── */
         .cdm-nav {
@@ -717,29 +689,7 @@ export default function CincoDeMayaPage() {
         }
       `}</style>
 
-      <div className="cdm" style={{ paddingTop: bannerVisible ? '44px' : '0' }}>
-
-        {/* ── PREVIEW BANNER ── */}
-        {bannerVisible && (
-          <div className="cdm-banner" role="banner">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <span className="cdm-banner-badge">Preview</span>
-              <span>Este sitio fue creado por Sabor Web. ¿Te gusta?</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <a href="https://saborweb.com/services" className="cdm-banner-cta">
-                ✦ Claim Your Site
-              </a>
-              <button
-                className="cdm-banner-close"
-                onClick={() => setBannerVisible(false)}
-                aria-label="Dismiss banner"
-              >
-                ✕
-              </button>
-            </div>
-          </div>
-        )}
+      <div className="cdm" style={{ paddingTop: '44px' }}>
 
         {/* ── NAV ── */}
         <nav className={`cdm-nav ${navScrolled ? 'scrolled' : ''}`} role="navigation" aria-label="Main navigation">
@@ -1169,6 +1119,6 @@ export default function CincoDeMayaPage() {
         </footer>
 
       </div>
-    </>
+    </PreviewGate>
   );
 }

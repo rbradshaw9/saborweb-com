@@ -17,6 +17,7 @@ const WHATSAPP = '+18019106171';
 export default function Footer() {
   const { t, lang } = useLanguage();
   const year = new Date().getFullYear();
+  const localizedHref = (href: string) => (lang === 'es' ? `/es${href}` : href);
 
   const services = [
     { href: '/services',     label: t.nav.services   },
@@ -75,7 +76,7 @@ export default function Footer() {
               {services.map(s => (
                 <li key={s.href}>
                   <Link
-                    href={s.href}
+                    href={localizedHref(s.href)}
                     style={{ color: 'var(--color-sw-muted)', fontSize: '0.9rem', transition: 'color 200ms ease' }}
                     onMouseEnter={e => (e.currentTarget.style.color = 'var(--color-sw-cream)')}
                     onMouseLeave={e => (e.currentTarget.style.color = 'var(--color-sw-muted)')}
@@ -96,7 +97,7 @@ export default function Footer() {
               {company.map(s => (
                 <li key={s.href}>
                   <Link
-                    href={s.href}
+                    href={localizedHref(s.href)}
                     style={{ color: 'var(--color-sw-muted)', fontSize: '0.9rem', transition: 'color 200ms ease' }}
                     onMouseEnter={e => (e.currentTarget.style.color = 'var(--color-sw-cream)')}
                     onMouseLeave={e => (e.currentTarget.style.color = 'var(--color-sw-muted)')}

@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { useLanguage } from '@/lib/LanguageContext';
 import { Menu, X } from 'lucide-react';
@@ -7,6 +8,9 @@ import BrandMark from '@/components/BrandMark';
 
 export default function Nav() {
   const { t, lang, setLang } = useLanguage();
+  const pathname = usePathname() || '/';
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -23,6 +27,24 @@ export default function Nav() {
     { href: '/local-seo',   label: t.nav.localSeo   },
     { href: '/about',       label: t.nav.about      },
   ];
+
+  const normalizedMarketingPath = pathname === '/es' ? '/' : pathname.startsWith('/es/') ? pathname.slice(3) || '/' : pathname;
+
+  const localizedHref = (href: string) => {
+    if (lang === 'es') return href === '/' ? '/es' : `/es${href}`;
+    return href;
+  };
+
+  const switchLanguage = (nextLang: 'en' | 'es') => {
+    setLang(nextLang);
+    const query = searchParams.toString();
+    const nextPath = nextLang === 'es'
+      ? normalizedMarketingPath === '/'
+        ? '/es'
+        : `/es${normalizedMarketingPath}`
+      : normalizedMarketingPath;
+    router.push(query ? `${nextPath}?${query}` : nextPath);
+  };
 
   return (
     <header
@@ -50,7 +72,7 @@ export default function Nav() {
           {links.map(link => (
             <Link
               key={link.href}
-              href={link.href}
+              href={localizedHref(link.href)}
               style={{
                 fontFamily: 'var(--font-label)',
                 fontSize: '0.72rem',
@@ -68,11 +90,11 @@ export default function Nav() {
           ))}
 
           <div className="language-switcher" aria-label="Site language">
-            <button type="button" onClick={() => setLang('es')} aria-pressed={lang === 'es'} className={lang === 'es' ? 'active' : ''}>
+            <button type="button" onClick={() => switchLanguage('es')} aria-pressed={lang === 'es'} className={lang === 'es' ? 'active' : ''}>
               Español
             </button>
             <span aria-hidden="true">/</span>
-            <button type="button" onClick={() => setLang('en')} aria-pressed={lang === 'en'} className={lang === 'en' ? 'active' : ''}>
+            <button type="button" onClick={() => switchLanguage('en')} aria-pressed={lang === 'en'} className={lang === 'en' ? 'active' : ''}>
               English
             </button>
           </div>
@@ -85,11 +107,11 @@ export default function Nav() {
         {/* Mobile right side */}
         <div style={{ marginLeft: 'auto', display: 'flex', gap: '1rem', alignItems: 'center' }} className="show-mobile">
           <div className="language-switcher language-switcher--compact" aria-label="Site language">
-            <button type="button" onClick={() => setLang('es')} aria-pressed={lang === 'es'} className={lang === 'es' ? 'active' : ''}>
+            <button type="button" onClick={() => switchLanguage('es')} aria-pressed={lang === 'es'} className={lang === 'es' ? 'active' : ''}>
               ES
             </button>
             <span aria-hidden="true">/</span>
-            <button type="button" onClick={() => setLang('en')} aria-pressed={lang === 'en'} className={lang === 'en' ? 'active' : ''}>
+            <button type="button" onClick={() => switchLanguage('en')} aria-pressed={lang === 'en'} className={lang === 'en' ? 'active' : ''}>
               EN
             </button>
           </div>
@@ -117,7 +139,7 @@ export default function Nav() {
           {links.map(link => (
             <Link
               key={link.href}
-              href={link.href}
+              href={localizedHref(link.href)}
               onClick={() => setOpen(false)}
               style={{ fontFamily: 'var(--font-label)', fontSize: '0.85rem', fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-sw-cream)' }}
             >

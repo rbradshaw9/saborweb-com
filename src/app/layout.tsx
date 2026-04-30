@@ -8,10 +8,12 @@ const inter        = Inter({ subsets: ['latin'], variable: '--font-inter',   dis
 const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-grotesk', display: 'swap', weight: ['500', '600', '700'] });
 
 export const metadata: Metadata = {
-  title: 'Sabor Web - Restaurant Websites for Puerto Rico',
+  title: {
+    default: 'Sabor Web - Restaurant Websites for Puerto Rico',
+    template: '%s | Sabor Web',
+  },
   description: 'Premium restaurant websites for Puerto Rico. Request a free live preview before you pay.',
   metadataBase: new URL('https://saborweb.com'),
-  alternates: { canonical: 'https://saborweb.com' },
   keywords: 'restaurant website Puerto Rico, pagina web restaurante Puerto Rico, web design PR, diseno web restaurante PR, Google Business restaurant',
   openGraph: {
     title: 'Sabor Web - Restaurant Websites for Puerto Rico',

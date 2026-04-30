@@ -5,6 +5,7 @@ import GoodstartSite from './goodstart/Site';
 export type GeneratedSiteComponentProps = {
   mode: RenderViewMode;
   lang: RenderLanguage;
+  content?: unknown;
 };
 
 export type GeneratedSiteComponent = ComponentType<GeneratedSiteComponentProps>;

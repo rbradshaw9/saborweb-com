@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import { GENERATED_SITE_COMPONENTS } from '@/generated-sites/components';
+import { loadGoodstartContent } from '@/generated-sites/goodstart/load-content';
 import { generatedSiteLanguage } from '@/lib/generated-sites';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 
@@ -40,7 +41,7 @@ export default async function CustomDomainRestaurantSitePage({
 
   const GeneratedSite = GENERATED_SITE_COMPONENTS[slug];
   if (GeneratedSite) {
-    return <GeneratedSite mode="live" lang={generatedSiteLanguage(segments)} />;
+    return <GeneratedSite mode="live" lang={generatedSiteLanguage(segments)} content={await loadGoodstartContent(slug)} />;
   }
 
   notFound();
